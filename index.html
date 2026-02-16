@@ -263,11 +263,10 @@ a.initiative-link {
 </div>
 
 <script>
-
-const supabaseClient = supabase.createClient(
 const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
   const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
-);
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
 
 let currentPage = 1;
 const pageSize = 25;
@@ -383,3 +382,4 @@ init();
 
 </body>
 </html>
+
