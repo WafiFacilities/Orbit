@@ -97,6 +97,19 @@ button { padding:8px 16px; background:#76B531; color:white; border:none; border-
   </select>
 </div>
 
+  <div class="field-row">
+  <label>Year:</label>
+  <select id="year" required>
+    <option value="">Select Year</option>
+    <option>2025</option>
+    <option>2026</option>
+    <option>2027</option>
+    <option>2028</option>
+    <option>2029</option>
+    <option>2030</option>
+  </select>
+</div>
+
 <div class="field-row">
   <label>Description:</label>
   <textarea id="description"></textarea>
@@ -171,7 +184,7 @@ document.getElementById('initiativeForm').addEventListener('submit', async (e)=>
    description: description.value,
 
    status: "Under Review",
-
+    year: year.value, 
    start_date: start_date.value,
    target_date: target_date.value || null,
    impact_type: impact_type.value,
@@ -201,3 +214,4 @@ async function logout(){
 
 </body>
 </html>
+
