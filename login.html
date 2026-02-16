@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Login - Facilities Dashboard</title>
+<title>Facilities Orbit – Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -10,23 +10,21 @@
 <style>
 
 @font-face {
-  font-family: '72 Condensed';
-  src: local('72 Condensed');
+  font-family:'72 Condensed';
+  src:local('72 Condensed');
 }
 
-body {
-  font-family: '72 Condensed', Arial, sans-serif;
+body{
+  font-family:'72 Condensed',Arial;
   margin:0;
   background:#f4f6f9;
-
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
 }
 
-/* LOGIN CONTAINER */
-.login-container {
+.login-container{
   background:white;
   padding:30px;
   border-radius:8px;
@@ -35,35 +33,26 @@ body {
   text-align:center;
 }
 
-.logo {
-  margin-bottom:10px;
-}
+.logo img{height:60px;margin-bottom:10px;}
 
-.logo img {
-  height:60px;
-  margin-bottom:10px;
-}
-
-.title {
+.title{
   font-size:18px;
   font-weight:bold;
   color:#404040;
   margin-bottom:20px;
   text-transform:uppercase;
-  letter-spacing:1px;
 }
 
-input {
+input{
   width:100%;
   padding:8px;
   margin-bottom:12px;
   border-radius:4px;
   border:1px solid #ccc;
-  font-family: '72 Condensed', Arial;
-  font-size:14px;
+  font-family:'72 Condensed';
 }
 
-button {
+button{
   width:100%;
   padding:10px;
   background:#76B531;
@@ -71,25 +60,28 @@ button {
   border:none;
   border-radius:4px;
   cursor:pointer;
-  font-family: '72 Condensed', Arial;
-  font-size:16px;
+  font-family:'72 Condensed';
 }
 
-button:hover {
-  background:#5c8f26;
-}
+button:hover{background:#5c8f26;}
 
-.error {
-  color:red;
-  font-size:14px;
+.link{
   margin-top:10px;
+  font-size:13px;
+  color:#76B531;
+  cursor:pointer;
 }
 
-.footer {
+.error{color:red;font-size:14px;margin-top:10px;}
+.success{color:green;font-size:14px;margin-top:10px;}
+
+.footer{
   margin-top:15px;
   font-size:12px;
   color:#777;
 }
+
+.hidden{display:none;}
 
 </style>
 </head>
@@ -99,19 +91,38 @@ button:hover {
 <div class="login-container">
 
   <div class="logo">
-    <img src="wafi-logo.png" alt="Wafi Logo">
+    <img src="wafi-logo.png">
   </div>
 
-  <div class="title">
-    FACILITIES – ONE STOP DASHBOARD
+  <div class="title">FACILITIES ORBIT</div>
+
+  <!-- LOGIN -->
+  <div id="loginBox">
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="login()">Login</button>
+
+    <div class="link" onclick="showSignup()">Create account</div>
+    <div class="link" onclick="showForgot()">Forgot password?</div>
   </div>
 
-  <input type="email" id="email" placeholder="Username (Email)" />
-  <input type="password" id="password" placeholder="Password" />
+  <!-- SIGNUP -->
+  <div id="signupBox" class="hidden">
+    <input type="email" id="signupEmail" placeholder="Email">
+    <input type="password" id="signupPassword" placeholder="Password">
+    <button onclick="signup()">Create Account</button>
+    <div class="link" onclick="showLogin()">Back to login</div>
+  </div>
 
-  <button onclick="login()">Login</button>
+  <!-- FORGOT -->
+  <div id="forgotBox" class="hidden">
+    <input type="email" id="forgotEmail" placeholder="Enter your email">
+    <button onclick="resetPassword()">Send reset link</button>
+    <div class="link" onclick="showLogin()">Back to login</div>
+  </div>
 
   <p class="error" id="errorMessage"></p>
+  <p class="success" id="successMessage"></p>
 
   <div class="footer">
     Wafi Energy Pakistan – Operations Excellence
@@ -121,50 +132,101 @@ button:hover {
 
 <script>
 
-const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
-
 const supabaseClient = window.supabase.createClient(
-  supabaseUrl,
-  supabaseKey
+  "https://kqhbvmqxrwwspopwckah.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
 );
 
-async function login() {
-
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  if (!email || !password) {
-    document.getElementById("errorMessage").textContent =
-      "Please enter email and password";
-    return;
-  }
-
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    document.getElementById("errorMessage").textContent = error.message;
-    return;
-  }
-
-  // Success → go to main page
-  window.location.replace("index.html");
+function clearMsg(){
+  errorMessage.textContent="";
+  successMessage.textContent="";
 }
 
-async function checkSession() {
-  const { data } = await supabaseClient.auth.getSession();
+function showLogin(){
+  clearMsg();
+  loginBox.classList.remove("hidden");
+  signupBox.classList.add("hidden");
+  forgotBox.classList.add("hidden");
+}
 
-  if (data.session) {
-    window.location.replace("index.html");
+function showSignup(){
+  clearMsg();
+  signupBox.classList.remove("hidden");
+  loginBox.classList.add("hidden");
+  forgotBox.classList.add("hidden");
+}
+
+function showForgot(){
+  clearMsg();
+  forgotBox.classList.remove("hidden");
+  loginBox.classList.add("hidden");
+  signupBox.classList.add("hidden");
+}
+
+async function login(){
+
+  clearMsg();
+
+  const {error} = await supabaseClient.auth.signInWithPassword({
+    email: loginEmail.value,
+    password: loginPassword.value
+  });
+
+  if(error){
+    errorMessage.textContent = error.message;
+    return;
   }
+
+  window.location="index.html";
+}
+
+async function signup(){
+
+  clearMsg();
+
+  const {error} = await supabaseClient.auth.signUp({
+    email: signupEmail.value,
+    password: signupPassword.value
+  });
+
+  if(error){
+    errorMessage.textContent = error.message;
+    return;
+  }
+
+  successMessage.textContent =
+    "Account created. Check email to verify.";
+}
+
+async function resetPassword(){
+
+  clearMsg();
+
+  const {error} = await supabaseClient.auth.resetPasswordForEmail(
+    forgotEmail.value,
+    {
+      redirectTo: window.location.origin + "/reset-password.html"
+    }
+  );
+
+  if(error){
+    errorMessage.textContent = error.message;
+    return;
+  }
+
+  successMessage.textContent =
+    "Password reset email sent.";
+}
+
+async function checkSession(){
+  const {data} = await supabaseClient.auth.getSession();
+  if(data.session) window.location="index.html";
 }
 
 checkSession();
 
 </script>
+
 
 </body>
 </html>
