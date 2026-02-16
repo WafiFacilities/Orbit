@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Initiatives Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+  @font-face {
+    font-family: '72 Condensed';
+    src: local('72 Condensed');
+  }
+
+  body {
+    font-family: '72 Condensed', Arial, sans-serif;
+    margin:0;
+    background:#f4f6f9;
+  }
+
+  .header {
+    display:flex;
+    align-items:center;
+    padding:10px 20px;
+    background:white;
+    border-bottom:2px solid #e0e0e0;
+  }
+
+  .header img {
+    height:40px;
+    margin-right:15px;
+  }
+
+  .header-title {
+    font-size:22px;
+    color:#404040;
+    font-weight:bold;
+    text-transform:uppercase;
+    margin:0;
+    letter-spacing:1px;
+  }
+
+  .layout {
+    display:flex;
+    height:calc(100vh - 62px);
+  }
+
+  .sidebar {
+    width:220px;
+    background:#404040;
+    color:white;
+    display:flex;
+    flex-direction:column;
+    padding-top:20px;
+  }
+
+  .sidebar h4 {
+    padding:10px 20px;
+    margin:0;
+    font-size:14px;
+    letter-spacing:1px;
+  }
+
+  .sidebar a {
+    color:white;
+    padding:10px 30px;
+    text-decoration:none;
+    display:block;
+    font-size:15px;
+  }
+
+  .sidebar a:hover {
+    background:#505050;
+  }
+
+  .sidebar .logout {
+    margin-top:auto;
+    border-top:1px solid #555;
+  }
+
+  .main {
+    flex:1;
+    padding:20px;
+    overflow-y:auto;
+  }
+
+  .filters {
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:15px;
+  }
+
+  .filters input, .filters select {
+    padding:6px;
+    border-radius:4px;
+    border:1px solid #ccc;
+    font-family: '72 Condensed', Arial;
+  }
+
+  table {
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+    border-radius:6px;
+    overflow:hidden;
+    box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  th, td {
+    border:1px solid #ddd;
+    padding:10px;
+    font-size:15px;
+  }
+
+  th {
+    background:#76B531;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+  }
+
+  th.sorted-asc::after { content:" ▲"; }
+  th.sorted-desc::after { content:" ▼"; }
+
+  tr:nth-child(even) { background:#f9f9f9; }
+  tr:hover { background:#eef3f8; }
+
+  .pagination {
+    margin-top:10px;
+    display:flex;
+    gap:5px;
+    justify-content:flex-end;
+  }
+
+  .pagination button {
+    padding:6px 12px;
+    border:none;
+    border-radius:4px;
+    background:#404040;
+    color:white;
+    cursor:pointer;
+  }
+
+  .indicator {
+    padding:4px 8px;
+    border-radius:4px;
+    font-weight:bold;
+    text-align:center;
+  }
+
+  .overdue { background:#e74c3c; color:white; }
+  .ontime { background:#76B531; color:white; }
+
+  a.initiative-link {
+    color:#76B531;
+    text-decoration:none;
+    font-weight:bold;
+  }
+
+  /* COMMENTARY COLUMN FIX */
+  .commentary-cell {
+    max-width: 220px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow: hidden;
+  }
+
+  .commentary-box {
+    max-height: 70px;
+    overflow-y: auto;
+    padding: 4px;
+  }
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <img src="wafi-logo.png">
+  <h1 class="header-title">FACILITIES – ONE STOP DASHBOARD</h1>
+</div>
+
+<div class="layout">
+
+<div class="sidebar">
+
+  <h4>INITIATIVE</h4>
+  <a href="index.html">List View</a>
+  <a href="add-initiative.html">Add New Initiative</a>
+  <a href="dashboard.html">Dashboard</a>
+
+  <h4>FINANCIAL</h4>
+  <a href="financial-dashboard.html">Unit Cost Graph</a>
+  <a href="unit-cost-tabular.html">Unit Cost Tabular</a>
+  <a href="financial-summary.html">Financial Performance</a>
+  <a href="financial-monthly-performance.html">Depot Yearly Performance</a>
+  <a href="financial-dashboard-overview.html">Category Wise</a>
+  <a href="financial-dashboard-category.html">Depot Wise</a>
+  <a href="financial-entry.html">Financial Data Entry</a>
+
+  <h4>PEOPLE</h4>
+  <a href="people-employees.html">Competency Tracker</a>
+  <a href="people-admin.html">Employee Admin</a>
+  <a href="people-competency-assignment.html">Competency Assignment</a>
+
+  <a href="#" onclick="logout()" class="logout">Logout</a>
+
+</div>
+
+<div class="main">
+
+<h2>List of Initiatives</h2>
+
+<div class="filters">
+
+  <input type="text" id="filterName" placeholder="Search Initiative Name">
+
+  <select id="filterTerminal">
+    <option value="">All Terminals</option>
+    <option>KMR</option><option>CKL</option><option>MCH</option>
+    <option>SKP</option><option>DLP</option>
+    <option>TJB</option><option>BHK</option>
+    <option>SSH</option><option>VHR</option>
+    <option>GTI</option><option>MMK</option>
+  </select>
+
+  <select id="filterStatus">
+    <option value="">All Status</option>
+    <option>Dropped</option>
+    <option>Open - Initiated</option>
+    <option>Open - Under MOC</option>
+    <option>Open - Under Execution</option>
+    <option>Closed</option>
+  </select>
+
+  <select id="filterImpactType">
+    <option value="">All Impact Types</option>
+    <option>Cost Saving (PKR)</option>
+    <option>Cost Avoidance (PKR)</option>
+    <option>Efficiency Improvement (G2G/Time)</option>
+    <option>HSSE</option>
+    <option>Controls</option>
+  </select>
+
+</div>
+
+<table>
+<thead>
+<tr>
+  <th>S.No</th>
+  <th data-column="terminal_name">Terminal</th>
+  <th data-column="initiative_name">Initiative Name</th>
+  <th data-column="status">Status</th>
+  <th>Indicator</th>
+  <th>Owner</th>
+  <th>Impact Type</th>
+  <th data-column="impact_amount">Impact Amount</th>
+  <th data-column="created_at">Start Date</th>
+  <th data-column="target_date">Target Date</th>
+  <th style="width:220px">Commentary</th>
+</tr>
+</thead>
+<tbody id="table-body"></tbody>
+</table>
+
+<div class="pagination">
+  <button onclick="prevPage()">Prev</button>
+  <span id="pageInfo">Page 1</span>
+  <button onclick="nextPage()">Next</button>
+</div>
+
+</div>
+</div>
+
+<script>
+
+const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+let currentPage = 1;
+const pageSize = 25;   // CHANGED FROM 10 → 25
+
+let sortColumn = "created_at";
+let sortOrder = "desc";
+
+async function init() {
+  const { data } = await supabaseClient.auth.getSession();
+  if(!data.session) window.location.replace("login.html");
+  loadData();
+}
+
+async function loadData() {
+
+  const from = (currentPage-1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabaseClient
+    .from("initiatives")
+    .select("*", { count: "exact" })
+    .order(sortColumn, { ascending: sortOrder === "asc" })
+    .range(from, to);
+
+  if(filterName.value)
+    query = query.ilike("initiative_name", `%${filterName.value}%`);
+
+  if(filterTerminal.value)
+    query = query.eq("terminal_name", filterTerminal.value);
+
+  if(filterStatus.value)
+    query = query.eq("status", filterStatus.value);
+
+  if(filterImpactType.value)
+    query = query.eq("impact_type", filterImpactType.value);
+
+  const { data, count } = await query;
+
+  const tbody = document.getElementById("table-body");
+  tbody.innerHTML = "";
+
+  document.getElementById("pageInfo").innerText =
+    `Page ${currentPage} / ${Math.ceil(count/pageSize)}`;
+
+  const today = new Date().toISOString().split("T")[0];
+
+  data.forEach((row, index) => {
+
+    let indicatorClass = "ontime";
+    let indicatorText = "On-time";
+
+    if(row.target_date && row.target_date < today) {
+      indicatorClass = "overdue";
+      indicatorText = "Overdue";
+    }
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${from + index + 1}</td>
+        <td>${row.terminal_name || ''}</td>
+
+        <td>
+          <a class="initiative-link" href="initiative-detail.html?id=${row.id}">
+            ${row.initiative_name || ''}
+          </a>
+        </td>
+
+        <td>${row.status || ''}</td>
+
+        <td>
+          <div class="indicator ${indicatorClass}">
+            ${indicatorText}
+          </div>
+        </td>
+
+        <td>${row.project_owner_email || ''}</td>
+        <td>${row.impact_type || ''}</td>
+        <td>${row.impact_amount || ''}</td>
+
+        <td>${row.created_at ? row.created_at.split("T")[0] : ''}</td>
+        <td>${row.target_date || ''}</td>
+
+        <td class="commentary-cell">
+          <div class="commentary-box">
+            ${row.commentary || ''}
+          </div>
+        </td>
+
+      </tr>`;
+  });
+}
+
+document.querySelectorAll("th[data-column]").forEach(th=>{
+  th.addEventListener("click", ()=>{
+
+    const col = th.getAttribute("data-column");
+
+    if(sortColumn === col)
+      sortOrder = sortOrder === "asc" ? "desc" : "asc";
+    else {
+      sortColumn = col;
+      sortOrder = "asc";
+    }
+
+    document.querySelectorAll("th").forEach(h=>{
+      h.classList.remove("sorted-asc","sorted-desc");
+    });
+
+    th.classList.add(sortOrder === "asc" ? "sorted-asc" : "sorted-desc");
+
+    loadData();
+  });
+});
+
+function nextPage(){ currentPage++; loadData(); }
+function prevPage(){ if(currentPage>1){ currentPage--; loadData(); } }
+
+filterName.addEventListener("input", ()=>{ currentPage=1; loadData(); });
+
+["filterTerminal","filterStatus","filterImpactType"]
+  .forEach(id => document.getElementById(id)
+    .addEventListener("change", ()=>{ currentPage=1; loadData(); }));
+
+async function logout(){
+  await supabaseClient.auth.signOut();
+  window.location.replace("login.html");
+}
+
+init();
+
+</script>
+
+</body>
+</html>

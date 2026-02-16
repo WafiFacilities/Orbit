@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Initiative Detail</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+@font-face { font-family: '72 Condensed'; src: local('72 Condensed'); }
+
+body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
+
+.header{display:flex;align-items:center;padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;}
+.header img{height:40px;margin-right:15px;}
+.header-title{font-size:22px;font-weight:bold;text-transform:uppercase;}
+
+.layout{display:flex;height:calc(100vh - 62px);}
+
+.sidebar{width:220px;background:#404040;color:white;display:flex;flex-direction:column;padding-top:20px;}
+.sidebar h4{padding:10px 20px;}
+.sidebar a{color:white;padding:10px 30px;text-decoration:none;}
+.sidebar a:hover{background:#505050;}
+.sidebar .logout{margin-top:auto;border-top:1px solid #555;}
+
+.main{flex:1;padding:20px;}
+
+.container{
+  background:white;
+  padding:20px;
+  border-radius:6px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  max-width:900px;
+}
+
+.data-row{display:flex;margin-bottom:12px;align-items:center;}
+.data-row label{flex:0 0 180px;font-weight:bold;}
+.data-row .value{flex:1;padding:6px;border:1px solid #ddd;background:#f9f9f9;}
+
+.commentary-box{
+  border:1px solid #ddd;
+  padding:10px;
+  background:#f9f9f9;
+  max-height:250px;
+  overflow-y:auto;
+}
+
+.comment-entry{
+  margin-bottom:10px;
+  padding-bottom:10px;
+  border-bottom:1px solid #ccc;
+}
+
+.comment-entry:last-child{
+  border-bottom:none;
+}
+
+.comment-date{
+  font-size:12px;
+  color:#666;
+  margin-bottom:4px;
+}
+
+.edit-box{margin-top:20px;padding:15px;background:#eef3f8;border-radius:6px;}
+
+.edit-box input,
+.edit-box select,
+.edit-box textarea{
+  width:100%;
+  padding:6px;
+  margin-bottom:10px;
+  border:1px solid #ccc;
+  border-radius:4px;
+  font-family:'72 Condensed';
+}
+
+button{
+  padding:8px 16px;
+  background:#76B531;
+  color:white;
+  border:none;
+  border-radius:4px;
+  cursor:pointer;
+}
+
+.error{color:red;}
+.success{color:green;}
+
+.warning{
+  color:#c0392b;
+  font-weight:bold;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <img src="wafi-logo.png">
+  <h1 class="header-title">FACILITIES – ONE STOP DASHBOARD</h1>
+</div>
+<div class="layout">
+<div class="sidebar">
+
+  <h4>INITIATIVE</h4>
+  <a href="index.html">List View</a>
+  <a href="add-initiative.html">Add New Initiative</a>
+  <a href="dashboard.html">Dashboard</a>
+
+  <h4>FINANCIAL</h4>
+  <a href="financial-dashboard.html">Unit Cost Graph</a>
+  <a href="unit-cost-tabular.html">Unit Cost Tabular</a>
+  <a href="financial-summary.html">Financial Performance</a>
+  <a href="financial-monthly-performance.html">Depot Yearly Performance</a>
+  <a href="financial-dashboard-overview.html">Category Wise</a>
+  <a href="financial-dashboard-category.html">Depot Wise</a>
+  <a href="financial-entry.html">Financial Data Entry</a>
+
+  <h4>PEOPLE</h4>
+  <a href="people-employees.html">Competency Tracker</a>
+  <a href="people-admin.html">Employee Admin</a>
+  <a href="people-competency-assignment.html">Competency Assignment</a>
+
+  <a href="#" onclick="logout()" class="logout">Logout</a>
+
+</div>
+
+
+<div class="main">
+
+<h2 id="pageTitle">Initiative Detail</h2>
+
+<div class="container" id="viewSection"></div>
+
+<p class="warning" id="closedWarning" style="display:none;">
+This initiative is CLOSED. Only superusers can modify it.
+</p>
+
+<!-- OWNER EDIT SECTION (NEW) -->
+<div class="container edit-box" id="ownerEditSection" style="display:none;">
+
+<h3>Update Initiative</h3>
+
+<label>Status</label>
+<select id="owner_status">
+  <option>Open - Initiated</option>
+  <option>Open - Under MOC</option>
+  <option>Open - Under Execution</option>
+  <option>Closed</option>
+  <option>Dropped</option>
+</select>
+
+<label>Add Commentary</label>
+<textarea id="owner_commentary"></textarea>
+
+<button onclick="saveOwnerUpdate()">Save Update</button>
+
+<p class="success" id="ownerSuccess" style="display:none;">Updated successfully</p>
+<p class="error" id="ownerError"></p>
+
+</div>
+
+<!-- SUPERUSER EDIT SECTION -->
+<div class="container edit-box" id="adminEditSection" style="display:none;">
+
+<h3>Edit Initiative</h3>
+
+<label>Initiative Name</label>
+<input id="edit_name">
+
+<label>Terminal</label>
+<select id="edit_terminal">
+  <option>KMR</option><option>CKL</option><option>MCH</option>
+  <option>SKP</option><option>DLP</option><option>TJB</option>
+  <option>BHK</option><option>SSH</option><option>VHR</option>
+  <option>GTI</option><option>MMK</option>
+</select>
+
+<label>Status</label>
+<select id="edit_status">
+  <option>Under Review</option>
+  <option>Open - Initiated</option>
+  <option>Open - Under MOC</option>
+  <option>Open - Under Execution</option>
+  <option>Closed</option>
+  <option>Dropped</option>
+</select>
+
+<label>Description</label>
+<textarea id="edit_description"></textarea>
+
+<label>Target Date</label>
+<input type="date" id="edit_target">
+
+<label>Impact Type</label>
+<select id="edit_impact_type">
+  <option>Cost Saving (PKR)</option>
+  <option>Cost Avoidance (PKR)</option>
+  <option>Efficiency Improvement (G2G/Time)</option>
+  <option>HSSE</option>
+  <option>Controls</option>
+</select>
+
+<label>Impact Amount</label>
+<input type="number" id="edit_impact_amount">
+
+<label>Project Owner Email</label>
+<input type="email" id="edit_owner">
+
+<label>Add Commentary</label>
+<textarea id="edit_commentary"></textarea>
+
+<button onclick="saveAllEdits()">Save All Changes</button>
+
+<p class="success" id="successMsg" style="display:none;">Saved successfully</p>
+<p class="error" id="errorMsg"></p>
+
+</div>
+
+</div>
+</div>
+
+<script>
+
+const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+const id = new URLSearchParams(window.location.search).get("id");
+let currentData = null;
+
+async function isSuperUser(){
+ const session = await supabaseClient.auth.getSession();
+ const email = session.data.session.user.email;
+
+ const {data} = await supabaseClient
+   .from('superusers')
+   .select('*')
+   .eq('email', email);
+
+ return data.length > 0;
+}
+
+async function init(){
+ const {data} = await supabaseClient.auth.getSession();
+ if(!data.session) window.location.replace("login.html");
+
+ loadDetail();
+}
+init();
+
+// ----- IMPROVED COMMENTARY FORMATTER -----
+function formatCommentary(text){
+
+  if(!text) return "<i>No commentary yet</i>";
+
+  const lines = text.split("\n").filter(l => l.trim() !== "");
+
+  let html = '<div class="commentary-box">';
+
+  lines.forEach(line => {
+
+    if(line.startsWith("[")){
+      html += `
+        <div class="comment-entry">
+          <div class="comment-date">${line.substring(0, line.indexOf("]")+1)}</div>
+          <div>${line.substring(line.indexOf("]")+1)}</div>
+        </div>
+      `;
+    } else {
+      html += `<div class="comment-entry">${line}</div>`;
+    }
+
+  });
+
+  html += "</div>";
+
+  return html;
+}
+
+async function loadDetail(){
+
+ const {data} = await supabaseClient
+   .from('initiatives')
+   .select('*')
+   .eq('id', id)
+   .single();
+
+ if(!data) return;
+
+ currentData = data;
+
+ pageTitle.innerText =
+   `Initiative Detail – ${data.initiative_name} | ${data.terminal_name}`;
+
+ viewSection.innerHTML = `
+ <div class="data-row"><label>Name:</label><div class="value">${data.initiative_name}</div></div>
+ <div class="data-row"><label>Terminal:</label><div class="value">${data.terminal_name}</div></div>
+ <div class="data-row"><label>Status:</label><div class="value">${data.status}</div></div>
+ <div class="data-row"><label>Description:</label><div class="value">${data.description||''}</div></div>
+ <div class="data-row"><label>Impact Type:</label><div class="value">${data.impact_type||''}</div></div>
+ <div class="data-row"><label>Impact Amount:</label><div class="value">${data.impact_amount||''}</div></div>
+ <div class="data-row"><label>Owner:</label><div class="value">${data.project_owner_email}</div></div>
+ <div class="data-row"><label>Commentary:</label><div class="value">${formatCommentary(data.commentary)}</div></div>
+ `;
+
+ const session = await supabaseClient.auth.getSession();
+ const userEmail = session.data.session.user.email;
+ const superUser = await isSuperUser();
+
+ if(data.status === "Closed"){
+   closedWarning.style.display = "block";
+
+   if(superUser) adminEditSection.style.display = "block";
+ }
+
+ else if(data.status === "Under Review"){
+   if(superUser) adminEditSection.style.display = "block";
+ }
+
+ else {
+
+   if(superUser){
+     adminEditSection.style.display = "block";
+   }
+   else if(userEmail.toLowerCase() === (data.project_owner_email || "").toLowerCase()){
+     ownerEditSection.style.display = "block";
+     owner_status.value = data.status;
+   }
+
+ }
+
+ if(superUser){
+   edit_name.value = data.initiative_name;
+   edit_terminal.value = data.terminal_name;
+   edit_status.value = data.status;
+   edit_description.value = data.description || '';
+   edit_target.value = data.target_date || '';
+   edit_impact_type.value = data.impact_type || '';
+   edit_impact_amount.value = data.impact_amount || '';
+   edit_owner.value = data.project_owner_email || '';
+ }
+}
+
+// ----- OWNER UPDATE FUNCTION -----
+async function saveOwnerUpdate(){
+
+ let updatedCommentary = currentData.commentary || "";
+
+ if(owner_commentary.value){
+   const now = new Date().toLocaleString();
+   updatedCommentary += `\n[${now}] ${owner_commentary.value}`;
+ }
+
+ const updates = {
+   status: owner_status.value,
+   commentary: updatedCommentary
+ };
+
+ const {error} = await supabaseClient
+   .from('initiatives')
+   .update(updates)
+   .eq('id', id);
+
+ if(error){
+   ownerError.innerText = error.message;
+   return;
+ }
+
+ ownerSuccess.style.display = "block";
+ owner_commentary.value="";
+
+ loadDetail();
+}
+
+// ----- SUPERUSER UPDATE (unchanged logic) -----
+async function saveAllEdits(){
+
+  let updates = { ...currentData };
+
+  updates.initiative_name = edit_name.value || currentData.initiative_name;
+  updates.terminal_name = edit_terminal.value || currentData.terminal_name;
+  updates.status = edit_status.value || currentData.status;
+  updates.description = edit_description.value || currentData.description;
+  updates.target_date = edit_target.value || currentData.target_date;
+  updates.impact_type = edit_impact_type.value || currentData.impact_type;
+  updates.project_owner_email = edit_owner.value || currentData.project_owner_email;
+
+  updates.impact_amount = edit_impact_amount.value
+      ? parseFloat(edit_impact_amount.value)
+      : currentData.impact_amount;
+
+  let updatedCommentary = currentData.commentary || "";
+
+  if(edit_commentary.value){
+     const now = new Date().toLocaleString();
+     updatedCommentary += `\n[${now}] ${edit_commentary.value}`;
+  }
+
+  updates.commentary = updatedCommentary;
+
+  delete updates.created_at;
+  delete updates.id;
+
+  const {error} = await supabaseClient
+    .from('initiatives')
+    .update(updates)
+    .eq('id', id);
+
+  if(error){
+    errorMsg.innerText = error.message;
+    return;
+  }
+
+  successMsg.style.display = "block";
+  edit_commentary.value = "";
+
+  loadDetail();
+}
+
+async function logout(){
+ await supabaseClient.auth.signOut();
+ window.location.replace("login.html");
+}
+
+</script>
+
+</body>
+</html>

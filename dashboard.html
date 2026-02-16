@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard KPIs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+<style>
+@font-face { font-family: '72 Condensed'; src: local('72 Condensed'); }
+
+body { font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
+
+.header{
+  display:flex;
+  align-items:center;
+  padding:10px 20px;
+  background:white;
+  border-bottom:2px solid #e0e0e0;
+}
+
+.header img{height:40px;margin-right:15px;}
+.header-title{font-size:22px;font-weight:bold;text-transform:uppercase;}
+
+.layout{display:flex;height:calc(100vh - 62px);}
+
+.sidebar{
+  width:220px;
+  background:#404040;
+  color:white;
+  display:flex;
+  flex-direction:column;
+  padding-top:20px;
+}
+
+.sidebar h4{padding:10px 20px;}
+.sidebar a{color:white;padding:10px 30px;text-decoration:none;}
+.sidebar a:hover{background:#505050;}
+.sidebar .logout{margin-top:auto;border-top:1px solid #555;}
+
+.main{flex:1;padding:20px;overflow-y:auto;}
+
+.section-title{
+  margin-top:20px;
+  margin-bottom:10px;
+  font-size:18px;
+  font-weight:bold;
+  color:#404040;
+  border-bottom:2px solid #76B531;
+  padding-bottom:5px;
+}
+
+.kpi-container{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:15px;
+  margin-bottom:20px;
+}
+
+.kpi{
+  background:white;
+  padding:15px;
+  border-radius:6px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  text-align:center;
+}
+
+.kpi h3{margin:0;color:#76B531;font-size:22px;}
+.kpi p{margin:5px 0 0 0;}
+
+.chart-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(400px,1fr));
+  gap:20px;
+}
+
+.chart-box{
+  background:white;
+  padding:15px;
+  border-radius:6px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+.filter-bar{
+  margin-bottom:20px;
+}
+
+.filter-bar select{
+  padding:6px;
+  border-radius:4px;
+  border:1px solid #ccc;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <img src="wafi-logo.png">
+  <h1 class="header-title">FACILITIES – ONE STOP DASHBOARD</h1>
+</div>
+
+<div class="layout">
+
+<div class="sidebar">
+
+  <h4>INITIATIVE</h4>
+  <a href="index.html">List View</a>
+  <a href="add-initiative.html">Add New Initiative</a>
+  <a href="dashboard.html">Dashboard</a>
+
+  <h4>FINANCIAL</h4>
+  <a href="financial-dashboard.html">Unit Cost Graph</a>
+  <a href="unit-cost-tabular.html">Unit Cost Tabular</a>
+  <a href="financial-summary.html">Financial Performance</a>
+  <a href="financial-monthly-performance.html">Depot Yearly Performance</a>
+  <a href="financial-dashboard-overview.html">Category Wise</a>
+  <a href="financial-dashboard-category.html">Depot Wise</a>
+  <a href="financial-entry.html">Financial Data Entry</a>
+
+  <h4>PEOPLE</h4>
+  <a href="people-employees.html">Competency Tracker</a>
+  <a href="people-admin.html">Employee Admin</a>
+  <a href="people-competency-assignment.html">Competency Assignment</a>
+
+  <a href="#" onclick="logout()" class="logout">Logout</a>
+
+</div>
+<div class="main">
+
+<h2>KPIs Dashboard</h2>
+
+<div class="filter-bar">
+  <label>Terminal Filter:</label>
+  <select id="terminalFilter" onchange="loadKPIs()">
+    <option value="">All Terminals</option>
+    <option>KMR</option><option>CKL</option><option>MCH</option>
+    <option>SKP</option><option>DLP</option><option>TJB</option>
+    <option>BHK</option><option>SSH</option><option>VHR</option>
+    <option>GTI</option><option>MMK</option>
+  </select>
+</div>
+
+<div class="section-title">Operational Summary</div>
+
+<div class="kpi-container">
+  <div class="kpi"><h3 id="total">0</h3><p>Total Initiatives</p></div>
+  <div class="kpi"><h3 id="open">0</h3><p>Open Initiatives</p></div>
+  <div class="kpi"><h3 id="closed">0</h3><p>Closed Initiatives</p></div>
+  <div class="kpi"><h3 id="overdue">0</h3><p>Overdue Initiatives</p></div>
+</div>
+
+<div class="section-title">Financial Summary</div>
+
+<div class="kpi-container">
+  <div class="kpi"><h3 id="cs_realized">0</h3><p>Realized Cost Saving (PKR)</p></div>
+  <div class="kpi"><h3 id="ca_realized">0</h3><p>Realized Cost Avoidance (PKR)</p></div>
+  <div class="kpi"><h3 id="cs_open">0</h3><p>Non-Actualized Cost Saving (PKR)</p></div>
+  <div class="kpi"><h3 id="ca_open">0</h3><p>Non-Actualized Cost Avoidance (PKR)</p></div>
+</div>
+
+<div class="section-title">Analytics</div>
+
+<div class="chart-grid">
+
+  <div class="chart-box">
+    <h3># of Initiatives by Terminal</h3>
+    <canvas id="byTerminal"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <h3>Initiatives by Impact Type</h3>
+    <canvas id="byType"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <h3>Realized Financial Impact by Terminal</h3>
+    <canvas id="financialTerminal"></canvas>
+  </div>
+
+</div>
+
+</div>
+</div>
+
+<script>
+
+Chart.register(ChartDataLabels);
+
+const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function init(){
+ const {data} = await supabaseClient.auth.getSession();
+ if(!data.session) window.location.replace("login.html");
+ loadKPIs();
+}
+init();
+
+async function loadKPIs(){
+
+ const terminal = document.getElementById("terminalFilter").value;
+
+ let query = supabaseClient.from("initiatives").select("*");
+
+ if(terminal){
+   query = query.eq("terminal_name", terminal);
+ }
+
+ const {data} = await query;
+
+ if(!data) return;
+
+ document.getElementById("total").innerText = data.length;
+
+ const open = data.filter(i=>i.status.startsWith("Open")).length;
+ const closed = data.filter(i=>i.status==="Closed").length;
+
+ document.getElementById("open").innerText = open;
+ document.getElementById("closed").innerText = closed;
+
+ const today = new Date().toISOString().split("T")[0];
+
+ const overdue = data.filter(i =>
+   i.target_date &&
+   i.target_date < today &&
+   i.status !== "Closed"
+ ).length;
+
+ document.getElementById("overdue").innerText = overdue;
+
+ const realized = data.filter(i=>i.status==="Closed");
+ const openProjects = data.filter(i=>i.status.startsWith("Open"));
+
+ function sum(type, list){
+   return list
+     .filter(i=>i.impact_type === type)
+     .reduce((a,b)=>a+(parseFloat(b.impact_amount)||0),0);
+ }
+
+ document.getElementById("cs_realized").innerText =
+   sum("Cost Saving (PKR)", realized).toLocaleString();
+
+ document.getElementById("ca_realized").innerText =
+   sum("Cost Avoidance (PKR)", realized).toLocaleString();
+
+ document.getElementById("cs_open").innerText =
+   sum("Cost Saving (PKR)", openProjects).toLocaleString();
+
+ document.getElementById("ca_open").innerText =
+   sum("Cost Avoidance (PKR)", openProjects).toLocaleString();
+
+ buildCharts(data);
+}
+
+function buildCharts(data){
+
+ const terminals = [...new Set(data.map(i => i.terminal_name))];
+
+ let openCounts = [];
+ let closedCounts = [];
+
+ terminals.forEach(t => {
+   const list = data.filter(i => i.terminal_name === t);
+   openCounts.push(list.filter(i => i.status.startsWith("Open")).length);
+   closedCounts.push(list.filter(i => i.status === "Closed").length);
+ });
+
+ new Chart(document.getElementById("byTerminal"), {
+   type: "bar",
+   data: {
+     labels: terminals,
+     datasets: [
+       { label: "Open", data: openCounts, backgroundColor: "#f1c40f" },
+       { label: "Closed", data: closedCounts, backgroundColor: "#76B531" }
+     ]
+   },
+   options: {
+     plugins: {
+       datalabels: { color: "#000", anchor: "end", align: "top" }
+     },
+     scales: { y: { beginAtZero: true } }
+   }
+ });
+
+ const types = {};
+ data.forEach(i => {
+   const t = i.impact_type || "Not Defined";
+   types[t] = (types[t] || 0) + 1;
+ });
+
+ new Chart(document.getElementById("byType"), {
+   type: "bar",
+   data: {
+     labels: Object.keys(types),
+     datasets: [{
+       label: "Number of Initiatives",
+       data: Object.values(types),
+       backgroundColor: "#3498db"
+     }]
+   },
+   options: {
+     plugins: {
+       datalabels: { color: "#000", anchor: "end", align: "top" }
+     },
+     scales: { y: { beginAtZero: true } }
+   }
+ });
+
+ let cs = [];
+ let ca = [];
+
+ terminals.forEach(t => {
+
+   const realized = data.filter(i =>
+     i.terminal_name === t &&
+     i.status === "Closed"
+   );
+
+   cs.push(realized.filter(i => i.impact_type === "Cost Saving (PKR)")
+     .reduce((a,b)=>a+(parseFloat(b.impact_amount)||0),0));
+
+   ca.push(realized.filter(i => i.impact_type === "Cost Avoidance (PKR)")
+     .reduce((a,b)=>a+(parseFloat(b.impact_amount)||0),0));
+ });
+
+ new Chart(document.getElementById("financialTerminal"), {
+   type: "bar",
+   data: {
+     labels: terminals,
+     datasets: [
+       { label: "Cost Saving (PKR)", data: cs, backgroundColor: "#76B531" },
+       { label: "Cost Avoidance (PKR)", data: ca, backgroundColor: "#e67e22" }
+     ]
+   },
+   options: {
+     plugins: {
+       datalabels: {
+         color: "#000",
+         anchor: "end",
+         align: "top",
+         formatter: value => value.toLocaleString()
+       }
+     },
+     scales: { y: { beginAtZero: true } }
+   }
+ });
+
+}
+
+async function logout(){
+ await supabaseClient.auth.signOut();
+ window.location.replace("login.html");
+}
+
+</script>
+
+</body>
+</html>

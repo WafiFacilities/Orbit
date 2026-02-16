@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Monthly Financial Performance (YTD)</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+@font-face { font-family: '72 Condensed'; src: local('72 Condensed'); }
+
+body {
+  font-family:'72 Condensed',Arial;
+  margin:0;
+  background:#f4f6f9;
+}
+
+.header {
+  display:flex;
+  align-items:center;
+  padding:10px 20px;
+  background:white;
+  border-bottom:2px solid #e0e0e0;
+}
+
+.header img { height:40px; margin-right:15px; }
+
+.header-title {
+  font-size:22px;
+  font-weight:bold;
+  text-transform:uppercase;
+}
+
+.layout { display:flex; height:calc(100vh - 62px); }
+
+.sidebar {
+  width:220px;
+  background:#404040;
+  color:white;
+  display:flex;
+  flex-direction:column;
+  padding-top:20px;
+}
+
+.sidebar h4 { padding:10px 20px; }
+.sidebar a { color:white; padding:10px 30px; text-decoration:none; }
+.sidebar a:hover { background:#505050; }
+.sidebar .logout { margin-top:auto; border-top:1px solid #555; }
+
+
+.sidebar a:hover { background:#505050; }
+
+.main { flex:1; padding:20px; overflow-y:auto; }
+
+.filters {
+  display:flex;
+  gap:15px;
+  margin-bottom:20px;
+}
+
+select {
+  padding:6px;
+  border-radius:4px;
+  border:1px solid #ccc;
+  font-family:'72 Condensed';
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+}
+
+th, td {
+  border:1px solid #ddd;
+  padding:8px;
+  text-align:center;
+}
+
+th {
+  background:#76B531;
+  color:white;
+}
+
+.group-header {
+  background:#404040 !important;
+  color:white;
+  font-weight:bold;
+}
+
+.total-row {
+  font-weight:bold;
+  background:#f0f0f0;
+}
+
+.good { background:#d4edda; }
+.bad { background:#f8d7da; }
+
+.note {
+  margin-top:10px;
+  font-style:italic;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <img src="wafi-logo.png">
+  <h1 class="header-title">FACILITIES – ONE STOP DASHBOARD</h1>
+</div>
+
+<div class="layout">
+<div class="sidebar">
+
+  <h4>INITIATIVE</h4>
+  <a href="index.html">List View</a>
+  <a href="add-initiative.html">Add New Initiative</a>
+  <a href="dashboard.html">Dashboard</a>
+
+  <h4>FINANCIAL</h4>
+  <a href="financial-dashboard.html">Unit Cost Graph</a>
+  <a href="unit-cost-tabular.html">Unit Cost Tabular</a>
+  <a href="financial-summary.html">Financial Performance</a>
+  <a href="financial-monthly-performance.html">Depot Yearly Performance</a>
+  <a href="financial-dashboard-overview.html">Category Wise</a>
+  <a href="financial-dashboard-category.html">Depot Wise</a>
+  <a href="financial-entry.html">Financial Data Entry</a>
+
+  <h4>PEOPLE</h4>
+  <a href="people-employees.html">Competency Tracker</a>
+  <a href="people-admin.html">Employee Admin</a>
+  <a href="people-competency-assignment.html">Competency Assignment</a>
+
+  <a href="#" onclick="logout()" class="logout">Logout</a>
+
+</div>
+
+<div class="main">
+
+<h2>Monthly Financial Performance – YTD View</h2>
+
+<div class="filters">
+
+  <select id="yearSelect" onchange="loadTable()">
+    <option>2024</option>
+    <option selected>2025</option>
+    <option>2026</option>
+  </select>
+
+  <select id="depotSelect" onchange="loadTable()">
+    <option value="Total Facilities">Total Facilities</option>
+    <option value="SSH">SH-Shershah SSH</option>
+    <option value="MHK">SH-MHK-Mehmoodkot</option>
+    <option value="CKL">SH-Chaklala CKL</option>
+    <option value="GTI">SH-FBD-Gatti-M.Term</option>
+    <option value="TJB">SH-Tarujabba TJB</option>
+    <option value="KMR">SH-Karachi KMR</option>
+    <option value="SKP">SH-Shikarpur SKP</option>
+    <option value="DLP">SH-Daulatpur DLP</option>
+    <option value="BHK">SH-Bhakkar BKR</option>
+    <option value="VHR">SH-Vehari VHR</option>
+<option value="MCH">SH-Machike MCH</option>
+  </select>
+
+</div>
+
+<div id="tableContainer"></div>
+
+<p class="note">
+I = A/B | J = A/F | K = G/H | L = K/J
+</p>
+
+</div>
+</div>
+
+<script>
+
+const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+function getMonthName(m) {
+  return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m-1];
+}
+
+// SUM function for YTD accumulation
+function sumYTD(data, depot, year, upto) {
+  return data
+    .filter(x => x.depot === depot && x.year === year && x.month <= upto)
+    .reduce((a,b) => a + (b.value || 0), 0);
+}
+
+// FULL YEAR sum
+function sumFY(data, depot, year) {
+  return data
+    .filter(x => x.depot === depot && x.year === year)
+    .reduce((a,b) => a + (b.value || 0), 0);
+}
+
+async function loadTable() {
+
+  const year = parseInt(document.getElementById("yearSelect").value);
+  const depot = document.getElementById("depotSelect").value;
+  const prevYear = year - 1;
+
+  const volCY = await supabaseClient.from("volume_data").select("*").eq("year", year);
+  const volLY = await supabaseClient.from("volume_data").select("*").eq("year", prevYear);
+
+  const dirCY = await supabaseClient.from("direct_cost_data").select("*").eq("year", year);
+  const dirLY = await supabaseClient.from("direct_cost_data").select("*").eq("year", prevYear);
+
+  const indirCY = await supabaseClient.from("indirect_cost_data").select("*").eq("year", year);
+  const indirLY = await supabaseClient.from("indirect_cost_data").select("*").eq("year", prevYear);
+
+  let html = `
+  <table>
+
+  <tr>
+    <th rowspan="2">Month</th>
+    <th colspan="2" class="group-header">Current Year YTD</th>
+    <th colspan="2" class="group-header">Last Year YTD</th>
+    <th colspan="2" class="group-header">Last Full Year</th>
+    <th colspan="4" class="group-header">Computed KPIs</th>
+  </tr>
+
+  <tr>
+    <th>A: Cost</th>
+    <th>B: Volume</th>
+
+    <th>E: Cost</th>
+    <th>F: Volume</th>
+
+    <th>G: Cost</th>
+    <th>H: Volume</th>
+
+    <th>CY UC<br>I = A/B</th>
+    <th>Vol Nor UC<br>J = A/F</th>
+    <th>Last FY UC<br>K = G/H</th>
+    <th>Imp/Dec<br>L = K/J</th>
+  </tr>
+  `;
+
+  // Full year constants
+  const G = sumFY(dirLY.data, depot, prevYear) + sumFY(indirLY.data, depot, prevYear);
+  const H = sumFY(volLY.data, depot, prevYear);
+
+  for(let m=1; m<=12; m++) {
+
+    // YTD Accumulations
+    const A = sumYTD(dirCY.data, depot, year, m) + sumYTD(indirCY.data, depot, year, m);
+    const B = sumYTD(volCY.data, depot, year, m);
+
+    const E = sumYTD(dirLY.data, depot, prevYear, m) + sumYTD(indirLY.data, depot, prevYear, m);
+    const F = sumYTD(volLY.data, depot, prevYear, m);
+
+    const I = B ? (A/B) : null;
+    const J = F ? (A/F) : null;
+    const K = H ? (G/H) : null;
+    const L = (K && J) ? (K/J) : null;
+
+    const colorClass = L ? (L > 1 ? "good" : "bad") : "";
+
+    html += `
+    <tr>
+      <td>${getMonthName(m)}</td>
+      <td>${A.toLocaleString()}</td>
+      <td>${B.toLocaleString()}</td>
+      <td>${E.toLocaleString()}</td>
+      <td>${F.toLocaleString()}</td>
+      <td>${G.toLocaleString()}</td>
+      <td>${H.toLocaleString()}</td>
+      <td>${I ? I.toFixed(2) : "-"}</td>
+      <td>${J ? J.toFixed(2) : "-"}</td>
+      <td>${K ? K.toFixed(2) : "-"}</td>
+      <td class="${colorClass}">${L ? L.toFixed(2) : "-"}</td>
+    </tr>`;
+  }
+
+  html += `</table>`;
+
+  document.getElementById("tableContainer").innerHTML = html;
+}
+
+loadTable();
+
+</script>
+
+</body>
+</html>

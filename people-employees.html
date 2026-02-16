@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>People – Competency Management</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+@font-face { font-family: '72 Condensed'; src: local('72 Condensed'); }
+
+body { font-family:'72 Condensed', Arial; margin:0; background:#f4f6f9; }
+
+/* Employee Name Link */
+.main table a {
+  color: #76B531;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.main table a:hover {
+  text-decoration: underline;
+}
+
+
+.header { display:flex; align-items:center; padding:10px 20px; background:white; border-bottom:2px solid #e0e0e0; }
+.header img { height:40px; margin-right:15px; }
+.header-title { font-size:22px; font-weight:bold; text-transform:uppercase; }
+
+.layout { display:flex; height:calc(100vh - 62px); }
+
+.sidebar {
+  width:220px; background:#404040; color:white;
+  display:flex; flex-direction:column; padding-top:20px;
+}
+.sidebar h4 { padding:10px 20px; margin:0; font-size:14px; }
+.sidebar a { color:white; padding:10px 30px; text-decoration:none; display:block; }
+.sidebar a:hover { background:#505050; }
+.sidebar .logout { margin-top:auto; border-top:1px solid #555; }
+
+.main { flex:1; padding:20px; overflow-y:auto; }
+
+.filters {
+  display:flex;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.filters input, .filters select {
+  padding:6px;
+  border-radius:4px;
+  border:1px solid #ccc;
+  font-family:'72 Condensed';
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+th, td { border:1px solid #ddd; padding:8px; text-align:center; }
+th { background:#76B531; color:white; }
+
+.status-valid { background:#d4edda; }
+.status-expiring { background:#fff3cd; }
+.status-expired { background:#f8d7da; }
+.status-missing { background:#f8d7da; }
+.na-cell { background:#e2e3e5; }
+
+.small-text {
+  font-size:11px;
+  display:block;
+  margin-top:3px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <img src="wafi-logo.png">
+  <h1 class="header-title">FACILITIES – ONE STOP DASHBOARD</h1>
+</div>
+
+<div class="layout">
+
+<div class="sidebar">
+
+  <h4>INITIATIVE</h4>
+  <a href="index.html">List View</a>
+  <a href="add-initiative.html">Add New Initiative</a>
+  <a href="dashboard.html">Dashboard</a>
+
+  <h4>FINANCIAL</h4>
+  <a href="financial-dashboard.html">Unit Cost Graph</a>
+  <a href="unit-cost-tabular.html">Unit Cost Tabular</a>
+  <a href="financial-summary.html">Financial Performance</a>
+  <a href="financial-monthly-performance.html">Depot Yearly Performance</a>
+  <a href="financial-dashboard-overview.html">Category Wise</a>
+  <a href="financial-dashboard-category.html">Depot Wise</a>
+  <a href="financial-entry.html">Financial Data Entry</a>
+
+  <h4>PEOPLE</h4>
+  <a href="people-employees.html">Competency Tracker</a>
+  <a href="people-admin.html">Employee Admin</a>
+  <a href="people-competency-assignment.html">Competency Assignment</a>
+
+  <a href="#" onclick="logout()" class="logout">Logout</a>
+
+</div>
+<div class="main">
+
+<h2>Competency Tracking</h2>
+
+<div class="filters">
+  <input type="text" id="filterName" placeholder="Search Name">
+  <select id="filterDepot">
+    <option value="">All Depots</option>
+  </select>
+  <select id="filterDesignation">
+    <option value="">All Designations</option>
+  </select>
+</div>
+
+<div id="content"></div>
+
+</div>
+</div>
+
+<script>
+const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+let allEmployees = [];
+let competencyTypes = [];
+let employeeCompetencies = [];
+let designationMatrix = [];
+
+function calculateExpiry(completionDate, validityYears){
+  const expiry = new Date(completionDate);
+  expiry.setFullYear(expiry.getFullYear() + validityYears);
+  return expiry.toISOString().split("T")[0];
+}
+
+function calculateStatus(completionDate, validityYears){
+
+  if(!completionDate)
+    return { text:"Not Done", class:"status-missing" };
+
+  const expiryDate = calculateExpiry(completionDate, validityYears);
+  const expiry = new Date(expiryDate);
+  const today = new Date();
+  const twoMonthsBefore = new Date(expiry);
+  twoMonthsBefore.setMonth(twoMonthsBefore.getMonth() - 2);
+
+  if(today > expiry)
+    return { text:"Expired", class:"status-expired", expiry:expiryDate };
+
+  if(today >= twoMonthsBefore)
+    return { text:"Expiring Soon", class:"status-expiring", expiry:expiryDate };
+
+  return { text:"Valid", class:"status-valid", expiry:expiryDate };
+}
+
+async function load(){
+
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  if(!sessionData.session){
+    window.location.replace("login.html");
+    return;
+  }
+
+  const { data: employees } =
+    await supabaseClient.from("employees").select("*").order("depot");
+
+  const { data: compTypes } =
+    await supabaseClient.from("competency_types").select("*");
+
+  const { data: empComp } =
+    await supabaseClient.from("employee_competencies").select("*");
+
+  const { data: matrix } =
+    await supabaseClient.from("designation_competency_matrix").select("*");
+
+  allEmployees = employees;
+  competencyTypes = compTypes;
+  employeeCompetencies = empComp;
+  designationMatrix = matrix;
+
+  populateFilters();
+  renderTable();
+}
+
+function populateFilters(){
+  const depotSelect = document.getElementById("filterDepot");
+  const desigSelect = document.getElementById("filterDesignation");
+
+  const depots = [...new Set(allEmployees.map(e=>e.depot))];
+  const designations = [...new Set(allEmployees.map(e=>e.designation))];
+
+  depots.forEach(d=>{
+    depotSelect.innerHTML += `<option value="${d}">${d}</option>`;
+  });
+
+  designations.forEach(d=>{
+    desigSelect.innerHTML += `<option value="${d}">${d}</option>`;
+  });
+}
+
+function renderTable(){
+
+  const nameFilter = document.getElementById("filterName").value.toLowerCase();
+  const depotFilter = document.getElementById("filterDepot").value;
+  const desigFilter = document.getElementById("filterDesignation").value;
+
+  const employees = allEmployees.filter(emp =>
+    emp.name.toLowerCase().includes(nameFilter) &&
+    (!depotFilter || emp.depot === depotFilter) &&
+    (!desigFilter || emp.designation === desigFilter)
+  );
+
+  let html = "<table><tr>";
+  html += "<th>Name</th><th>Depot</th><th>Designation</th><th>Role Start</th>";
+
+  competencyTypes.forEach(c=>{
+    html += `<th>${c.name}</th>`;
+  });
+
+  html += "</tr>";
+
+  employees.forEach(emp=>{
+
+    html += "<tr>";
+    html += `<td><a href="people-employee-detail.html?id=${emp.id}">${emp.name}</a></td>`;
+    html += `<td>${emp.depot}</td>`;
+    html += `<td>${emp.designation}</td>`;
+    html += `<td>${emp.role_start_date || ''}</td>`;
+
+    competencyTypes.forEach(c=>{
+
+      const record = employeeCompetencies.find(ec =>
+        ec.employee_id === emp.id &&
+        ec.competency_type_id === c.id
+      );
+
+      const required = designationMatrix.find(m =>
+        m.designation?.trim() === emp.designation?.trim() &&
+        m.competency_type_id === c.id &&
+        m.is_applicable === true
+      );
+
+      if(record){
+
+        const status = calculateStatus(record.completion_date, c.validity_years);
+
+        let secondLine = "";
+
+        if(status.text === "Valid")
+          secondLine = `Completed: ${record.completion_date}`;
+
+        if(status.text === "Expiring Soon")
+          secondLine = `Expires On: ${status.expiry}`;
+
+        if(status.text === "Expired")
+          secondLine = `Expired On: ${status.expiry}`;
+
+        html += `<td class="${status.class}">
+          ${status.text}
+          <span class="small-text">${secondLine}</span>
+        </td>`;
+
+        return;
+      }
+
+      if(required){
+
+        html += `<td class="status-missing">
+          Not Done
+          <span class="small-text">
+            Target Date: -
+          </span>
+        </td>`;
+        return;
+      }
+
+      html += `<td class="na-cell">N/A</td>`;
+
+    });
+
+    html += "</tr>";
+  });
+
+  html += "</table>";
+  document.getElementById("content").innerHTML = html;
+}
+
+document.getElementById("filterName")
+  .addEventListener("input", renderTable);
+
+document.getElementById("filterDepot")
+  .addEventListener("change", renderTable);
+
+document.getElementById("filterDesignation")
+  .addEventListener("change", renderTable);
+
+async function logout(){
+  await supabaseClient.auth.signOut();
+  window.location.replace("login.html");
+}
+
+load();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+body {
+  font-family: Arial;
+  padding: 20px;
+}
+
+input, textarea, select {
+  width: 300px;
+  margin: 5px 0;
+}
+
+table {
+  margin-top: 15px;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 8px;
+}

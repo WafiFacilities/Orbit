@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Employee Competency Detail</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+@font-face { font-family: '72 Condensed'; src: local('72 Condensed'); }
+
+body { font-family:'72 Condensed', Arial; margin:0; background:#f4f6f9; }
+
+.header { display:flex; align-items:center; padding:10px 20px; background:white; border-bottom:2px solid #e0e0e0; }
+.header img { height:40px; margin-right:15px; }
+.header-title { font-size:22px; font-weight:bold; text-transform:uppercase; }
+
+.layout { display:flex; height:calc(100vh - 62px); }
+
+.sidebar {
+  width:220px; background:#404040; color:white;
+  display:flex; flex-direction:column; padding-top:20px;
+}
+.sidebar h4 { padding:10px 20px; margin:0; }
+.sidebar a { color:white; padding:10px 30px; text-decoration:none; display:block; }
+.sidebar a:hover { background:#505050; }
+.sidebar .logout { margin-top:auto; border-top:1px solid #555; }
+
+.main { flex:1; padding:20px; overflow-y:auto; }
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+th, td { border:1px solid #ddd; padding:8px; text-align:center; }
+th { background:#76B531; color:white; }
+
+button {
+  padding:5px 10px;
+  border:none;
+  border-radius:4px;
+  cursor:pointer;
+  background:#76B531;
+  color:white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <img src="wafi-logo.png">
+  <h1 class="header-title">FACILITIES – ONE STOP DASHBOARD</h1>
+</div>
+
+<div class="layout">
+
+<div class="sidebar">
+  <h4>PEOPLE</h4>
+  <a href="people-employees.html">Back to Competency List</a>
+  <a href="#" onclick="logout()" class="logout">Logout</a>
+</div>
+
+<div class="main">
+<h2 id="empName">Employee Detail</h2>
+<div id="detailTable"></div>
+</div>
+
+</div>
+
+<script>
+const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+function getEmployeeId(){
+  const params = new URLSearchParams(window.location.search);
+  return params.get("id");
+}
+
+async function isSuperUser(email){
+  const { data } = await supabaseClient
+    .from('superusers')
+    .select('*')
+    .eq('email', email.toLowerCase().trim());
+  return data.length > 0;
+}
+
+async function load(){
+
+  const empId = getEmployeeId();
+
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  if(!sessionData.session) window.location.replace("login.html");
+
+  const userEmail = sessionData.session.user.email;
+  const superUser = await isSuperUser(userEmail);
+
+  const { data: employee } = await supabaseClient
+    .from("employees")
+    .select("*")
+    .eq("id", empId)
+    .single();
+
+  document.getElementById("empName").innerText =
+    employee.name + " – Competency Detail";
+
+  const { data: competencyTypes } =
+    await supabaseClient.from("competency_types").select("*");
+
+  const { data: records } =
+    await supabaseClient
+      .from("employee_competencies")
+      .select("*")
+      .eq("employee_id", empId);
+
+  let html = `
+  <table>
+  <tr>
+    <th>Training</th>
+    <th>Completion Date</th>
+    <th>Expiry Date</th>
+    <th>Target Date</th>
+    <th>Assessed By</th>
+    <th>Remarks</th>
+    <th>Created At</th>
+    <th>Save</th>
+  </tr>`;
+
+  competencyTypes.forEach(c => {
+
+    const rec = records.find(r =>
+      r.competency_type_id === c.id
+    ) || {};
+
+    const canEdit =
+      (employee.email?.toLowerCase().trim() === userEmail?.toLowerCase().trim())
+      || superUser;
+
+    html += `
+    <tr>
+      <td>${c.name}</td>
+
+      <td>
+        <input type="date"
+          id="completion_${c.id}"
+          value="${rec.completion_date || ''}"
+          ${canEdit ? '' : 'disabled'}>
+      </td>
+
+      <td>
+        ${rec.expiry_date || ''}
+      </td>
+
+      <td>
+        <input type="date"
+          id="target_${c.id}"
+          value="${rec.target_date || ''}"
+          ${superUser ? '' : 'disabled'}>
+      </td>
+
+      <td>
+        <input type="text"
+          id="assessed_${c.id}"
+          value="${rec.assessed_by || ''}"
+          ${canEdit ? '' : 'disabled'}>
+      </td>
+
+      <td>
+        <input type="text"
+          id="remarks_${c.id}"
+          value="${rec.remarks || ''}"
+          ${canEdit ? '' : 'disabled'}>
+      </td>
+
+      <td>${rec.created_at ? rec.created_at.split("T")[0] : ''}</td>
+
+      <td>
+        ${canEdit ? `
+        <button onclick="save(${empId}, ${c.id})">
+          Save
+        </button>` : ''}
+      </td>
+    </tr>`;
+  });
+
+  html += "</table>";
+  document.getElementById("detailTable").innerHTML = html;
+}
+
+async function save(empId, compId){
+
+  const completion = document.getElementById(`completion_${compId}`).value;
+  const target = document.getElementById(`target_${compId}`).value;
+  const assessed = document.getElementById(`assessed_${compId}`).value;
+  const remarks = document.getElementById(`remarks_${compId}`).value;
+
+  // 🔥 AUTO CALCULATE EXPIRY
+  const { data: comp } = await supabaseClient
+    .from("competency_types")
+    .select("validity_years")
+    .eq("id", compId)
+    .single();
+
+  let expiry = null;
+
+  if (completion && comp?.validity_years) {
+    const d = new Date(completion);
+    d.setFullYear(d.getFullYear() + comp.validity_years);
+    expiry = d.toISOString().split("T")[0];
+  }
+
+  const { error } = await supabaseClient
+    .from("employee_competencies")
+    .upsert(
+      {
+        employee_id: parseInt(empId),
+        competency_type_id: parseInt(compId),
+        completion_date: completion || null,
+        expiry_date: expiry,
+        target_date: target || null,
+        assessed_by: assessed || null,
+        remarks: remarks || null
+      },
+      { onConflict: 'employee_id,competency_type_id' }
+    );
+
+  if (error) {
+    console.log(error);
+    alert(error.message);
+    return;
+  }
+
+  alert("Saved");
+  load();
+}
+
+async function logout(){
+  await supabaseClient.auth.signOut();
+  window.location.replace("login.html");
+}
+
+load();
+
+</script>
+
+</body>
+</html>

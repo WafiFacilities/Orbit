@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Financial Comparative Summary</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+@font-face { font-family: '72 Condensed'; src: local('72 Condensed'); }
+
+body { font-family:'72 Condensed',Arial; margin:0; background:#f4f6f9; }
+
+.header { display:flex; align-items:center; padding:10px 20px; background:white; border-bottom:2px solid #e0e0e0; }
+.header img { height:40px; margin-right:15px; }
+.header-title { font-size:22px; font-weight:bold; text-transform:uppercase; }
+
+.layout { display:flex; height:calc(100vh - 62px); }
+
+.sidebar {
+  width:220px;
+  background:#404040;
+  color:white;
+  display:flex;
+  flex-direction:column;
+  padding-top:20px;
+}
+
+.sidebar h4 { padding:10px 20px; }
+.sidebar a { color:white; padding:10px 30px; text-decoration:none; }
+.sidebar a:hover { background:#505050; }
+.sidebar .logout { margin-top:auto; border-top:1px solid #555; }
+
+
+.main { flex:1; padding:20px; }
+
+.filters { display:flex; gap:15px; margin-bottom:20px; }
+
+select { padding:6px; border-radius:4px; border:1px solid #ccc; font-family:'72 Condensed'; }
+
+table { width:100%; border-collapse:collapse; background:white; }
+
+th, td { border:1px solid #ddd; padding:8px; text-align:center; }
+
+th { background:#76B531; color:white; }
+
+.group-header { background:#404040 !important; color:white; font-weight:bold; }
+
+.total-row { font-weight:bold; background:#f0f0f0; }
+
+.good { background:#d4edda; }
+.bad { background:#f8d7da; }
+
+.note { margin-top:10px; font-style:italic; }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <img src="wafi-logo.png">
+  <h1 class="header-title">FACILITIES – ONE STOP DASHBOARD</h1>
+</div>
+
+<div class="layout">
+
+<div class="sidebar">
+
+  <h4>INITIATIVE</h4>
+  <a href="index.html">List View</a>
+  <a href="add-initiative.html">Add New Initiative</a>
+  <a href="dashboard.html">Dashboard</a>
+
+  <h4>FINANCIAL</h4>
+  <a href="financial-dashboard.html">Unit Cost Graph</a>
+  <a href="unit-cost-tabular.html">Unit Cost Tabular</a>
+  <a href="financial-summary.html">Financial Performance</a>
+  <a href="financial-monthly-performance.html">Depot Yearly Performance</a>
+  <a href="financial-dashboard-overview.html">Category Wise</a>
+  <a href="financial-dashboard-category.html">Depot Wise</a>
+  <a href="financial-entry.html">Financial Data Entry</a>
+
+  <h4>PEOPLE</h4>
+  <a href="people-employees.html">Competency Tracker</a>
+  <a href="people-admin.html">Employee Admin</a>
+  <a href="people-competency-assignment.html">Competency Assignment</a>
+
+  <a href="#" onclick="logout()" class="logout">Logout</a>
+
+</div>
+<div class="main">
+
+<h2>Comparative Financial Summary</h2>
+
+<div class="filters">
+  <select id="yearSelect" onchange="loadTable()">
+    <option>2024</option>
+    <option selected>2025</option>
+    <option>2026</option>
+  </select>
+
+  <select id="monthSelect" onchange="loadTable()">
+    <option value="1">Jan</option>
+    <option value="2">Feb</option>
+    <option value="3">Mar</option>
+    <option value="4">Apr</option>
+    <option value="5">May</option>
+    <option value="6">Jun</option>
+    <option value="7">Jul</option>
+    <option value="8">Aug</option>
+    <option value="9">Sep</option>
+    <option value="10">Oct</option>
+    <option value="11" selected>Nov</option>
+    <option value="12">Dec</option>
+  </select>
+</div>
+
+<div id="tableContainer"></div>
+
+<p class="note">
+I = A/B | J = A/F | K = G/H | L = K/J
+</p>
+
+</div>
+</div>
+
+<script>
+const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+const depots = [
+  { name: "SH-Shershah SSH", code: "SSH" },
+  { name: "SH-MHK-Mehmoodkot", code: "MCH" },
+  { name: "SH-Chaklala CKL", code: "CKL" },
+  { name: "SH-FBD-Gatti-M.Term", code: "GTI" },
+  { name: "SH-Tarujabba TJB", code: "TJB" },
+  { name: "SH-Karachi KMR", code: "KMR" },
+  { name: "SH-Shikarpur SKP", code: "SKP" },
+  { name: "SH-Daulatpur DLP", code: "DLP" },
+  { name: "SH-Bhakkar BKR", code: "BHK" },
+  { name: "SH-Vehari VHR", code: "VHR" },
+  { name: "SH-Machike MCH", code: "MCH" }
+];
+
+function sum(data, depot, year, upto) {
+  return data.filter(x => x.depot === depot && x.year === year && x.month <= upto)
+             .reduce((a,b) => a + (b.value || 0), 0);
+}
+
+function sumFY(data, depot, year) {
+  return data.filter(x => x.depot === depot && x.year === year)
+             .reduce((a,b) => a + (b.value || 0), 0);
+}
+
+async function loadTable() {
+
+  const year = parseInt(yearSelect.value);
+  const month = parseInt(monthSelect.value);
+  const prevYear = year - 1;
+
+  const volCY = await supabaseClient.from("volume_data").select("*").eq("year", year);
+  const volLY = await supabaseClient.from("volume_data").select("*").eq("year", prevYear);
+
+  const dirCY = await supabaseClient.from("direct_cost_data").select("*").eq("year", year);
+  const dirLY = await supabaseClient.from("direct_cost_data").select("*").eq("year", prevYear);
+
+  const indirCY = await supabaseClient.from("indirect_cost_data").select("*").eq("year", year);
+  const indirLY = await supabaseClient.from("indirect_cost_data").select("*").eq("year", prevYear);
+
+  let html = `<table>
+
+  <tr>
+    <th rowspan="2">Terminal</th>
+    <th colspan="2" class="group-header">Current Year YTD</th>
+    <th colspan="2" class="group-header">Last Year YTD</th>
+    <th colspan="2" class="group-header">Last Full Year</th>
+    <th colspan="4" class="group-header">Computed KPIs</th>
+  </tr>
+
+  <tr>
+    <th>A: Cost</th>
+    <th>B: Volume</th>
+
+    <th>E: Cost</th>
+    <th>F: Volume</th>
+
+    <th>G: Cost</th>
+    <th>H: Volume</th>
+
+    <th>CY UC<br><span style="font-size:12px">I = A/B</span></th>
+    <th>Vol Nor UC<br><span style="font-size:12px">J = A/F</span></th>
+    <th>Last FY UC<br><span style="font-size:12px">K = G/H</span></th>
+    <th>Imp/Dec<br><span style="font-size:12px">L = K/J</span></th>
+  </tr>`;
+
+  for(const depot of depots){
+
+    const code = depot.code;
+
+    const A = sum(dirCY.data, code, year, month) + sum(indirCY.data, code, year, month);
+    const B = sum(volCY.data, code, year, month);
+
+    const E = sum(dirLY.data, code, prevYear, month) + sum(indirLY.data, code, prevYear, month);
+    const F = sum(volLY.data, code, prevYear, month);
+
+    const G = sumFY(dirLY.data, code, prevYear) + sumFY(indirLY.data, code, prevYear);
+    const H = sumFY(volLY.data, code, prevYear);
+
+    const I = B ? (A/B) : null;
+    const J = F ? (A/F) : null;
+    const K = H ? (G/H) : null;
+    const L = (K && J) ? (K/J) : null;
+
+    const colorClass = L ? (L > 1 ? "good" : "bad") : "";
+
+    html += `<tr>
+      <td>${depot.name}</td>
+      <td>${A.toLocaleString()}</td>
+      <td>${B.toLocaleString()}</td>
+      <td>${E.toLocaleString()}</td>
+      <td>${F.toLocaleString()}</td>
+      <td>${G.toLocaleString()}</td>
+      <td>${H.toLocaleString()}</td>
+      <td>${I ? I.toFixed(2) : "-"}</td>
+      <td>${J ? J.toFixed(2) : "-"}</td>
+      <td>${K ? K.toFixed(2) : "-"}</td>
+      <td class="${colorClass}">${L ? L.toFixed(2) : "-"}</td>
+    </tr>`;
+  }
+
+  const tf = "Total Facilities";
+
+  const A = sum(dirCY.data, tf, year, month) + sum(indirCY.data, tf, year, month);
+  const B = sum(volCY.data, tf, year, month);
+
+  const E = sum(dirLY.data, tf, prevYear, month) + sum(indirLY.data, tf, prevYear, month);
+  const F = sum(volLY.data, tf, prevYear, month);
+
+  const G = sumFY(dirLY.data, tf, prevYear) + sumFY(indirLY.data, tf, prevYear);
+  const H = sumFY(volLY.data, tf, prevYear);
+
+  const I = B ? (A/B) : null;
+  const J = F ? (A/F) : null;
+  const K = H ? (G/H) : null;
+  const L = (K && J) ? (K/J) : null;
+
+  html += `<tr class="total-row">
+    <td>TOTAL FACILITIES</td>
+    <td>${A.toLocaleString()}</td>
+    <td>${B.toLocaleString()}</td>
+    <td>${E.toLocaleString()}</td>
+    <td>${F.toLocaleString()}</td>
+    <td>${G.toLocaleString()}</td>
+    <td>${H.toLocaleString()}</td>
+    <td>${I ? I.toFixed(2) : "-"}</td>
+    <td>${J ? J.toFixed(2) : "-"}</td>
+    <td>${K ? K.toFixed(2) : "-"}</td>
+    <td class="${L>1?'good':'bad'}">${L ? L.toFixed(2) : "-"}</td>
+  </tr>`;
+
+  tableContainer.innerHTML = html + "</table>";
+}
+
+loadTable();
+
+</script>
+
+</body>
+</html>
