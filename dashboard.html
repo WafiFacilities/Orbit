@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Facilities Orbit – Executive Dashboard</title>
+<title>Facilities Orbit — Executive Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -26,40 +27,53 @@ body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 .main{flex:1;padding:20px;overflow-y:auto;}
 
 .section-title{
-margin-top:25px;margin-bottom:10px;
-font-size:18px;font-weight:bold;color:#404040;
-border-bottom:2px solid #76B531;padding-bottom:5px;
+margin-top:25px;
+margin-bottom:10px;
+font-size:18px;
+font-weight:bold;
+border-bottom:2px solid #76B531;
+padding-bottom:4px;
 }
 
-.kpi-container{
+.kpi-grid{
 display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:15px;margin-bottom:20px;
+grid-template-columns:repeat(5,1fr);
+gap:12px;
 }
 
 .kpi{
-background:white;padding:15px;border-radius:6px;
+background:white;
+padding:14px;
+border-radius:6px;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 text-align:center;
 }
 
-.kpi h3{margin:0;color:#76B531;font-size:22px;}
+.kpi h3{margin:0;color:#76B531;}
+.kpi small{color:#777;}
 
 .chart-grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(420px,1fr));
-gap:20px;
+gap:18px;
 }
 
 .chart-box{
-background:white;padding:15px;border-radius:6px;
+background:white;
+padding:15px;
+border-radius:6px;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
+height:420px;
 }
 
-.filter-bar{margin-bottom:20px;}
-.filter-bar select{padding:6px;border-radius:4px;border:1px solid #ccc;}
+.filter-bar{margin-bottom:15px;}
+select{padding:6px;border-radius:4px;border:1px solid #ccc;}
 
-table{width:100%;border-collapse:collapse;}
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+}
 th,td{padding:8px;border:1px solid #ddd;text-align:center;}
 th{background:#76B531;color:white;}
 </style>
@@ -69,7 +83,7 @@ th{background:#76B531;color:white;}
 
 <div class="header">
 <img src="wafi-logo.png">
-<h1 class="header-title">FACILITIES – ONE STOP DASHBOARD</h1>
+<h1 class="header-title">FACILITIES ORBIT — EXECUTIVE DASHBOARD</h1>
 </div>
 
 <div class="layout">
@@ -84,68 +98,61 @@ th{background:#76B531;color:white;}
 
 <div class="main">
 
-<h2>Executive Dashboard</h2>
+<h2>Executive KPIs</h2>
 
 <div class="filter-bar">
 Terminal:
-<select id="terminalFilter" onchange="loadKPIs()">
-<option value="">All</option>
-<option>KMR</option><option>CKL</option><option>MCH</option>
-<option>SKP</option><option>DLP</option><option>TJB</option>
-<option>BHK</option><option>SSH</option><option>VHR</option>
-<option>GTI</option><option>MMK</option>
-</select>
+<select id="terminalFilter"></select>
 
 Year:
-<select id="yearFilter" onchange="loadKPIs()">
-<option value="">All</option>
-<option>2025</option>
-<option>2026</option>
-<option>2027</option>
-<option>2028</option>
-<option>2029</option>
-<option>2030</option>
-</select>
+<select id="yearFilter"></select>
 </div>
 
 <div class="section-title">Operational Summary</div>
 
-<div class="kpi-container">
-<div class="kpi"><h3 id="total">0</h3>Total</div>
-<div class="kpi"><h3 id="underReview">0</h3>Under Review</div>
-<div class="kpi"><h3 id="open">0</h3>Open</div>
-<div class="kpi"><h3 id="closed">0</h3>Closed</div>
+<div class="kpi-grid">
+<div class="kpi"><h3 id="k_total">0</h3><small>Total</small></div>
+<div class="kpi"><h3 id="k_review">0</h3><small>Under Review</small></div>
+<div class="kpi"><h3 id="k_open">0</h3><small>Open</small></div>
+<div class="kpi"><h3 id="k_closed">0</h3><small>Closed</small></div>
+<div class="kpi"><h3 id="k_overdue">0</h3><small>Overdue</small></div>
 </div>
 
-<div class="section-title">Impact Summary</div>
+<div class="section-title">Impact (Realized vs Pipeline)</div>
 
-<div class="kpi-container">
-<div class="kpi"><h3 id="cs">0</h3>Cost Saving (PKR)</div>
-<div class="kpi"><h3 id="ca">0</h3>Cost Avoidance (PKR)</div>
-<div class="kpi"><h3 id="kt">0</h3>Capacity Enhancement (KT)</div>
-<div class="kpi"><h3 id="g2g">0</h3>G2G Improvement (Min)</div>
+<div class="kpi-grid">
+<div class="kpi"><h3 id="cs_r">0</h3><small>Cost Saving Realized</small></div>
+<div class="kpi"><h3 id="cs_p">0</h3><small>Cost Saving Pipeline</small></div>
+<div class="kpi"><h3 id="ca_r">0</h3><small>Cost Avoidance Realized</small></div>
+<div class="kpi"><h3 id="ca_p">0</h3><small>Cost Avoidance Pipeline</small></div>
+<div class="kpi"><h3 id="g2g_r">0</h3><small>G2G Realized</small></div>
+<div class="kpi"><h3 id="g2g_p">0</h3><small>G2G Pipeline</small></div>
+<div class="kpi"><h3 id="cap_r">0</h3><small>Capacity Realized</small></div>
+<div class="kpi"><h3 id="cap_p">0</h3><small>Capacity Pipeline</small></div>
 </div>
 
 <div class="section-title">Analytics</div>
 
 <div class="chart-grid">
-
-<div class="chart-box"><h3>Realized vs Pipeline</h3><canvas id="gauge"></canvas></div>
-<div class="chart-box"><h3>Impact Trend by Year</h3><canvas id="trend"></canvas></div>
-<div class="chart-box"><h3>Stage Funnel</h3><canvas id="funnel"></canvas></div>
-<div class="chart-box"><h3>Live Progress Heatmap</h3><canvas id="heatmap"></canvas></div>
-
+<div class="chart-box"><canvas id="pipelineChart"></canvas></div>
+<div class="chart-box"><canvas id="trendChart"></canvas></div>
+<div class="chart-box"><canvas id="funnelChart"></canvas></div>
+<div class="chart-box"><canvas id="heatmapChart"></canvas></div>
 </div>
 
 <div class="section-title">Terminal Ranking</div>
-<div class="chart-box">
-<table id="ranking">
+<table>
 <thead>
-<tr><th>Rank</th><th>Terminal</th><th>Total Impact</th><th>Closed</th></tr>
+<tr>
+<th>Terminal</th>
+<th>Cost Saving (PKR)</th>
+<th>Cost Avoidance (PKR)</th>
+<th>G2G (Minutes)</th>
+<th>Capacity (KT)</th>
+</tr>
 </thead>
-<tbody></tbody>
+<tbody id="rankingTable"></tbody>
 </table>
-</div>
 
 </div>
 </div>
@@ -153,135 +160,181 @@ Year:
 <script>
 Chart.register(ChartDataLabels);
 
-const supabase=supabase.createClient(
-"https://kqhbvmqxrwwspopwckah.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
+const supabaseClient = window.supabase.createClient(
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8",
+"YOUR_PUBLIC_KEY"
 );
 
-async function loadKPIs(){
+let allData=[];
+let charts=[];
 
-const terminal=terminalFilter.value;
-const year=yearFilter.value;
+function destroyCharts(){
+charts.forEach(c=>c.destroy());
+charts=[];
+}
 
-let query=supabase.from("initiatives").select("*");
+async function init(){
 
-if(terminal) query=query.eq("terminal_name",terminal);
-if(year) query=query.eq("year",year);
+const {data}=await supabaseClient.auth.getSession();
+if(!data.session) location="login.html";
 
-const {data}=await query;
-if(!data) return;
+const {data:rows}=await supabaseClient.from("initiatives").select("*");
+allData=rows;
 
-/* KPI */
-total.innerText=data.length;
-underReview.innerText=data.filter(i=>i.status==="Under Review").length;
-open.innerText=data.filter(i=>i.status.startsWith("Open")).length;
-closed.innerText=data.filter(i=>i.status==="Closed").length;
+populateFilters();
+render();
+}
 
-/* Impact totals */
-const sum=t=>data.filter(i=>i.impact_type===t)
+function populateFilters(){
+
+const terminals=[...new Set(allData.map(i=>i.terminal_name))];
+const years=[...new Set(allData.map(i=>i.year))].sort();
+
+terminalFilter.innerHTML=`<option value="">All</option>`+
+terminals.map(t=>`<option>${t}</option>`).join("");
+
+yearFilter.innerHTML=`<option value="">All</option>`+
+years.map(y=>`<option>${y}</option>`).join("");
+}
+
+function filtered(){
+return allData.filter(i=>
+(!terminalFilter.value||i.terminal_name===terminalFilter.value)&&
+(!yearFilter.value||i.year==yearFilter.value)
+);
+}
+
+function sum(list,type){
+return list.filter(i=>i.impact_type===type)
 .reduce((a,b)=>a+(parseFloat(b.impact_amount)||0),0);
+}
 
-cs.innerText=sum("Cost Saving (PKR)").toLocaleString();
-ca.innerText=sum("Cost Avoidance (PKR)").toLocaleString();
-kt.innerText=sum("Capacity Enhancement (KT)").toLocaleString();
-g2g.innerText=sum("G2G Improvement (Minutes)").toLocaleString();
+function render(){
 
-buildGauge(data);
+destroyCharts();
+
+const data=filtered();
+const today=new Date().toISOString().split("T")[0];
+
+k_total.innerText=data.length;
+k_review.innerText=data.filter(i=>i.status==="Under Review").length;
+k_open.innerText=data.filter(i=>i.status.startsWith("Open")).length;
+k_closed.innerText=data.filter(i=>i.status==="Closed").length;
+k_overdue.innerText=data.filter(i=>i.target_date && i.target_date<today && i.status!=="Closed").length;
+
+const realized=data.filter(i=>i.status==="Closed");
+const pipeline=data.filter(i=>i.status!=="Closed" && i.status!=="Dropped");
+
+cs_r.innerText=sum(realized,"Cost Saving (PKR)").toLocaleString();
+cs_p.innerText=sum(pipeline,"Cost Saving (PKR)").toLocaleString();
+ca_r.innerText=sum(realized,"Cost Avoidance (PKR)").toLocaleString();
+ca_p.innerText=sum(pipeline,"Cost Avoidance (PKR)").toLocaleString();
+g2g_r.innerText=sum(realized,"G2G Improvement (Minutes)").toLocaleString();
+g2g_p.innerText=sum(pipeline,"G2G Improvement (Minutes)").toLocaleString();
+cap_r.innerText=sum(realized,"Capacity Enhancement (KT)").toLocaleString();
+cap_p.innerText=sum(pipeline,"Capacity Enhancement (KT)").toLocaleString();
+
+buildPipelineChart(realized,pipeline);
 buildTrend(data);
 buildFunnel(data);
-buildRanking(data);
 buildHeatmap(data);
+buildRanking(realized);
 }
 
-/* GAUGE */
-function buildGauge(data){
-const realized=data.filter(i=>i.status==="Closed")
-.reduce((a,b)=>a+(parseFloat(b.impact_amount)||0),0);
-
-const pipeline=data.filter(i=>i.status!=="Closed"&&i.status!=="Dropped")
-.reduce((a,b)=>a+(parseFloat(b.impact_amount)||0),0);
-
-new Chart(gauge,{
-type:"doughnut",
-data:{labels:["Realized","Pipeline"],
-datasets:[{data:[realized,pipeline],
-backgroundColor:["#76B531","#f39c12"]}]},
-options:{cutout:"70%"}
-});
+function buildPipelineChart(r,p){
+charts.push(new Chart(pipelineChart,{
+type:"bar",
+data:{
+labels:["Cost Saving","Cost Avoidance","G2G","Capacity"],
+datasets:[
+{label:"Realized",data:[
+sum(r,"Cost Saving (PKR)"),
+sum(r,"Cost Avoidance (PKR)"),
+sum(r,"G2G Improvement (Minutes)"),
+sum(r,"Capacity Enhancement (KT)")
+]},
+{label:"Pipeline",data:[
+sum(p,"Cost Saving (PKR)"),
+sum(p,"Cost Avoidance (PKR)"),
+sum(p,"G2G Improvement (Minutes)"),
+sum(p,"Capacity Enhancement (KT)")
+]}
+]}
+}));
 }
 
-/* TREND */
 function buildTrend(data){
+
 const years=[...new Set(data.map(i=>i.year))].sort();
-const totals=years.map(y=>data.filter(i=>i.year===y)
+const vals=years.map(y=>data.filter(i=>i.year==y && i.status==="Closed")
 .reduce((a,b)=>a+(parseFloat(b.impact_amount)||0),0));
 
-new Chart(trend,{
+charts.push(new Chart(trendChart,{
 type:"line",
-data:{labels:years,datasets:[{data:totals,borderColor:"#76B531"}]}
-});
+data:{labels:years,datasets:[{label:"Realized Impact",data:vals}]}
+}));
 }
 
-/* FUNNEL */
 function buildFunnel(data){
-const stages=["Under Review","Open - Initiated","Open - Under MOC","Open - Under Execution","Closed"];
-const counts=stages.map(s=>data.filter(i=>i.status===s).length);
 
-new Chart(funnel,{
+const stages=["Under Review","Open - Initiated","Open - Under Execution","Closed"];
+const vals=stages.map(s=>data.filter(i=>i.status===s).length);
+
+charts.push(new Chart(funnelChart,{
 type:"bar",
-data:{labels:stages,datasets:[{data:counts,backgroundColor:"#3498db"}]},
-options:{indexAxis:"y"}
-});
+data:{labels:stages,datasets:[{data:vals}]}
+}));
 }
 
-/* RANKING */
-function buildRanking(data){
+function buildHeatmap(data){
+
 const terminals=[...new Set(data.map(i=>i.terminal_name))];
+const statuses=["Under Review","Open - Initiated","Open - Under Execution","Closed"];
 
-const ranking=terminals.map(t=>{
+const matrix=terminals.map(t=>statuses.map(s=>
+data.filter(i=>i.terminal_name===t && i.status===s).length));
+
+charts.push(new Chart(heatmapChart,{
+type:"bar",
+data:{
+labels:statuses,
+datasets:terminals.map((t,i)=>({
+label:t,
+data:matrix[i],
+stack:"x"
+}))
+},
+options:{scales:{x:{stacked:true},y:{stacked:true}}}
+}));
+}
+
+function buildRanking(data){
+
+const terminals=[...new Set(data.map(i=>i.terminal_name))];
+rankingTable.innerHTML="";
+
+terminals.forEach(t=>{
 const list=data.filter(i=>i.terminal_name===t);
-return{
-terminal:t,
-impact:list.reduce((a,b)=>a+(parseFloat(b.impact_amount)||0),0),
-closed:list.filter(i=>i.status==="Closed").length
-};
-}).sort((a,b)=>b.impact-a.impact);
-
-const tbody=document.querySelector("#ranking tbody");
-tbody.innerHTML="";
-ranking.forEach((r,i)=>{
-tbody.innerHTML+=`<tr>
-<td>${i+1}</td>
-<td>${r.terminal}</td>
-<td>${r.impact.toLocaleString()}</td>
-<td>${r.closed}</td>
+rankingTable.innerHTML+=`
+<tr>
+<td>${t}</td>
+<td>${sum(list,"Cost Saving (PKR)").toLocaleString()}</td>
+<td>${sum(list,"Cost Avoidance (PKR)").toLocaleString()}</td>
+<td>${sum(list,"G2G Improvement (Minutes)").toLocaleString()}</td>
+<td>${sum(list,"Capacity Enhancement (KT)").toLocaleString()}</td>
 </tr>`;
 });
 }
 
-/* HEATMAP */
-function buildHeatmap(data){
-const terminals=[...new Set(data.map(i=>i.terminal_name))];
-const stages=[...new Set(data.map(i=>i.status))];
-
-const datasets=stages.map(stage=>({
-label:stage,
-data:terminals.map(t=>data.filter(i=>i.terminal_name===t&&i.status===stage).length)
-}));
-
-new Chart(heatmap,{
-type:"bar",
-data:{labels:terminals,datasets:datasets},
-options:{scales:{x:{stacked:true},y:{stacked:true}}}
-});
-}
+terminalFilter.onchange=render;
+yearFilter.onchange=render;
 
 async function logout(){
-await supabase.auth.signOut();
+await supabaseClient.auth.signOut();
 location="login.html";
 }
 
-loadKPIs();
+init();
 </script>
 </body>
 </html>
