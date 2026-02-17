@@ -226,10 +226,28 @@ async function loadKPIs(){
  const {data}=await query;
  if(!data) return;
 
- total.innerText=data.length;
- underReview.innerText=data.filter(i=>isUnderReview(i.status)).length;
- open.innerText=data.filter(i=>isOpen(i.status)).length;
- closed.innerText=data.filter(i=>isClosed(i.status)).length;
+// NORMALIZE STATUS FUNCTION (CRITICAL FIX)
+function normStatus(s){
+  return String(s || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g," ");
+}
+
+total.innerText = data.length;
+
+underReview.innerText = data.filter(i =>
+  normStatus(i.status) === "under review"
+).length;
+
+open.innerText = data.filter(i =>
+  normStatus(i.status).startsWith("open")
+).length;
+
+closed.innerText = data.filter(i =>
+  normStatus(i.status) === "closed"
+).length;
+
 
  const realized=data.filter(i=>isClosed(i.status));
  const pipeline=data.filter(i=>!isClosed(i.status) && !isDropped(i.status));
@@ -325,3 +343,4 @@ loadKPIs();
 
 </body>
 </html>
+
