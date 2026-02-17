@@ -61,45 +61,31 @@ body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 .impact-line{display:flex;justify-content:space-between;margin-bottom:6px;}
 .impact-line .value{color:#76B531;font-weight:bold;font-size:18px}
 
-/* grid sections */
-.impact-section-grid{
+/* 4 column sections */
+.section-grid{
  display:grid;
- grid-template-columns: repeat(4, minmax(0, 1fr));  /* prevents overflow */
+ grid-template-columns:repeat(4,1fr);
  gap:20px;
  margin-top:20px;
- width:100%;              /* lock to container width */
 }
 
-/* ensure chart never stretches column */
 .card{
  background:white;
  padding:15px;
  border-radius:6px;
  box-shadow:0 2px 6px rgba(0,0,0,0.1);
- width:100%;
- overflow:hidden;          /* prevents right shift */
-}
-
-/* make canvas responsive INSIDE card */
-.card canvas{
- width:100% !important;
- height:260px !important;
- display:block;
-}
-
-
-.card{
- background:white;padding:15px;border-radius:6px;
- box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 .card-title{
  font-weight:bold;
- margin-bottom:10px;
  text-align:center;
+ margin-bottom:10px;
 }
 
-.card canvas{height:260px !important}
+.card canvas{
+ width:100%!important;
+ height:260px!important;
+}
 
 table{width:100%;border-collapse:collapse;font-size:13px;}
 th{background:#76B531;color:white;padding:6px;}
@@ -186,24 +172,24 @@ Year:
 </div>
 </div>
 
-<!-- IMPACT BY TERMINAL -->
+<!-- CHARTS -->
 <div class="section-title">Impact by Terminal</div>
 
-<div class="impact-section-grid">
-<div class="card"><div class="card-title">Cost Saving (PKR)</div><canvas id="chart_cs"></canvas></div>
-<div class="card"><div class="card-title">Cost Avoidance (PKR)</div><canvas id="chart_ca"></canvas></div>
-<div class="card"><div class="card-title">G2G Improvement (Minutes)</div><canvas id="chart_g2g"></canvas></div>
-<div class="card"><div class="card-title">Capacity Enhancement (KT)</div><canvas id="chart_cap"></canvas></div>
+<div class="section-grid">
+<div class="card"><div class="card-title">Cost Saving</div><canvas id="chart_cs"></canvas></div>
+<div class="card"><div class="card-title">Cost Avoidance</div><canvas id="chart_ca"></canvas></div>
+<div class="card"><div class="card-title">G2G Improvement</div><canvas id="chart_g2g"></canvas></div>
+<div class="card"><div class="card-title">Capacity Enhancement</div><canvas id="chart_cap"></canvas></div>
 </div>
 
 <!-- TOP INITIATIVES -->
 <div class="section-title">Top Initiatives</div>
 
-<div class="impact-section-grid">
-<div class="card"><div class="card-title">Cost Saving (PKR)</div><table id="table_cs"></table></div>
-<div class="card"><div class="card-title">Cost Avoidance (PKR)</div><table id="table_ca"></table></div>
-<div class="card"><div class="card-title">G2G Improvement (Minutes)</div><table id="table_g2g"></table></div>
-<div class="card"><div class="card-title">Capacity Enhancement (KT)</div><table id="table_cap"></table></div>
+<div class="section-grid">
+<div class="card"><div class="card-title">Cost Saving</div><table id="table_cs"></table></div>
+<div class="card"><div class="card-title">Cost Avoidance</div><table id="table_ca"></table></div>
+<div class="card"><div class="card-title">G2G Improvement</div><table id="table_g2g"></table></div>
+<div class="card"><div class="card-title">Capacity Enhancement</div><table id="table_cap"></table></div>
 </div>
 
 </div>
@@ -218,8 +204,17 @@ const supabaseClient = window.supabase.createClient(
 
 let charts={};
 
-function match(type, text){
- return text?.toLowerCase().includes(type);
+function cleanStatus(s){
+ return (s||"").toLowerCase().trim();
+}
+
+function isClosed(s){ return cleanStatus(s).startsWith("closed"); }
+function isOpen(s){ return cleanStatus(s).startsWith("open"); }
+function isDropped(s){ return cleanStatus(s).startsWith("dropped"); }
+function isUnderReview(s){ return cleanStatus(s)==="under review"; }
+
+function matchImpact(type,text){
+ return (text||"").toLowerCase().includes(type);
 }
 
 async function loadKPIs(){
@@ -232,16 +227,16 @@ async function loadKPIs(){
  if(!data) return;
 
  total.innerText=data.length;
- underReview.innerText=data.filter(i=>i.status==="Under Review").length;
- open.innerText=data.filter(i=>i.status?.startsWith("Open")).length;
- closed.innerText=data.filter(i=>(i.status || "").toLowerCase().includes("closed")).length;
+ underReview.innerText=data.filter(i=>isUnderReview(i.status)).length;
+ open.innerText=data.filter(i=>isOpen(i.status)).length;
+ closed.innerText=data.filter(i=>isClosed(i.status)).length;
 
- const realized=data.filter(i=>i.status==="Closed");
- const pipeline=data.filter(i=>i.status!=="Closed" && i.status!=="Dropped");
+ const realized=data.filter(i=>isClosed(i.status));
+ const pipeline=data.filter(i=>!isClosed(i.status) && !isDropped(i.status));
 
  const sum=(list,key)=>list
-  .filter(i=>match(key,i.impact_type))
-  .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0);
+   .filter(i=>matchImpact(key,i.impact_type))
+   .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0);
 
  cs_realized.innerText=sum(realized,"saving").toLocaleString();
  cs_pipeline.innerText=sum(pipeline,"saving").toLocaleString();
@@ -268,7 +263,7 @@ async function loadKPIs(){
 
 function buildChart(data,key,id){
 
- const filtered=data.filter(i=>match(key,i.impact_type));
+ const filtered=data.filter(i=>matchImpact(key,i.impact_type));
  const terminals=[...new Set(filtered.map(i=>i.terminal_name))];
 
  const realized=[];
@@ -276,10 +271,12 @@ function buildChart(data,key,id){
 
  terminals.forEach(t=>{
    const list=filtered.filter(i=>i.terminal_name===t);
-   realized.push(list.filter(i=>i.status==="Closed")
-    .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0));
-   pipeline.push(list.filter(i=>i.status!=="Closed" && i.status!=="Dropped")
-    .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0));
+
+   realized.push(list.filter(i=>isClosed(i.status))
+     .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0));
+
+   pipeline.push(list.filter(i=>!isClosed(i.status) && !isDropped(i.status))
+     .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0));
  });
 
  if(charts[id]) charts[id].destroy();
@@ -300,9 +297,9 @@ function buildChart(data,key,id){
 function buildTable(data,key,id){
 
  const rows=data
-  .filter(i=>match(key,i.impact_type) && i.status!=="Dropped")
-  .sort((a,b)=>(b.impact_amount||0)-(a.impact_amount||0))
-  .slice(0,10);
+   .filter(i=>matchImpact(key,i.impact_type) && !isDropped(i.status))
+   .sort((a,b)=>(b.impact_amount||0)-(a.impact_amount||0))
+   .slice(0,10);
 
  let html="<tr><th>Terminal</th><th>Initiative</th><th>Value</th></tr>";
 
@@ -328,4 +325,3 @@ loadKPIs();
 
 </body>
 </html>
-
