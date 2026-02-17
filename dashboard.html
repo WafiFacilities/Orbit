@@ -13,6 +13,32 @@
 
 body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 
+/* IMPACT KPI FORMAT */
+
+.impact-title{
+  font-weight:bold;
+  font-size:16px;
+  margin-bottom:12px;
+  color:#000;
+}
+
+.impact-line{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:6px;
+  font-size:14px;
+}
+
+.impact-line .label{
+  color:#000;
+}
+
+.impact-line .value{
+  color:#76B531;
+  font-weight:bold;
+}
+
+ 
 .header{
  display:flex;align-items:center;padding:10px 20px;
  background:white;border-bottom:2px solid #e0e0e0;
@@ -129,36 +155,67 @@ body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 
 <div class="kpi-container">
 
-<div class="kpi">
-<h3 id="cs_realized">0</h3>
-<p>Cost Saving — Realized (PKR)</p>
-<hr>
-<h3 id="cs_pipeline">0</h3>
-<p>Pipeline (PKR)</p>
+<!-- COST SAVING -->
+<div class="kpi impact-box">
+  <div class="impact-title">Cost Saving (PKR)</div>
+
+  <div class="impact-line">
+    <span class="label">Realized:</span>
+    <span class="value" id="cs_realized">0</span>
+  </div>
+
+  <div class="impact-line">
+    <span class="label">Pipeline:</span>
+    <span class="value" id="cs_pipeline">0</span>
+  </div>
 </div>
 
-<div class="kpi">
-<h3 id="ca_realized">0</h3>
-<p>Cost Avoidance — Realized (PKR)</p>
-<hr>
-<h3 id="ca_pipeline">0</h3>
-<p>Pipeline (PKR)</p>
+
+<!-- COST AVOIDANCE -->
+<div class="kpi impact-box">
+  <div class="impact-title">Cost Avoidance (PKR)</div>
+
+  <div class="impact-line">
+    <span class="label">Realized:</span>
+    <span class="value" id="ca_realized">0</span>
+  </div>
+
+  <div class="impact-line">
+    <span class="label">Pipeline:</span>
+    <span class="value" id="ca_pipeline">0</span>
+  </div>
 </div>
 
-<div class="kpi">
-<h3 id="g2g_realized">0</h3>
-<p>G2G — Realized (Minutes)</p>
-<hr>
-<h3 id="g2g_pipeline">0</h3>
-<p>Pipeline (Minutes)</p>
+
+<!-- G2G -->
+<div class="kpi impact-box">
+  <div class="impact-title">G2G Improvement (Minutes)</div>
+
+  <div class="impact-line">
+    <span class="label">Realized:</span>
+    <span class="value" id="g2g_realized">0</span>
+  </div>
+
+  <div class="impact-line">
+    <span class="label">Pipeline:</span>
+    <span class="value" id="g2g_pipeline">0</span>
+  </div>
 </div>
 
-<div class="kpi">
-<h3 id="cap_realized">0</h3>
-<p>Capacity — Realized (KT)</p>
-<hr>
-<h3 id="cap_pipeline">0</h3>
-<p>Pipeline (KT)</p>
+
+<!-- CAPACITY -->
+<div class="kpi impact-box">
+  <div class="impact-title">Capacity Enhancement (KT)</div>
+
+  <div class="impact-line">
+    <span class="label">Realized:</span>
+    <span class="value" id="cap_realized">0</span>
+  </div>
+
+  <div class="impact-line">
+    <span class="label">Pipeline:</span>
+    <span class="value" id="cap_pipeline">0</span>
+  </div>
 </div>
 
 </div>
@@ -274,3 +331,4 @@ async function logout(){
 
 </body>
 </html>
+
