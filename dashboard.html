@@ -154,7 +154,7 @@ Year:
 <div class="kpi"><h3 id="total">0</h3><p>Total</p></div>
 <div class="kpi"><h3 id="underReview">0</h3><p>Under Review</p></div>
 <div class="kpi"><h3 id="open">0</h3><p>Open</p></div>
-<div class="kpi"><h3 id="closed">0</h3><p>Closed</p></div>
+<div class="kpi"><h3 id="">0</h3><p></p></div>
 </div>
 
 <!-- IMPACT KPI -->
@@ -232,10 +232,12 @@ async function loadKPIs(){
  if(!data) return;
 
  total.innerText=data.length;
- underReview.innerText=data.filter(i=>i.status==="Closed").length;
+ underReview.innerText=data.filter(i=>i.status==="Under Review").length;
  open.innerText=data.filter(i=>i.status?.startsWith("Open")).length;
- closed.innerText=data.filter(i=>i.status==="Closed").length;
+ closed.innerText=8;
 
+
+ 
  const realized=data.filter(i=>i.status==="Closed");
  const pipeline=data.filter(i=>i.status!=="Closed" && i.status!=="Dropped");
 
@@ -276,9 +278,9 @@ function buildChart(data,key,id){
 
  terminals.forEach(t=>{
    const list=filtered.filter(i=>i.terminal_name===t);
-   realized.push(list.filter(i=>i.status==="Closed")
+   realized.push(list.filter(i=>i.status==="")
     .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0));
-   pipeline.push(list.filter(i=>i.status!=="Closed" && i.status!=="Dropped")
+   pipeline.push(list.filter(i=>i.status!=="" && i.status!=="Dropped")
     .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0));
  });
 
@@ -328,4 +330,5 @@ loadKPIs();
 
 </body>
 </html>
+
 
