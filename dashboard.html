@@ -235,13 +235,19 @@ async function loadKPIs(){
  total.innerText = data.length;
 
 underReview.innerText =
-  data.filter(i => i.status === "Under Review").length;
+  data.filter(i =>
+    i.status?.trim().toLowerCase() === "under review"
+  ).length;
 
 open.innerText =
-  data.filter(i => i.status && i.status.startsWith("Open")).length;
+  data.filter(i =>
+    i.status?.trim().toLowerCase().startsWith("open")
+  ).length;
 
 closed.innerText =
-  data.filter(i => i.status === "Closed").length;
+  data.filter(i =>
+    i.status?.trim().toLowerCase() === "closed"
+  ).length;
 
 
  const realized=data.filter(i=>i.status==="Closed");
@@ -336,6 +342,7 @@ loadKPIs();
 
 </body>
 </html>
+
 
 
 
