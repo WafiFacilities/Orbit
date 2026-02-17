@@ -232,7 +232,7 @@ async function loadKPIs(){
  if(!data) return;
 
  total.innerText=data.length;
- underReview.innerText=data.filter(i=>i.status==="Under Review").length;
+ underReview.innerText=data.filter(i=>i.status==="Closed").length;
  open.innerText=data.filter(i=>i.status?.startsWith("Open")).length;
  closed.innerText=data.filter(i=>i.status==="Closed").length;
 
@@ -328,3 +328,4 @@ loadKPIs();
 
 </body>
 </html>
+
