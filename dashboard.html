@@ -237,7 +237,7 @@ function normStatus(s){
 total.innerText = data.length;
 
 underReview.innerText = data.filter(i =>
-  normStatus(i.status) === "under review"
+  normStatus(i.status).startsWith("under review")
 ).length;
 
 open.innerText = data.filter(i =>
@@ -245,8 +245,9 @@ open.innerText = data.filter(i =>
 ).length;
 
 closed.innerText = data.filter(i =>
-  normStatus(i.status) === "closed"
+  normStatus(i.status).startsWith("closed")
 ).length;
+
 
 
  const realized=data.filter(i=>isClosed(i.status));
@@ -343,4 +344,5 @@ loadKPIs();
 
 </body>
 </html>
+
 
