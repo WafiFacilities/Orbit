@@ -10,82 +10,9 @@
 
 <style>
 @font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
-
 body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 
-/* IMPACT KPI FORMAT */
-/* ===== SECTION TITLE ===== */
-.section-title{
-  margin-top:25px;
-  margin-bottom:15px;
-  font-size:24px;        /* bigger */
-  font-weight:700;       /* bold */
-  color:#404040;
-  border-bottom:3px solid #76B531;
-  padding-bottom:6px;
-}
-
-
-/* ===== KPI BOX ===== */
-.kpi{
-  background:white;
-  padding:20px;
-  border-radius:6px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
-  text-align:center;
-}
-
-
-/* ===== KPI VALUE ===== */
-.kpi h3{
-  margin:0;
-  font-size:42px;        /* MUCH BIGGER */
-  font-weight:700;
-  color:#76B531;
-  line-height:1.1;
-}
-
-
-/* ===== KPI LABEL ===== */
-.kpi p{
-  margin-top:6px;
-  font-size:14px;
-  color:#666;
-  font-weight:500;
-  letter-spacing:0.5px;
-}
-
-  
-.impact-title{
-  font-weight:bold;
-  font-size:16px;
-  margin-bottom:12px;
-  color:#000;
-}
-
-.impact-line{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:6px;
-  font-size:14px;
-}
-
-.impact-line .label{
-  color:#000;
-  font-size:14px
-}
-
-.impact-line .value{
-  color:#76B531;
-  font-weight:bold;
-  font-size:20px
-}
-
- 
-.header{
- display:flex;align-items:center;padding:10px 20px;
- background:white;border-bottom:2px solid #e0e0e0;
-}
+.header{display:flex;align-items:center;padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;}
 .header img{height:40px;margin-right:15px;}
 .header-title{font-size:22px;font-weight:bold;text-transform:uppercase;}
 
@@ -103,9 +30,12 @@ body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 .main{flex:1;padding:20px;overflow-y:auto;}
 
 .section-title{
- margin-top:25px;margin-bottom:10px;
- font-size:18px;font-weight:bold;
- border-bottom:2px solid #76B531;padding-bottom:5px;
+ margin-top:25px;
+ margin-bottom:15px;
+ font-size:24px;
+ font-weight:700;
+ border-bottom:3px solid #76B531;
+ padding-bottom:6px;
 }
 
 .kpi-container{
@@ -115,26 +45,52 @@ body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 }
 
 .kpi{
- background:white;padding:15px;border-radius:6px;
+ background:white;padding:20px;border-radius:6px;
  box-shadow:0 2px 6px rgba(0,0,0,0.1);
  text-align:center;
 }
 
-.kpi h3{margin:0;color:#76B531;}
-.kpi hr{border:none;border-top:1px solid #eee;margin:10px 0;}
+.kpi h3{
+ margin:0;font-size:42px;font-weight:700;color:#76B531;
+}
+
+.impact-title{font-weight:bold;font-size:16px;margin-bottom:12px;}
+.impact-line{display:flex;justify-content:space-between;margin-bottom:6px;}
+.impact-line .value{color:#76B531;font-weight:bold;font-size:20px}
 
 .filter-bar{margin-bottom:20px;}
 .filter-bar select{padding:6px;border-radius:4px;border:1px solid #ccc;}
 
-.chart-grid{
- display:grid;
- grid-template-columns:repeat(auto-fit,minmax(400px,1fr));
- gap:20px;
-}
 .chart-box{
  background:white;padding:15px;border-radius:6px;
  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+ margin-bottom:25px;
 }
+
+.impact-card{
+ background:white;
+ padding:20px;
+ border-radius:6px;
+ box-shadow:0 2px 6px rgba(0,0,0,0.1);
+ margin-bottom:30px;
+}
+
+.impact-card canvas{
+ height:300px !important;
+ margin-bottom:10px;
+}
+
+.top-table{
+ width:100%;
+ border-collapse:collapse;
+}
+.top-table th{
+ background:#76B531;color:white;padding:6px;font-size:13px;
+}
+.top-table td{
+ border:1px solid #ddd;padding:6px;font-size:13px;
+}
+
 </style>
 </head>
 
@@ -182,9 +138,8 @@ body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 </div>
 
 
-<!-- OPERATIONAL SUMMARY -->
+<!-- OPERATIONAL -->
 <div class="section-title">Operational Summary</div>
-
 <div class="kpi-container">
 <div class="kpi"><h3 id="total">0</h3><p>Total</p></div>
 <div class="kpi"><h3 id="underReview">0</h3><p>Under Review</p></div>
@@ -193,93 +148,45 @@ body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 </div>
 
 
-<!-- IMPACT -->
+<!-- IMPACT KPI -->
 <div class="section-title">Impact (Realized vs Pipeline)</div>
-
 <div class="kpi-container">
 
-<!-- COST SAVING -->
-<div class="kpi impact-box">
-  <div class="impact-title">Cost Saving (PKR)</div>
-
-  <div class="impact-line">
-    <span class="label">Realized:</span>
-    <span class="value" id="cs_realized">0</span>
-  </div>
-
-  <div class="impact-line">
-    <span class="label">Pipeline:</span>
-    <span class="value" id="cs_pipeline">0</span>
-  </div>
+<div class="kpi">
+<div class="impact-title">Cost Saving (PKR)</div>
+<div class="impact-line"><span>Realized</span><span class="value" id="cs_realized">0</span></div>
+<div class="impact-line"><span>Pipeline</span><span class="value" id="cs_pipeline">0</span></div>
 </div>
 
-
-<!-- COST AVOIDANCE -->
-<div class="kpi impact-box">
-  <div class="impact-title">Cost Avoidance (PKR)</div>
-
-  <div class="impact-line">
-    <span class="label">Realized:</span>
-    <span class="value" id="ca_realized">0</span>
-  </div>
-
-  <div class="impact-line">
-    <span class="label">Pipeline:</span>
-    <span class="value" id="ca_pipeline">0</span>
-  </div>
+<div class="kpi">
+<div class="impact-title">Cost Avoidance (PKR)</div>
+<div class="impact-line"><span>Realized</span><span class="value" id="ca_realized">0</span></div>
+<div class="impact-line"><span>Pipeline</span><span class="value" id="ca_pipeline">0</span></div>
 </div>
 
-
-<!-- G2G -->
-<div class="kpi impact-box">
-  <div class="impact-title">G2G Improvement (Minutes)</div>
-
-  <div class="impact-line">
-    <span class="label">Realized:</span>
-    <span class="value" id="g2g_realized">0</span>
-  </div>
-
-  <div class="impact-line">
-    <span class="label">Pipeline:</span>
-    <span class="value" id="g2g_pipeline">0</span>
-  </div>
+<div class="kpi">
+<div class="impact-title">G2G Improvement (Minutes)</div>
+<div class="impact-line"><span>Realized</span><span class="value" id="g2g_realized">0</span></div>
+<div class="impact-line"><span>Pipeline</span><span class="value" id="g2g_pipeline">0</span></div>
 </div>
 
-
-<!-- CAPACITY -->
-<div class="kpi impact-box">
-  <div class="impact-title">Capacity Enhancement (KT)</div>
-
-  <div class="impact-line">
-    <span class="label">Realized:</span>
-    <span class="value" id="cap_realized">0</span>
-  </div>
-
-  <div class="impact-line">
-    <span class="label">Pipeline:</span>
-    <span class="value" id="cap_pipeline">0</span>
-  </div>
+<div class="kpi">
+<div class="impact-title">Capacity Enhancement (KT)</div>
+<div class="impact-line"><span>Realized</span><span class="value" id="cap_realized">0</span></div>
+<div class="impact-line"><span>Pipeline</span><span class="value" id="cap_pipeline">0</span></div>
 </div>
 
 </div>
 
 
-<!-- CHARTS -->
-<div class="section-title">Analytics</div>
+<!-- ================================================= -->
+<!-- IMPACT ANALYTICS -->
+<!-- ================================================= -->
 
-<div class="chart-grid">
+<div class="section-title">Impact Analytics</div>
 
-<div class="chart-box">
-<h3>Initiatives by Terminal</h3>
-<canvas id="terminalChart"></canvas>
-</div>
+<div id="impactAnalytics"></div>
 
-<div class="chart-box">
-<h3>Impact Type Distribution</h3>
-<canvas id="impactTypeChart"></canvas>
-</div>
-
-</div>
 
 </div>
 </div>
@@ -291,8 +198,6 @@ const supabaseClient = supabase.createClient(
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
 );
 
-let terminalChart, impactTypeChart;
-
 async function init(){
  const {data}=await supabaseClient.auth.getSession();
  if(!data.session) window.location="login.html";
@@ -300,17 +205,18 @@ async function init(){
 }
 init();
 
+
 async function loadKPIs(){
 
- const terminal = terminalFilter.value;
- const year = yearFilter.value;
+ const terminal=terminalFilter.value;
+ const year=yearFilter.value;
 
- let query = supabaseClient.from("initiatives").select("*");
+ let query=supabaseClient.from("initiatives").select("*");
 
  if(terminal) query=query.eq("terminal_name",terminal);
  if(year) query=query.eq("year",year);
 
- const {data} = await query;
+ const {data}=await query;
  if(!data) return;
 
  total.innerText=data.length;
@@ -321,8 +227,7 @@ async function loadKPIs(){
  const realized=data.filter(i=>i.status==="Closed");
  const pipeline=data.filter(i=>i.status!=="Closed" && i.status!=="Dropped");
 
- const sum=(list,type)=>
- list.filter(i=>i.impact_type===type)
+ const sum=(list,type)=>list.filter(i=>i.impact_type===type)
  .reduce((a,b)=>a+(parseFloat(b.impact_amount)||0),0);
 
  cs_realized.innerText=sum(realized,"Cost Saving (PKR)").toLocaleString();
@@ -337,33 +242,102 @@ async function loadKPIs(){
  cap_realized.innerText=sum(realized,"Capacity Enhancement (KT)").toLocaleString();
  cap_pipeline.innerText=sum(pipeline,"Capacity Enhancement (KT)").toLocaleString();
 
- buildCharts(data);
+ renderImpactAnalytics(data);
 }
 
-function buildCharts(data){
 
- const terminals=[...new Set(data.map(i=>i.terminal_name))];
- const counts=terminals.map(t=>data.filter(i=>i.terminal_name===t).length);
 
- if(terminalChart) terminalChart.destroy();
- terminalChart=new Chart(terminalChart=document.getElementById("terminalChart"),{
+function renderImpactAnalytics(data){
+
+ const container=document.getElementById("impactAnalytics");
+ container.innerHTML="";
+
+ const types=[
+ "Cost Saving (PKR)",
+ "Cost Avoidance (PKR)",
+ "G2G Improvement (Minutes)",
+ "Capacity Enhancement (KT)"
+ ];
+
+ types.forEach(type=>{
+
+   const id=type.replace(/[^a-z]/gi,"");
+
+   container.innerHTML+=`
+   <div class="impact-card">
+     <h3>${type}</h3>
+     <canvas id="${id}_chart"></canvas>
+     <h4>Top 10 Initiatives</h4>
+     <table class="top-table" id="${id}_table"></table>
+   </div>
+   `;
+
+   buildImpactChart(data,type,`${id}_chart`);
+   buildTopTable(data,type,`${id}_table`);
+ });
+
+}
+
+
+
+function buildImpactChart(data,type,canvasId){
+
+ const filtered=data.filter(i=>i.impact_type===type);
+ const terminals=[...new Set(filtered.map(i=>i.terminal_name))];
+
+ const realized=[];
+ const pipeline=[];
+
+ terminals.forEach(t=>{
+   const list=filtered.filter(i=>i.terminal_name===t);
+
+   realized.push(
+     list.filter(i=>i.status==="Closed")
+     .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0)
+   );
+
+   pipeline.push(
+     list.filter(i=>i.status!=="Closed" && i.status!=="Dropped")
+     .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0)
+   );
+ });
+
+ new Chart(document.getElementById(canvasId),{
  type:"bar",
- data:{labels:terminals,datasets:[{data:counts,backgroundColor:"#76B531"}]},
- options:{plugins:{legend:{display:false}}}
- });
-
- const types={};
- data.forEach(i=>{
- const t=i.impact_type||"Unknown";
- types[t]=(types[t]||0)+1;
- });
-
- if(impactTypeChart) impactTypeChart.destroy();
- impactTypeChart=new Chart(document.getElementById("impactTypeChart"),{
- type:"pie",
- data:{labels:Object.keys(types),datasets:[{data:Object.values(types)}]}
+ data:{
+ labels:terminals,
+ datasets:[
+ {label:"Realized",data:realized,backgroundColor:"#2ecc71"},
+ {label:"Pipeline",data:pipeline,backgroundColor:"#f1c40f"}
+ ]
+ },
+ options:{responsive:true,maintainAspectRatio:false}
  });
 }
+
+
+
+function buildTopTable(data,type,tableId){
+
+ const rows=data
+ .filter(i=>i.impact_type===type && i.status!=="Dropped")
+ .sort((a,b)=>(b.impact_amount||0)-(a.impact_amount||0))
+ .slice(0,10);
+
+ let html=`<tr><th>Terminal</th><th>Initiative</th><th>Value</th></tr>`;
+
+ rows.forEach(r=>{
+ html+=`<tr>
+ <td>${r.terminal_name}</td>
+ <td>${r.initiative_name}</td>
+ <td>${Number(r.impact_amount||0).toLocaleString()}</td>
+ </tr>`;
+ });
+
+ document.getElementById(tableId).innerHTML=html;
+}
+
+
 
 async function logout(){
  await supabaseClient.auth.signOut();
@@ -374,6 +348,3 @@ async function logout(){
 
 </body>
 </html>
-
-
-
