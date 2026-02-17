@@ -234,7 +234,7 @@ async function loadKPIs(){
  total.innerText=data.length;
  underReview.innerText=data.filter(i=>i.status==="Under Review").length;
  open.innerText=data.filter(i=>i.status?.startsWith("Open")).length;
- closed.innerText=data.filter(i=>i.status==="Closed").length;
+ closed.innerText=data.filter(i=>(i.status || "").toLowerCase().includes("closed")).length;
 
  const realized=data.filter(i=>i.status==="Closed");
  const pipeline=data.filter(i=>i.status!=="Closed" && i.status!=="Dropped");
@@ -328,3 +328,4 @@ loadKPIs();
 
 </body>
 </html>
+
