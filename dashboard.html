@@ -137,10 +137,10 @@ Year:
 <div class="section-title">Operational Summary</div>
 
 <div class="kpi-container">
-<div class="kpi"><h3 id="total">0</h3><p>Total</p></div>
-<div class="kpi"><h3 id="underReview">0</h3><p>Under Review</p></div>
-<div class="kpi"><h3 id="open">0</h3><p>Open</p></div>
-<div class="kpi"><h3 id="closed">0</h3><p>Closed</p></div>
+<div class="kpi"><h3 id="totalKPI">0</h3><p>Total</p></div>
+<div class="kpi"><h3 id="underReviewKPI">0</h3><p>Under Review</p></div>
+<div class="kpi"><h3 id="openKPI">0</h3><p>Open</p></div>
+<div class="kpi"><h3 id="closedKPI">0</h3><p>Closed</p></div>
 </div>
 
 <!-- IMPACT KPI -->
@@ -234,17 +234,17 @@ function normStatus(s){
     .replace(/\s+/g," ");
 }
 
-total.innerText = data.length;
+totalKPI.innerText = data.length;
 
-underReview.innerText = data.filter(i =>
+underReviewKPI.innerText = data.filter(i =>
   normStatus(i.status).startsWith("under review")
 ).length;
 
-open.innerText = data.filter(i =>
+openKPI.innerText = data.filter(i =>
   normStatus(i.status).startsWith("open")
 ).length;
 
-closed.innerText = data.filter(i =>
+closedKPI.innerText = data.filter(i =>
   normStatus(i.status).startsWith("closed")
 ).length;
 
@@ -344,5 +344,6 @@ loadKPIs();
 
 </body>
 </html>
+
 
 
