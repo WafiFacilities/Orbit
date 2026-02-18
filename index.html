@@ -239,15 +239,25 @@ pageInfo.innerText=`Page ${currentPage} / ${Math.ceil(count/pageSize)}`;
 
 const today=new Date().toISOString().split("T")[0];
 
-data.forEach((row,index)=>{
+data.forEach((row, index) => {
 
-let indicatorClass="ontime";
-let indicatorText="On-time";
+  let indicatorClass = "ontime";
+  let indicatorText = "On-time";
 
-if(row.target_date && row.target_date<today){
-indicatorClass="overdue";
-indicatorText="Overdue";
-}
+  // PRIORITY 1 → CLOSED
+  if (row.status && row.status.toLowerCase().startsWith("closed")) {
+    indicatorClass = "closed";
+    indicatorText = "Closed";
+  }
+
+  // PRIORITY 2 → OVERDUE (only if not closed)
+  else if (row.target_date && row.target_date < today) {
+    indicatorClass = "overdue";
+    indicatorText = "Overdue";
+  }
+
+});
+
 
 tbody.innerHTML+=`
 <tr>
@@ -299,6 +309,7 @@ window.location="login.html";
 
 </body>
 </html>
+
 
 
 
