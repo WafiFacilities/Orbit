@@ -12,9 +12,28 @@
 body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 
 .header{
-display:flex;align-items:center;padding:10px 20px;
-background:white;border-bottom:2px solid #e0e0e0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;   /* pushes items to edges */
+  padding:10px 20px;
+  background:white;
+  border-bottom:2px solid #e0e0e0;
 }
+
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:12px;   /* spacing between orbit logo and title */
+}
+
+.header-left img{
+  height:40px;
+}
+
+.wafi-logo{
+  height:40px;
+}
+
 .header img{height:40px;margin-right:15px;}
 .header-title{
 font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
@@ -82,10 +101,16 @@ color:#76B531;text-decoration:none;font-weight:bold;
 <body>
 
 <div class="header">
-<img src="wafi-logo.png">
-  <img src="orbit-logo.png">
-<h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+
+  <div class="header-left">
+    <img src="orbit-logo.png">
+    <h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+  </div>
+
+  <img src="wafi-logo.png" class="wafi-logo">
+
 </div>
+
 
 <div class="layout">
 
@@ -310,6 +335,7 @@ window.location="login.html";
 
 </body>
 </html>
+
 
 
 
