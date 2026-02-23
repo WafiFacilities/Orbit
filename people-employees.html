@@ -229,7 +229,7 @@ async function load(){
   // CHECK SUPER USER
   // ==============================
   const { data: su } = await supabaseClient
-    .from("super_users")
+    .from("superusers")
     .select("email")
     .ilike("email", currentUserEmail)
     .maybeSingle();
@@ -391,4 +391,5 @@ load();
 
 </body>
 </html>
+
 
