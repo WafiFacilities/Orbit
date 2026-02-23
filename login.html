@@ -205,7 +205,7 @@ async function resetPassword(){
   const {error} = await supabaseClient.auth.resetPasswordForEmail(
     forgotEmail.value,
     {
-      redirectTo: window.location.origin + "/orbit/reset-password.html"
+      redirectTo: window.location.origin + "/Orbit/reset-password.html"
     }
   );
 
@@ -230,4 +230,5 @@ checkSession();
 
 </body>
 </html>
+
 
