@@ -299,6 +299,11 @@ function populateFilters(){
   designations.forEach(d=>{
     desigSelect.innerHTML+=`<option value="${d}">${d}</option>`;
   });
+
+  if(!isSuperUser){
+  depotSelect.innerHTML = `<option value="${currentUserDepot}">${currentUserDepot}</option>`;
+  return;
+}
 }
 
 function renderTable(){
@@ -391,5 +396,6 @@ load();
 
 </body>
 </html>
+
 
 
