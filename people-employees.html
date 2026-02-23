@@ -217,12 +217,14 @@ async function load(){
 
   if(!SUPER_USERS.includes(userEmail)){
 
-    const { data: userEmployee } = await supabaseClient
-      .from("employees")
-      .select("depot")
-      .eq("email", userEmail)
-      .single();
+    const { data: userEmployee, error } = await supabaseClient
+  .from("employees")
+  .select("depot")
+  .eq("email", userEmail)
+  .maybeSingle();
 
+if(error) console.log("Employee lookup error:", error);
+    
     if(userEmployee){
       userDepot = userEmployee.depot;
     }
@@ -391,5 +393,6 @@ load();
 
 </body>
 </html>
+
 
 
