@@ -11,13 +11,42 @@
 @font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
 body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 
-.header{display:flex;align-items:center;padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;}
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;   /* pushes items to edges */
+  padding:10px 20px;
+  background:white;
+  border-bottom:2px solid #e0e0e0;
+}
+
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:12px;   /* spacing between orbit logo and title */
+}
+
+.header-left img{
+  height:40px;
+}
+
+.wafi-logo{
+  height:40px;
+}
+
 .header img{height:40px;margin-right:15px;}
-.header-title{font-size:22px;font-weight:bold;text-transform:uppercase;}
+.header-title{
+font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
+}
 
 .layout{display:flex;height:calc(100vh - 62px);}
-.sidebar{width:220px;background:#404040;color:white;display:flex;flex-direction:column;padding-top:20px;}
-.sidebar a{color:white;padding:10px 30px;text-decoration:none;}
+
+.sidebar{
+width:220px;background:#404040;color:white;
+display:flex;flex-direction:column;padding-top:20px;
+}
+.sidebar h4{padding:10px 20px;margin:0;}
+.sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
 .sidebar a:hover{background:#505050;}
 .sidebar .logout{margin-top:auto;border-top:1px solid #555;}
 
@@ -99,16 +128,42 @@ td{border:1px solid #ddd;padding:6px;}
 <body>
 
 <div class="header">
-<img src="wafi-logo.png">
-<h1 class="header-title">FACILITIES – ORBIT DASHBOARD</h1>
+
+  <div class="header-left">
+    <img src="orbit-logo.png">
+    <h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+  </div>
+
+  <img src="wafi-logo.png" class="wafi-logo">
+
 </div>
+
 
 <div class="layout">
 
 <div class="sidebar">
-<a href="index.html">List View</a>
-<a href="add-initiative.html">Add Initiative</a>
-<a href="#" onclick="logout()" class="logout">Logout</a>
+
+  <h4>INITIATIVE</h4>
+  <a href="index.html">All Initiatives - List</a>
+  <a href="add-initiative.html">Add New Initiative</a>
+  <a href="dashboard.html">Dashboard</a>
+
+  <h4>FINANCIAL</h4>
+  <a href="financial-dashboard.html">Unit Cost Graphical</a>
+  <a href="unit-cost-tabular.html">Unit Cost Tabular</a>
+  <a href="financial-dashboard-overview.html">Category Wise Breakup</a>
+  <a href="financial-dashboard-category.html">Depot Wise Breakup</a>
+  <a href="financial-summary.html">Financial Performance</a>
+  <a href="financial-monthly-performance.html">Depot Yearly Performance</a>
+  
+
+  <h4>PEOPLE</h4>
+  <a href="people-employees.html">Competency Tracker</a>
+  <a href="people-admin.html">Employee Admin</a>
+  <a href="people-competency-assignment.html">Competency Assignment</a>
+
+  <a href="#" onclick="logout()" class="logout">Logout</a>
+
 </div>
 
 <div class="main">
@@ -344,6 +399,7 @@ loadKPIs();
 
 </body>
 </html>
+
 
 
 
