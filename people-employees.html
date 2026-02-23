@@ -158,6 +158,12 @@ th { background:#76B531; color:white; }
 </div>
 
 <script>
+
+  const SUPER_USERS = [
+  "m-a.saleem@wafi-energy.com",
+  "manager@company.com"
+];
+  
 const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
   const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -201,8 +207,45 @@ async function load(){
     return;
   }
 
-  const { data: employees } =
-    await supabaseClient.from("employees").select("*").order("depot");
+  const userEmail = sessionData.session.user.email;
+
+  /* -------------------------------------------------- */
+  /* GET LOGGED IN USER DEPOT                          */
+  /* -------------------------------------------------- */
+
+  let userDepot = null;
+
+  if(!SUPER_USERS.includes(userEmail)){
+
+    const { data: userEmployee } = await supabaseClient
+      .from("employees")
+      .select("depot")
+      .eq("email", userEmail)
+      .single();
+
+    if(userEmployee){
+      userDepot = userEmployee.depot;
+    }
+  }
+
+  /* -------------------------------------------------- */
+  /* LOAD EMPLOYEES                                    */
+  /* -------------------------------------------------- */
+
+  let employeeQuery = supabaseClient
+    .from("employees")
+    .select("*")
+    .order("depot");
+
+  if(userDepot){
+    employeeQuery = employeeQuery.eq("depot", userDepot);
+  }
+
+  const { data: employees } = await employeeQuery;
+
+  /* -------------------------------------------------- */
+  /* LOAD OTHER TABLES                                 */
+  /* -------------------------------------------------- */
 
   const { data: compTypes } =
     await supabaseClient.from("competency_types").select("*");
@@ -213,6 +256,10 @@ async function load(){
   const { data: matrix } =
     await supabaseClient.from("designation_competency_matrix").select("*");
 
+  /* -------------------------------------------------- */
+  /* ASSIGN                                            */
+  /* -------------------------------------------------- */
+
   allEmployees = employees;
   competencyTypes = compTypes;
   employeeCompetencies = empComp;
@@ -221,7 +268,6 @@ async function load(){
   populateFilters();
   renderTable();
 }
-
 function populateFilters(){
   const depotSelect = document.getElementById("filterDepot");
   const desigSelect = document.getElementById("filterDesignation");
@@ -345,4 +391,5 @@ load();
 
 </body>
 </html>
+
 
