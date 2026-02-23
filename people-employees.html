@@ -176,6 +176,10 @@ const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+let currentUserEmail = "";
+let currentUserDepot = "";
+let isSuperUser = false;
+  
 let allEmployees=[];
 let competencyTypes=[];
 let employeeCompetencies=[];
@@ -209,28 +213,72 @@ function calculateStatus(completionDate, validityYears){
 
 async function load(){
 
-  const { data:sessionData } = await supabaseClient.auth.getSession();
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+
   if(!sessionData.session){
     window.location.replace("login.html");
     return;
   }
 
-  const { data:employees } =
+  // ==============================
+  // GET LOGGED IN USER EMAIL
+  // ==============================
+  currentUserEmail = sessionData.session.user.email.toLowerCase();
+
+  // ==============================
+  // CHECK SUPER USER
+  // ==============================
+  const { data: su } = await supabaseClient
+    .from("super_users")
+    .select("email")
+    .ilike("email", currentUserEmail)
+    .maybeSingle();
+
+  isSuperUser = !!su;
+
+  // ==============================
+  // IF NOT SUPER USER → GET DEPOT
+  // ==============================
+  if(!isSuperUser){
+
+    const { data: emp } = await supabaseClient
+      .from("employees")
+      .select("depot")
+      .ilike("email", currentUserEmail)
+      .maybeSingle();
+
+    if(emp){
+      currentUserDepot = emp.depot;
+    }
+  }
+
+  // ==============================
+  // LOAD EMPLOYEE DATA
+  // ==============================
+  const { data: employees } =
     await supabaseClient.from("employees").select("*").order("depot");
 
-  const { data:compTypes } =
+  const { data: compTypes } =
     await supabaseClient.from("competency_types").select("*");
 
-  const { data:empComp } =
+  const { data: empComp } =
     await supabaseClient.from("employee_competencies").select("*");
 
-  const { data:matrix } =
+  const { data: matrix } =
     await supabaseClient.from("designation_competency_matrix").select("*");
 
-  allEmployees=employees;
-  competencyTypes=compTypes;
-  employeeCompetencies=empComp;
-  designationMatrix=matrix;
+  allEmployees = employees;
+  competencyTypes = compTypes;
+  employeeCompetencies = empComp;
+  designationMatrix = matrix;
+
+  // ==============================
+  // FORCE DEPOT FILTER IF NOT SUPER
+  // ==============================
+  if(!isSuperUser){
+    document.getElementById("filterDepot").value = currentUserDepot;
+    document.getElementById("filterDepot").disabled = true;
+  }
 
   populateFilters();
   renderTable();
@@ -259,12 +307,12 @@ function renderTable(){
   const depotFilter=document.getElementById("filterDepot").value;
   const desigFilter=document.getElementById("filterDesignation").value;
 
-  const employees=allEmployees.filter(emp =>
-    emp.name.toLowerCase().includes(nameFilter) &&
-    (!depotFilter || emp.depot===depotFilter) &&
-    (!desigFilter || emp.designation===desigFilter)
-  );
-
+  const employees = allEmployees.filter(emp =>
+  emp.name.toLowerCase().includes(nameFilter) &&
+  (!depotFilter || emp.depot === depotFilter) &&
+  (!desigFilter || emp.designation === desigFilter) &&
+  (isSuperUser || emp.depot === currentUserDepot)
+);
   let html="<table><tr>";
   html+="<th>Name</th><th>Depot</th><th>Designation</th><th>Role Start</th>";
 
@@ -343,3 +391,4 @@ load();
 
 </body>
 </html>
+
