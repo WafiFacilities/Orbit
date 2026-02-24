@@ -142,41 +142,57 @@ init();
 // =====================
 async function loadTraining(email){
 
- const {data,error} = await supabaseClient
-   .from('employee_competencies')   // ✅ CORRECT TABLE NAME
-   .select('*')
-   .eq('employee_email', email);
+ // Step 1: Get employee record
+ const {data: employee, error: empError} = await supabaseClient
+   .from('employees')
+   .select('id')
+   .eq('email', email)
+   .single();
+
+ if(empError || !employee){
+   document.getElementById("trainingSection").innerHTML =
+     "<div class='empty'>Employee record not found.</div>";
+   console.log(empError);
+   return;
+ }
+
+ // Step 2: Get competencies using employee_id
+ const {data, error} = await supabaseClient
+   .from('employee_competencies')
+   .select(`
+     completion_date,
+     expiry_date,
+     competency_types (
+        competency_name
+     )
+   `)
+   .eq('employee_id', employee.id);
 
  const section = document.getElementById("trainingSection");
  section.innerHTML = "";
 
  if(error){
-   section.innerHTML = "<div class='empty'>Error loading competency records.</div>";
+   section.innerHTML = "<div class='empty'>Error loading competencies.</div>";
    console.log(error);
    return;
  }
 
  if(!data || data.length === 0){
-   section.innerHTML = "<div class='empty'>No competency records assigned.</div>";
+   section.innerHTML = "<div class='empty'>No competencies assigned.</div>";
    return;
  }
 
  data.forEach(row=>{
 
-   // Optional status color logic
-   let borderColor = "#76B531"; // default green
-
-   if(row.status === "Expired"){
-     borderColor = "#c0392b";
-   }
-   else if(row.status === "In Progress"){
-     borderColor = "#f39c12";
-   }
+   const name = row.competency_types?.competency_name || "Unknown";
+   const completion = row.completion_date || "Not Completed";
+   const expiry = row.expiry_date || "N/A";
 
    section.innerHTML += `
-     <div class="card" style="border-left:4px solid ${borderColor}">
-       <strong>${row.competency_name}</strong><br>
-       Status: <strong>${row.status}</strong>
+     <div class="card">
+       <strong>${name}</strong><br>
+       Completed: ${completion}<br>
+       Expiry: ${expiry}
      </div>
    `;
  });
