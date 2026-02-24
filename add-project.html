@@ -181,6 +181,11 @@ button {
   <input id="sponsor">
 </div>
 
+  <div class="field-row">
+  <label>Contractor:</label>
+  <input id="contractor" placeholder="Contractor company name">
+</div>
+
 <div class="field-row">
   <label>Team Members:</label>
   <input id="team_members" placeholder="Comma separated emails or names">
@@ -237,7 +242,8 @@ document.getElementById('projectForm').addEventListener('submit', async (e)=>{
    start_date: start_date.value,
    target_date: target_date.value || null,
    sponsor: sponsor.value || null,
-   team_members: team_members.value || null,
+contractor: contractor.value || null,
+team_members: team_members.value || null,
    project_owner_email: project_owner_email.value,
    commentary: commentary.value || null,
    status: "Open - Initiated"
