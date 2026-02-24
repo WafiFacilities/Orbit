@@ -34,13 +34,13 @@ display:flex;flex-direction:column;padding-top:20px;
 .sidebar a:hover{background:#505050;}
 .sidebar .logout{margin-top:auto;border-top:1px solid #555;}
 
-.main{flex:1;padding:20px;overflow-y:auto;}
+.main{flex:1;padding:20px;overflow:auto;}
 
 .filters{margin-bottom:15px;}
+
 select{
 padding:6px;border-radius:4px;border:1px solid #ccc;
-font-family:'72 Condensed';
-margin-right:10px;
+font-family:'72 Condensed';margin-right:10px;
 }
 
 table{
@@ -53,12 +53,12 @@ th,td{
 border:1px solid #ddd;
 padding:6px;
 text-align:center;
+font-size:12px;
 }
 
 th{
 background:#76B531;
 color:white;
-font-size:12px;
 }
 
 .total-row{
@@ -94,22 +94,16 @@ background:#f2f2f2;
 <div class="filters">
 <select id="depotFilter" onchange="loadTable()">
 <option value="ALL">All Depots</option>
-<option>KMR</option>
-<option>CKL</option>
-<option>MCH</option>
-<option>SKP</option>
-<option>DLP</option>
-<option>TJB</option>
-<option>BHK</option>
-<option>SSH</option>
-<option>VHR</option>
-<option>GTI</option>
-</select>
-
-<select id="costTypeFilter" onchange="loadTable()">
-<option value="BOTH">Both</option>
-<option value="DIRECT">Direct</option>
-<option value="INDIRECT">Indirect</option>
+<option value="PK01000040">KMR</option>
+<option value="PK01000028">CKL</option>
+<option value="PK01000061">MCH</option>
+<option value="PK01000055">SKP</option>
+<option value="PK01000056">DLP</option>
+<option value="PK01000031">TJB</option>
+<option value="PK01000057">BHK</option>
+<option value="PK01000025">SSH</option>
+<option value="PK01000059">VHR</option>
+<option value="PK01000030">GTI</option>
 </select>
 </div>
 
@@ -120,13 +114,16 @@ background:#f2f2f2;
 <script>
 const monthLabels = [];
 const years = [2025, 2026];
+
 years.forEach(y=>{
  for(let m=1;m<=12;m++){
    monthLabels.push(
-     new Date(y,m-1,1).toLocaleString('en',{month:'short'}) + "'" + String(y).slice(-2)
+     new Date(y,m-1,1).toLocaleString('en',{month:'short'}) +
+     "'" + String(y).slice(-2)
    );
  }
 });
+
 monthLabels.forEach(l=>{
  document.write(`<th>${l}</th>`);
 });
@@ -135,13 +132,13 @@ monthLabels.forEach(l=>{
 </thead>
 
 <tbody id="tableBody"></tbody>
-
 </table>
 
 </div>
 </div>
 
 <script>
+
 const supabaseClient = supabase.createClient(
 "https://kqhbvmqxrwwspopwckah.supabase.co",
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
@@ -150,80 +147,71 @@ const supabaseClient = supabase.createClient(
 async function loadTable(){
 
 const depot = document.getElementById("depotFilter").value;
-const costType = document.getElementById("costTypeFilter").value;
 
-const direct = await supabaseClient.from("direct_cost_data").select("*");
-const indirect = await supabaseClient.from("indirect_cost_data").select("*");
+const {data, error} = await supabaseClient
+  .from("financial_actuals")
+  .select("*")
+  .in("year",[2025,2026]);
 
-let categories = new Set();
+if(error){
+  console.log(error);
+  return;
+}
 
-direct.data.forEach(r=>categories.add(r.category));
-indirect.data.forEach(r=>categories.add(r.category));
-
-categories = Array.from(categories);
-
-let html = "";
+let categories = [...new Set(data.map(r=>r.category))];
 
 let grandTotals = Array(24).fill(0);
 
+let html = "";
+
 categories.forEach(cat=>{
 
-let rowTotals = Array(24).fill(0);
+ let rowTotals = Array(24).fill(0);
 
-for(let i=0;i<24;i++){
+ for(let i=0;i<24;i++){
 
- const year = i<12?2025:2026;
- const month = (i%12)+1;
+   const year = i<12?2025:2026;
+   const month = (i%12)+1;
 
- let d = 0;
- let ind = 0;
+   let sum = data
+     .filter(r=>r.category===cat)
+     .filter(r=>r.year===year && r.month===month)
+     .filter(r=>depot==="ALL" || r.cost_center===depot)
+     .reduce((acc,r)=>acc + (r.actual_amount||0),0);
 
- if(costType!=="INDIRECT"){
-   d = direct.data
-     .filter(r=>r.category==cat && r.year==year && r.month==month)
-     .filter(r=>depot==="ALL" || r.depot==depot)
-     .reduce((sum,x)=>sum+x.value,0);
+   const mpkr = sum / 1000000;
+
+   rowTotals[i] = mpkr;
+   grandTotals[i] += mpkr;
  }
 
- if(costType!=="DIRECT"){
-   ind = indirect.data
-     .filter(r=>r.category==cat && r.year==year && r.month==month)
-     .filter(r=>depot==="ALL" || r.depot==depot)
-     .reduce((sum,x)=>sum+x.value,0);
- }
+ html += "<tr>";
+ html += `<td style="text-align:left">${cat}</td>`;
 
- const total = (d + ind) / 1000000; // convert to MPKR
+ rowTotals.forEach(v=>{
+   html += `<td>${v? v.toFixed(2):"-"}</td>`;
+ });
 
- rowTotals[i] = total;
- grandTotals[i] += total;
-}
-
-html += "<tr>";
-html += `<td style="text-align:left">${cat}</td>`;
-
-rowTotals.forEach(v=>{
- html += `<td>${v? v.toFixed(2):"-"}</td>`;
-});
-
-html += "</tr>";
-
+ html += "</tr>";
 });
 
 html += `<tr class="total-row"><td>Total</td>`;
 grandTotals.forEach(v=>{
- html += `<td>${v? v.toFixed(2):"-"}</td>`;
+  html += `<td>${v? v.toFixed(2):"-"}</td>`;
 });
 html += "</tr>";
 
 document.getElementById("tableBody").innerHTML = html;
+
 }
 
 async function logout(){
-await supabaseClient.auth.signOut();
-window.location.replace("login.html");
+ await supabaseClient.auth.signOut();
+ window.location.replace("login.html");
 }
 
 loadTable();
+
 </script>
 
 </body>
