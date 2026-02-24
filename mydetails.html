@@ -1,127 +1,203 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>My Details</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{
-    font-family: Arial;
-    background:#f4f6f9;
-    padding:40px;
+@font-face { font-family: '72 Condensed'; src: local('72 Condensed'); }
+
+body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
+
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 20px;
+  background:white;
+  border-bottom:2px solid #e0e0e0;
 }
+
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.header-left img{height:40px;}
+.wafi-logo{height:40px;}
+
+.header-title{
+font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
+}
+
+.layout{display:flex;height:calc(100vh - 62px);}
+
+.sidebar{
+width:220px;background:#404040;color:white;
+display:flex;flex-direction:column;padding-top:20px;
+}
+.sidebar h4{padding:10px 20px;margin:0;}
+.sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
+.sidebar a:hover{background:#505050;}
+.sidebar .logout{margin-top:auto;border-top:1px solid #555;}
+
+.main{flex:1;padding:20px;overflow-y:auto;}
 
 .container{
-    max-width:900px;
-    margin:auto;
-    background:white;
-    padding:30px;
-    border-radius:10px;
-    box-shadow:0 5px 20px rgba(0,0,0,0.05);
-}
-
-h2{
-    border-bottom:1px solid #ddd;
-    padding-bottom:10px;
-}
-
-.section{
-    margin-top:30px;
+  background:white;
+  padding:20px;
+  border-radius:6px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom:20px;
 }
 
 .card{
-    background:#f9fafb;
-    padding:15px;
-    border-radius:6px;
-    margin-bottom:10px;
+  background:#f9f9f9;
+  padding:12px;
+  border-radius:4px;
+  margin-bottom:10px;
+  border-left:4px solid #76B531;
 }
+
+h3{margin-top:0;}
+.empty{color:#888;}
 </style>
 </head>
 
 <body>
 
+<div class="header">
+  <div class="header-left">
+    <img src="orbit-logo.png">
+    <h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+  </div>
+  <img src="wafi-logo.png" class="wafi-logo">
+</div>
+
+<div class="layout">
+<div class="sidebar">
+
+  <h4>INITIATIVE</h4>
+  <a href="index.html">All Initiatives - List</a>
+  <a href="add-initiative.html">Add New Initiative</a>
+  <a href="dashboard.html">Dashboard</a>
+
+  <h4>PEOPLE</h4>
+  <a href="people-employees.html">Competency Tracker</a>
+
+  <a href="my-details.html">My Details</a>
+
+  <a href="#" onclick="logout()" class="logout">Logout</a>
+
+</div>
+
+<div class="main">
+
+<h2>My Details</h2>
+
 <div class="container">
-    <h1>My Details</h1>
+  <h3>My Training / Competency Status</h3>
+  <div id="trainingSection">Loading...</div>
+</div>
 
-    <div class="section">
-        <h2>Training Status</h2>
-        <div id="trainingList">Loading...</div>
-    </div>
+<div class="container">
+  <h3>My Initiatives (Project Owner)</h3>
+  <div id="initiativeSection">Loading...</div>
+</div>
 
-    <div class="section">
-        <h2>My Initiatives</h2>
-        <div id="initiativeList">Loading...</div>
-    </div>
+</div>
 </div>
 
 <script>
 
-const supabase = window.supabase.createClient(
-    "https://YOUR_PROJECT_ID.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
-);
+const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";   // use same key
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-async function loadMyDetails(){
+async function init(){
 
-    const { data: { user } } = await supabase.auth.getUser();
+ const {data} = await supabaseClient.auth.getSession();
 
-    if(!user){
-        alert("Not logged in");
-        return;
-    }
+ if(!data.session){
+   window.location.replace("login.html");
+   return;
+ }
 
-    const email = user.email;
+ const userEmail = data.session.user.email;
 
-    // 1️⃣ Fetch Training Status
-    const { data: trainingData, error: trainingError } =
-        await supabase
-            .from('training_status')
-            .select('*')
-            .eq('email', email);
-
-    const trainingDiv = document.getElementById("trainingList");
-    trainingDiv.innerHTML = "";
-
-    if(trainingData && trainingData.length > 0){
-        trainingData.forEach(item=>{
-            trainingDiv.innerHTML += `
-                <div class="card">
-                    <strong>${item.training_name}</strong><br>
-                    Status: ${item.status}
-                </div>
-            `;
-        });
-    } else {
-        trainingDiv.innerHTML = "No training records found.";
-    }
-
-    // 2️⃣ Fetch Initiatives Owned by User
-    const { data: initiativeData, error: initiativeError } =
-        await supabase
-            .from('initiatives')
-            .select('*')
-            .eq('owner_email', email);
-
-    const initiativeDiv = document.getElementById("initiativeList");
-    initiativeDiv.innerHTML = "";
-
-    if(initiativeData && initiativeData.length > 0){
-        initiativeData.forEach(item=>{
-            initiativeDiv.innerHTML += `
-                <div class="card">
-                    <strong>${item.title}</strong><br>
-                    Status: ${item.status}
-                </div>
-            `;
-        });
-    } else {
-        initiativeDiv.innerHTML = "No initiatives assigned.";
-    }
-
+ loadTraining(userEmail);
+ loadInitiatives(userEmail);
 }
 
-loadMyDetails();
+init();
+
+
+// =====================
+// LOAD TRAINING STATUS
+// =====================
+async function loadTraining(email){
+
+ const {data,error} = await supabaseClient
+   .from('employee_competency')   // <-- adjust if your table name differs
+   .select('*')
+   .eq('employee_email', email);
+
+ const section = document.getElementById("trainingSection");
+ section.innerHTML = "";
+
+ if(!data || data.length === 0){
+   section.innerHTML = "<div class='empty'>No competency records assigned.</div>";
+   return;
+ }
+
+ data.forEach(row=>{
+   section.innerHTML += `
+     <div class="card">
+       <strong>${row.competency_name}</strong><br>
+       Status: ${row.status}
+     </div>
+   `;
+ });
+}
+
+
+// =====================
+// LOAD MY INITIATIVES
+// =====================
+async function loadInitiatives(email){
+
+ const {data,error} = await supabaseClient
+   .from('initiatives')
+   .select('*')
+   .eq('project_owner_email', email)
+   .order('created_at', {ascending:false});
+
+ const section = document.getElementById("initiativeSection");
+ section.innerHTML = "";
+
+ if(!data || data.length === 0){
+   section.innerHTML = "<div class='empty'>No initiatives assigned.</div>";
+   return;
+ }
+
+ data.forEach(row=>{
+   section.innerHTML += `
+     <div class="card">
+       <strong>${row.initiative_name}</strong><br>
+       Terminal: ${row.terminal_name}<br>
+       Status: ${row.status}
+     </div>
+   `;
+ });
+}
+
+
+async function logout(){
+ await supabaseClient.auth.signOut();
+ window.location.replace("login.html");
+}
 
 </script>
 
