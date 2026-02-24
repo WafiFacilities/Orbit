@@ -9,7 +9,47 @@
 @font-face { font-family: '72 Condensed'; src: local('72 Condensed'); }
 
 body { font-family:'72 Condensed', Arial; margin:0; background:#f4f6f9; }
+.attachment-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
 
+.view-btn {
+  background: #76B531;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  width: 140px;
+}
+
+.view-btn:hover {
+  background: #5f9427;
+}
+
+.upload-btn {
+  background: #404040;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: center;
+  width: 140px;
+}
+
+.upload-btn:hover {
+  background: #2f2f2f;
+}
+
+.no-file {
+  font-size: 12px;
+  color: #999;
+}
 .header { display:flex; align-items:center; padding:10px 20px; background:white; border-bottom:2px solid #e0e0e0; }
 .header img { height:40px; margin-right:15px; }
 .header-title { font-size:22px; font-weight:bold; text-transform:uppercase; }
@@ -173,14 +213,21 @@ async function load(){
       ${canEdit ? '' : 'disabled'}>
   </td>
 
-  <td>
-    ${rec.attachment_path ? 
-      `<button onclick="viewAttachment('${rec.attachment_path}')">View</button><br>` 
-      : ''}
-    ${canEdit ? 
-      `<input type="file" id="file_${c.id}" />` 
-      : ''}
-  </td>
+  <td class="attachment-cell">
+  ${rec.attachment_path ? 
+    `<button class="view-btn" onclick="viewAttachment('${rec.attachment_path}')">
+      📎 View Attachment
+    </button>` 
+    : `<span class="no-file">No Attachment</span>`
+  }
+
+  ${canEdit ? `
+    <label class="upload-btn">
+      ⬆ Upload
+      <input type="file" id="file_${c.id}" hidden>
+    </label>
+  ` : ''}
+</td>
 
   <td>${rec.created_at ? rec.created_at.split("T")[0] : ''}</td>
 
@@ -291,4 +338,5 @@ load();
 
 </body>
 </html>
+
 
