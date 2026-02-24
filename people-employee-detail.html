@@ -116,17 +116,18 @@ async function load(){
       .eq("employee_id", empId);
 
   let html = `
-  <table>
-  <tr>
-    <th>Training</th>
-    <th>Completion Date</th>
-    <th>Expiry Date</th>
-    <th>Target Date</th>
-    <th>Assessed By</th>
-    <th>Remarks</th>
-    <th>Created At</th>
-    <th>Save</th>
-  </tr>`;
+<table>
+<tr>
+  <th>Training</th>
+  <th>Completion Date</th>
+  <th>Expiry Date</th>
+  <th>Target Date</th>
+  <th>Assessed By</th>
+  <th>Remarks</th>
+  <th>Attachment</th>
+  <th>Created At</th>
+  <th>Save</th>
+</tr>`;
 
   competencyTypes.forEach(c => {
 
@@ -139,50 +140,57 @@ async function load(){
       || superUser;
 
     html += `
-    <tr>
-      <td>${c.name}</td>
+<tr>
+  <td>${c.name}</td>
 
-      <td>
-        <input type="date"
-          id="completion_${c.id}"
-          value="${rec.completion_date || ''}"
-          ${canEdit ? '' : 'disabled'}>
-      </td>
+  <td>
+    <input type="date"
+      id="completion_${c.id}"
+      value="${rec.completion_date || ''}"
+      ${canEdit ? '' : 'disabled'}>
+  </td>
 
-      <td>
-        ${rec.expiry_date || ''}
-      </td>
+  <td>${rec.expiry_date || ''}</td>
 
-      <td>
-        <input type="date"
-          id="target_${c.id}"
-          value="${rec.target_date || ''}"
-          ${superUser ? '' : 'disabled'}>
-      </td>
+  <td>
+    <input type="date"
+      id="target_${c.id}"
+      value="${rec.target_date || ''}"
+      ${superUser ? '' : 'disabled'}>
+  </td>
 
-      <td>
-        <input type="text"
-          id="assessed_${c.id}"
-          value="${rec.assessed_by || ''}"
-          ${canEdit ? '' : 'disabled'}>
-      </td>
+  <td>
+    <input type="text"
+      id="assessed_${c.id}"
+      value="${rec.assessed_by || ''}"
+      ${canEdit ? '' : 'disabled'}>
+  </td>
 
-      <td>
-        <input type="text"
-          id="remarks_${c.id}"
-          value="${rec.remarks || ''}"
-          ${canEdit ? '' : 'disabled'}>
-      </td>
+  <td>
+    <input type="text"
+      id="remarks_${c.id}"
+      value="${rec.remarks || ''}"
+      ${canEdit ? '' : 'disabled'}>
+  </td>
 
-      <td>${rec.created_at ? rec.created_at.split("T")[0] : ''}</td>
+  <td>
+    ${rec.attachment_path ? 
+      `<button onclick="viewAttachment('${rec.attachment_path}')">View</button><br>` 
+      : ''}
+    ${canEdit ? 
+      `<input type="file" id="file_${c.id}" />` 
+      : ''}
+  </td>
 
-      <td>
-        ${canEdit ? `
-        <button onclick="save(${empId}, ${c.id})">
-          Save
-        </button>` : ''}
-      </td>
-    </tr>`;
+  <td>${rec.created_at ? rec.created_at.split("T")[0] : ''}</td>
+
+  <td>
+    ${canEdit ? `
+    <button onclick="save(${empId}, ${c.id})">
+      Save
+    </button>` : ''}
+  </td>
+</tr>`;
   });
 
   html += "</table>";
@@ -195,8 +203,10 @@ async function save(empId, compId){
   const target = document.getElementById(`target_${compId}`).value;
   const assessed = document.getElementById(`assessed_${compId}`).value;
   const remarks = document.getElementById(`remarks_${compId}`).value;
+  const fileInput = document.getElementById(`file_${compId}`);
+  const file = fileInput ? fileInput.files[0] : null;
 
-  // 🔥 AUTO CALCULATE EXPIRY
+  // Auto calculate expiry
   const { data: comp } = await supabaseClient
     .from("competency_types")
     .select("validity_years")
@@ -211,6 +221,25 @@ async function save(empId, compId){
     expiry = d.toISOString().split("T")[0];
   }
 
+  let attachmentPath = null;
+  let attachmentName = null;
+
+  if(file){
+    const filePath = `${empId}_${compId}_${Date.now()}_${file.name}`;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from("competency-attachments")
+      .upload(filePath, file, { upsert: true });
+
+    if(uploadError){
+      alert(uploadError.message);
+      return;
+    }
+
+    attachmentPath = filePath;
+    attachmentName = file.name;
+  }
+
   const { error } = await supabaseClient
     .from("employee_competencies")
     .upsert(
@@ -221,13 +250,16 @@ async function save(empId, compId){
         expiry_date: expiry,
         target_date: target || null,
         assessed_by: assessed || null,
-        remarks: remarks || null
+        remarks: remarks || null,
+        ...(attachmentPath && {
+          attachment_path: attachmentPath,
+          attachment_name: attachmentName
+        })
       },
       { onConflict: 'employee_id,competency_type_id' }
     );
 
   if (error) {
-    console.log(error);
     alert(error.message);
     return;
   }
@@ -235,7 +267,19 @@ async function save(empId, compId){
   alert("Saved");
   load();
 }
+  async function viewAttachment(path){
 
+  const { data } = await supabaseClient.storage
+    .from("competency-attachments")
+    .createSignedUrl(path, 60);
+
+  if(data?.signedUrl){
+    window.open(data.signedUrl, "_blank");
+  } else {
+    alert("Unable to open file");
+  }
+}
+  
 async function logout(){
   await supabaseClient.auth.signOut();
   window.location.replace("login.html");
@@ -247,3 +291,4 @@ load();
 
 </body>
 </html>
+
