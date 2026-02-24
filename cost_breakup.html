@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cost Breakup</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+@font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
+
+body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
+
+.header{
+display:flex;align-items:center;justify-content:space-between;
+padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;
+}
+
+.header-left{display:flex;align-items:center;gap:12px;}
+.header-left img{height:40px;}
+.wafi-logo{height:40px;}
+.header-title{
+font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
+}
+
+.layout{display:flex;height:calc(100vh - 62px);}
+
+.sidebar{
+width:220px;background:#404040;color:white;
+display:flex;flex-direction:column;padding-top:20px;
+}
+
+.sidebar h4{padding:10px 20px;margin:0;}
+.sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
+.sidebar a:hover{background:#505050;}
+.sidebar .logout{margin-top:auto;border-top:1px solid #555;}
+
+.main{flex:1;padding:20px;overflow-y:auto;}
+
+.filters{margin-bottom:15px;}
+select{
+padding:6px;border-radius:4px;border:1px solid #ccc;
+font-family:'72 Condensed';
+margin-right:10px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:6px;
+text-align:center;
+}
+
+th{
+background:#76B531;
+color:white;
+font-size:12px;
+}
+
+.total-row{
+font-weight:bold;
+background:#f2f2f2;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<div class="header-left">
+<img src="orbit-logo.png">
+<h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+</div>
+<img src="wafi-logo.png" class="wafi-logo">
+</div>
+
+<div class="layout">
+
+<div class="sidebar">
+<h4>FINANCIAL</h4>
+<a href="cost_breakup.html">Cost Breakup</a>
+<a href="unit-cost-tabular.html">Unit Cost Tabular</a>
+<a href="#" onclick="logout()" class="logout">Logout</a>
+</div>
+
+<div class="main">
+
+<h2>Category-wise Cost Breakup (MPKR)</h2>
+
+<div class="filters">
+<select id="depotFilter" onchange="loadTable()">
+<option value="ALL">All Depots</option>
+<option>KMR</option>
+<option>CKL</option>
+<option>MCH</option>
+<option>SKP</option>
+<option>DLP</option>
+<option>TJB</option>
+<option>BHK</option>
+<option>SSH</option>
+<option>VHR</option>
+<option>GTI</option>
+</select>
+
+<select id="costTypeFilter" onchange="loadTable()">
+<option value="BOTH">Both</option>
+<option value="DIRECT">Direct</option>
+<option value="INDIRECT">Indirect</option>
+</select>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<script>
+const monthLabels = [];
+const years = [2025, 2026];
+years.forEach(y=>{
+ for(let m=1;m<=12;m++){
+   monthLabels.push(
+     new Date(y,m-1,1).toLocaleString('en',{month:'short'}) + "'" + String(y).slice(-2)
+   );
+ }
+});
+monthLabels.forEach(l=>{
+ document.write(`<th>${l}</th>`);
+});
+</script>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+
+</table>
+
+</div>
+</div>
+
+<script>
+const supabaseClient = supabase.createClient(
+"https://kqhbvmqxrwwspopwckah.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
+);
+
+async function loadTable(){
+
+const depot = document.getElementById("depotFilter").value;
+const costType = document.getElementById("costTypeFilter").value;
+
+const direct = await supabaseClient.from("direct_cost_data").select("*");
+const indirect = await supabaseClient.from("indirect_cost_data").select("*");
+
+let categories = new Set();
+
+direct.data.forEach(r=>categories.add(r.category));
+indirect.data.forEach(r=>categories.add(r.category));
+
+categories = Array.from(categories);
+
+let html = "";
+
+let grandTotals = Array(24).fill(0);
+
+categories.forEach(cat=>{
+
+let rowTotals = Array(24).fill(0);
+
+for(let i=0;i<24;i++){
+
+ const year = i<12?2025:2026;
+ const month = (i%12)+1;
+
+ let d = 0;
+ let ind = 0;
+
+ if(costType!=="INDIRECT"){
+   d = direct.data
+     .filter(r=>r.category==cat && r.year==year && r.month==month)
+     .filter(r=>depot==="ALL" || r.depot==depot)
+     .reduce((sum,x)=>sum+x.value,0);
+ }
+
+ if(costType!=="DIRECT"){
+   ind = indirect.data
+     .filter(r=>r.category==cat && r.year==year && r.month==month)
+     .filter(r=>depot==="ALL" || r.depot==depot)
+     .reduce((sum,x)=>sum+x.value,0);
+ }
+
+ const total = (d + ind) / 1000000; // convert to MPKR
+
+ rowTotals[i] = total;
+ grandTotals[i] += total;
+}
+
+html += "<tr>";
+html += `<td style="text-align:left">${cat}</td>`;
+
+rowTotals.forEach(v=>{
+ html += `<td>${v? v.toFixed(2):"-"}</td>`;
+});
+
+html += "</tr>";
+
+});
+
+html += `<tr class="total-row"><td>Total</td>`;
+grandTotals.forEach(v=>{
+ html += `<td>${v? v.toFixed(2):"-"}</td>`;
+});
+html += "</tr>";
+
+document.getElementById("tableBody").innerHTML = html;
+}
+
+async function logout(){
+await supabaseClient.auth.signOut();
+window.location.replace("login.html");
+}
+
+loadTable();
+</script>
+
+</body>
+</html>
