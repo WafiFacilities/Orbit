@@ -10,6 +10,17 @@
 @font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
 body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 
+  .project-link{
+  color:#76B531;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.project-link:hover{
+  text-decoration:underline;
+  color:#5a8f26;
+}
+  
 .header{
 display:flex;align-items:center;justify-content:space-between;
 padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;
@@ -184,7 +195,7 @@ color:#76B531;text-decoration:none;font-weight:bold;
 
 const supabaseClient = supabase.createClient(
 "https://kqhbvmqxrwwspopwckah.supabase.co",
-"YOUR_ANON_KEY"
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
 );
 
 let currentPage=1;
