@@ -7,40 +7,103 @@
 
 <style>
 @font-face { font-family: '72 Condensed'; src: local('72 Condensed'); }
+
 body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
+
 .header{
-display:flex;align-items:center;justify-content:space-between;
-padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 20px;
+  background:white;
+  border-bottom:2px solid #e0e0e0;
 }
-.header-left{display:flex;align-items:center;gap:12px;}
-.header-left img{height:40px;}
-.wafi-logo{height:40px;}
-.header-title{font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;}
+
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.header-left img{ height:40px; }
+.wafi-logo{ height:40px; }
+
+.header-title{
+font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
+}
+
 .layout{display:flex;height:calc(100vh - 62px);}
+
 .sidebar{
 width:220px;background:#404040;color:white;
 display:flex;flex-direction:column;padding-top:20px;
 }
+
 .sidebar h4{padding:10px 20px;margin:0;}
 .sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
 .sidebar a:hover{background:#505050;}
 .sidebar .logout{margin-top:auto;border-top:1px solid #555;}
+
 .main{flex:1;padding:20px;overflow-y:auto;}
+
 .container{
-background:white;padding:20px;border-radius:6px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);max-width:900px;
+  background:white;
+  padding:20px;
+  border-radius:6px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  max-width:900px;
 }
+
 .data-row{display:flex;margin-bottom:12px;align-items:center;}
 .data-row label{flex:0 0 200px;font-weight:bold;}
 .data-row .value{flex:1;padding:6px;border:1px solid #ddd;background:#f9f9f9;}
-.commentary-box{border:1px solid #ddd;padding:10px;background:#f9f9f9;max-height:250px;overflow-y:auto;}
-.edit-box{margin-top:20px;padding:15px;background:#eef3f8;border-radius:6px;}
-.edit-box input,.edit-box select,.edit-box textarea{
-width:100%;padding:6px;margin-bottom:10px;border:1px solid #ccc;border-radius:4px;
+
+.commentary-box{
+  border:1px solid #ddd;
+  padding:10px;
+  background:#f9f9f9;
+  max-height:250px;
+  overflow-y:auto;
 }
-button{padding:8px 16px;background:#76B531;color:white;border:none;border-radius:4px;cursor:pointer;}
-.success{color:green;}
+
+.comment-entry{
+  margin-bottom:10px;
+  padding-bottom:10px;
+  border-bottom:1px solid #ccc;
+}
+
+.comment-entry:last-child{ border-bottom:none; }
+
+.comment-date{
+  font-size:12px;
+  color:#666;
+  margin-bottom:4px;
+}
+
+.edit-box{margin-top:20px;padding:15px;background:#eef3f8;border-radius:6px;}
+
+.edit-box input,
+.edit-box select,
+.edit-box textarea{
+  width:100%;
+  padding:6px;
+  margin-bottom:10px;
+  border:1px solid #ccc;
+  border-radius:4px;
+  font-family:'72 Condensed';
+}
+
+button{
+  padding:8px 16px;
+  background:#76B531;
+  color:white;
+  border:none;
+  border-radius:4px;
+  cursor:pointer;
+}
+
 .error{color:red;}
+.success{color:green;}
 .warning{color:#c0392b;font-weight:bold;margin-top:10px;}
 </style>
 </head>
@@ -48,19 +111,19 @@ button{padding:8px 16px;background:#76B531;color:white;border:none;border-radius
 <body>
 
 <div class="header">
-<div class="header-left">
-<img src="orbit-logo.png">
-<h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
-</div>
-<img src="wafi-logo.png" class="wafi-logo">
+  <div class="header-left">
+    <img src="orbit-logo.png">
+    <h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+  </div>
+  <img src="wafi-logo.png" class="wafi-logo">
 </div>
 
 <div class="layout">
 <div class="sidebar">
-<h4>PROJECTS</h4>
-<a href="projects.html">All Projects</a>
-<a href="add-project.html">Add Project</a>
-<a href="#" onclick="logout()" class="logout">Logout</a>
+  <h4>PROJECTS</h4>
+  <a href="projects.html">All Projects</a>
+  <a href="add-project.html">Add New Project</a>
+  <a href="#" onclick="logout()" class="logout">Logout</a>
 </div>
 
 <div class="main">
@@ -79,23 +142,25 @@ This project is CLOSED. Only superusers can modify it.
 
 <label>Status</label>
 <select id="owner_status">
-<option>Open - Initiated</option>
-<option>Open - Under Execution</option>
-<option>Under MOC</option>
-<option>Closed</option>
-<option>Dropped</option>
+  <option>Open - Initiated</option>
+  <option>Open - Under Execution</option>
+  <option>Under MOC</option>
+  <option>Closed</option>
+  <option>Dropped</option>
 </select>
 
 <label>Add Commentary</label>
 <textarea id="owner_commentary"></textarea>
 
 <button onclick="saveOwnerUpdate()">Save Update</button>
+
 <p class="success" id="ownerSuccess" style="display:none;">Updated successfully</p>
 <p class="error" id="ownerError"></p>
 </div>
 
 <!-- SUPERUSER EDIT -->
 <div class="container edit-box" id="adminEditSection" style="display:none;">
+
 <h3>Edit Project</h3>
 
 <label>Project Name</label>
@@ -106,8 +171,8 @@ This project is CLOSED. Only superusers can modify it.
 
 <label>Project Type</label>
 <select id="edit_type">
-<option>Opex</option>
-<option>Capex</option>
+  <option>Opex</option>
+  <option>Capex</option>
 </select>
 
 <label>Project Category</label>
@@ -124,11 +189,11 @@ This project is CLOSED. Only superusers can modify it.
 
 <label>Status</label>
 <select id="edit_status">
-<option>Open - Initiated</option>
-<option>Open - Under Execution</option>
-<option>Under MOC</option>
-<option>Closed</option>
-<option>Dropped</option>
+  <option>Open - Initiated</option>
+  <option>Open - Under Execution</option>
+  <option>Under MOC</option>
+  <option>Closed</option>
+  <option>Dropped</option>
 </select>
 
 <label>Description</label>
@@ -144,21 +209,23 @@ This project is CLOSED. Only superusers can modify it.
 <textarea id="edit_commentary"></textarea>
 
 <button onclick="saveAllEdits()">Save All Changes</button>
+
 <p class="success" id="successMsg" style="display:none;">Saved successfully</p>
 <p class="error" id="errorMsg"></p>
+
 </div>
 
 </div>
 </div>
 
 <script>
-const supabaseClient = supabase.createClient(
-"https://kqhbvmqxrwwspopwckah.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
-);
+
+const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 const id = new URLSearchParams(window.location.search).get("id");
-let currentData=null;
+let currentData = null;
 
 async function isSuperUser(){
  const session = await supabaseClient.auth.getSession();
@@ -169,35 +236,56 @@ async function isSuperUser(){
    .select('*')
    .eq('email', email);
 
- return data.length>0;
+ return data.length > 0;
 }
 
 async function init(){
- const {data}=await supabaseClient.auth.getSession();
- if(!data.session) window.location="login.html";
+ const {data} = await supabaseClient.auth.getSession();
+ if(!data.session) window.location.replace("login.html");
  loadDetail();
 }
 init();
 
 function formatCommentary(text){
+
  if(!text) return "<i>No commentary yet</i>";
- return `<div class="commentary-box">${text.replace(/\n/g,"<br>")}</div>`;
+
+ const lines = text.split("\n").filter(l => l.trim() !== "");
+ let html = '<div class="commentary-box">';
+
+ lines.forEach(line => {
+   if(line.startsWith("[")){
+     html += `
+       <div class="comment-entry">
+         <div class="comment-date">${line.substring(0, line.indexOf("]")+1)}</div>
+         <div>${line.substring(line.indexOf("]")+1)}</div>
+       </div>
+     `;
+   } else {
+     html += `<div class="comment-entry">${line}</div>`;
+   }
+ });
+
+ html += "</div>";
+ return html;
 }
 
 async function loadDetail(){
- const {data}=await supabaseClient
+
+ const {data} = await supabaseClient
    .from('projects')
    .select('*')
-   .eq('id',id)
+   .eq('id', id)
    .single();
 
  if(!data) return;
 
- currentData=data;
+ currentData = data;
 
- pageTitle.innerText=`Project Detail – ${data.project_name} | ${data.terminal_name}`;
+ pageTitle.innerText =
+   `Project Detail – ${data.project_name} | ${data.terminal_name}`;
 
- viewSection.innerHTML=`
+ viewSection.innerHTML = `
  <div class="data-row"><label>Name:</label><div class="value">${data.project_name}</div></div>
  <div class="data-row"><label>Terminal:</label><div class="value">${data.terminal_name}</div></div>
  <div class="data-row"><label>Type:</label><div class="value">${data.project_type}</div></div>
@@ -210,106 +298,116 @@ async function loadDetail(){
  <div class="data-row"><label>Commentary:</label><div class="value">${formatCommentary(data.commentary)}</div></div>
  `;
 
- const session=await supabaseClient.auth.getSession();
- const userEmail=session.data.session.user.email;
- const superUser=await isSuperUser();
+ const session = await supabaseClient.auth.getSession();
+ const userEmail = session.data.session.user.email;
+ const superUser = await isSuperUser();
 
- if(data.status==="Closed"){
-   closedWarning.style.display="block";
-   if(superUser) adminEditSection.style.display="block";
+ if(data.status === "Closed"){
+   closedWarning.style.display = "block";
+   if(superUser) adminEditSection.style.display = "block";
  }
  else{
-   if(superUser) adminEditSection.style.display="block";
-   else if(userEmail.toLowerCase()===data.project_owner_email.toLowerCase()){
-     ownerEditSection.style.display="block";
-     owner_status.value=data.status;
+   if(superUser){
+     adminEditSection.style.display = "block";
+   }
+   else if(userEmail.toLowerCase() === (data.project_owner_email || "").toLowerCase()){
+     ownerEditSection.style.display = "block";
+     owner_status.value = data.status;
    }
  }
 
  if(superUser){
-   edit_name.value=data.project_name;
-   edit_terminal.value=data.terminal_name;
-   edit_type.value=data.project_type;
-   edit_category.value=data.project_category||'';
-   edit_budget.value=data.planned_pkr||'';
-   edit_sponsor.value=data.sponsor||'';
-   edit_contractor.value=data.contractor||'';
-   edit_status.value=data.status;
-   edit_description.value=data.description||'';
-   edit_target.value=data.target_date||'';
-   edit_owner.value=data.project_owner_email;
+   edit_name.value = data.project_name;
+   edit_terminal.value = data.terminal_name;
+   edit_type.value = data.project_type;
+   edit_category.value = data.project_category || '';
+   edit_budget.value = data.planned_pkr || '';
+   edit_sponsor.value = data.sponsor || '';
+   edit_contractor.value = data.contractor || '';
+   edit_status.value = data.status;
+   edit_description.value = data.description || '';
+   edit_target.value = data.target_date || '';
+   edit_owner.value = data.project_owner_email || '';
  }
 }
 
 async function saveOwnerUpdate(){
- let updatedCommentary=currentData.commentary||"";
+
+ let updatedCommentary = currentData.commentary || "";
 
  if(owner_commentary.value){
-   const now=new Date().toLocaleString();
-   updatedCommentary+=`\n[${now}] ${owner_commentary.value}`;
+   const now = new Date().toLocaleString();
+   updatedCommentary += `\n[${now}] ${owner_commentary.value}`;
  }
 
- const {error}=await supabaseClient
+ const updates = {
+   status: owner_status.value,
+   commentary: updatedCommentary
+ };
+
+ const {error} = await supabaseClient
    .from('projects')
-   .update({
-     status: owner_status.value,
-     commentary: updatedCommentary
-   })
-   .eq('id',id);
+   .update(updates)
+   .eq('id', id);
 
  if(error){
-   ownerError.innerText=error.message;
+   ownerError.innerText = error.message;
    return;
  }
 
- ownerSuccess.style.display="block";
+ ownerSuccess.style.display = "block";
  owner_commentary.value="";
  loadDetail();
 }
 
 async function saveAllEdits(){
 
- let updatedCommentary=currentData.commentary||"";
+ let updates = { ...currentData };
+
+ updates.project_name = edit_name.value;
+ updates.terminal_name = edit_terminal.value;
+ updates.project_type = edit_type.value;
+ updates.project_category = edit_category.value;
+ updates.planned_pkr = edit_budget.value ? parseFloat(edit_budget.value) : null;
+ updates.sponsor = edit_sponsor.value;
+ updates.contractor = edit_contractor.value;
+ updates.status = edit_status.value;
+ updates.description = edit_description.value;
+ updates.target_date = edit_target.value;
+ updates.project_owner_email = edit_owner.value;
+
+ let updatedCommentary = currentData.commentary || "";
 
  if(edit_commentary.value){
-   const now=new Date().toLocaleString();
-   updatedCommentary+=`\n[${now}] ${edit_commentary.value}`;
+   const now = new Date().toLocaleString();
+   updatedCommentary += `\n[${now}] ${edit_commentary.value}`;
  }
 
- const updates={
-   project_name: edit_name.value,
-   terminal_name: edit_terminal.value,
-   project_type: edit_type.value,
-   project_category: edit_category.value,
-   planned_pkr: parseFloat(edit_budget.value)||null,
-   sponsor: edit_sponsor.value||null,
-   contractor: edit_contractor.value||null,
-   status: edit_status.value,
-   description: edit_description.value,
-   target_date: edit_target.value||null,
-   project_owner_email: edit_owner.value,
-   commentary: updatedCommentary
- };
+ updates.commentary = updatedCommentary;
 
- const {error}=await supabaseClient
+ delete updates.created_at;
+ delete updates.id;
+
+ const {error} = await supabaseClient
    .from('projects')
    .update(updates)
-   .eq('id',id);
+   .eq('id', id);
 
  if(error){
-   errorMsg.innerText=error.message;
+   errorMsg.innerText = error.message;
    return;
  }
 
- successMsg.style.display="block";
- edit_commentary.value="";
+ successMsg.style.display = "block";
+ edit_commentary.value = "";
  loadDetail();
 }
 
 async function logout(){
  await supabaseClient.auth.signOut();
- window.location="login.html";
+ window.location.replace("login.html");
 }
+
 </script>
 
 </body>
