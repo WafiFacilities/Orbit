@@ -173,9 +173,9 @@ color:#76B531;text-decoration:none;font-weight:bold;
 <th data-column="status">Status</th>
 <th>Indicator</th>
 <th data-column="planned_pkr">Planned PKR</th>
-<th data-column="start_date">Start</th>
+
 <th data-column="target_date">Target</th>
-<th>Owner</th>
+
 <th>Commentary</th>
 </tr>
 </thead>
@@ -261,18 +261,19 @@ tbody.innerHTML+=`
 <td>${from+index+1}</td>
 <td>${row.terminal_name||''}</td>
 <td>${row.year||''}</td>
-<td><a class="project-link" href="project-detail.html?id=${row.id}">
-${row.project_name||''}</a></td>
+<td>
+  <a class="project-link" href="project-detail.html?id=${row.id}">
+    ${row.project_name||''}
+  </a>
+</td>
 <td>${row.project_type||''}</td>
 <td>${row.project_category||''}</td>
 <td>${row.status||''}</td>
 <td><div class="indicator ${indicatorClass}">${indicatorText}</div></td>
 <td>${row.planned_pkr||''}</td>
-<td>${row.start_date||''}</td>
 <td>${row.target_date||''}</td>
-<td>${row.project_owner_email||''}</td>
 <td class="commentary-cell">
-<div class="commentary-box">${row.commentary||''}</div>
+  <div class="commentary-box">${row.commentary||''}</div>
 </td>
 </tr>`;
 });
