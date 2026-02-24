@@ -137,15 +137,24 @@ init();
 // =====================
 // LOAD TRAINING STATUS
 // =====================
+// =====================
+// LOAD TRAINING STATUS
+// =====================
 async function loadTraining(email){
 
  const {data,error} = await supabaseClient
-   .from('employee_competency')   // <-- adjust if your table name differs
+   .from('employee_competencies')   // ✅ CORRECT TABLE NAME
    .select('*')
    .eq('employee_email', email);
 
  const section = document.getElementById("trainingSection");
  section.innerHTML = "";
+
+ if(error){
+   section.innerHTML = "<div class='empty'>Error loading competency records.</div>";
+   console.log(error);
+   return;
+ }
 
  if(!data || data.length === 0){
    section.innerHTML = "<div class='empty'>No competency records assigned.</div>";
@@ -153,15 +162,25 @@ async function loadTraining(email){
  }
 
  data.forEach(row=>{
+
+   // Optional status color logic
+   let borderColor = "#76B531"; // default green
+
+   if(row.status === "Expired"){
+     borderColor = "#c0392b";
+   }
+   else if(row.status === "In Progress"){
+     borderColor = "#f39c12";
+   }
+
    section.innerHTML += `
-     <div class="card">
+     <div class="card" style="border-left:4px solid ${borderColor}">
        <strong>${row.competency_name}</strong><br>
-       Status: ${row.status}
+       Status: <strong>${row.status}</strong>
      </div>
    `;
  });
 }
-
 
 // =====================
 // LOAD MY INITIATIVES
