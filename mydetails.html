@@ -19,21 +19,12 @@ body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
   border-bottom:2px solid #e0e0e0;
 }
 
-.header-left{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
+.header-left{display:flex;align-items:center;gap:12px;}
 .header-left img{height:40px;}
 .wafi-logo{height:40px;}
-
-.header-title{
-font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
-}
+.header-title{font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;}
 
 .layout{display:flex;height:calc(100vh - 62px);}
-
 .sidebar{
 width:220px;background:#404040;color:white;
 display:flex;flex-direction:column;padding-top:20px;
@@ -54,15 +45,20 @@ display:flex;flex-direction:column;padding-top:20px;
 }
 
 .card{
-  background:#f9f9f9;
-  padding:12px;
-  border-radius:4px;
+  padding:10px;
   margin-bottom:10px;
   border-left:4px solid #76B531;
+  background:#f9f9f9;
 }
 
-h3{margin-top:0;}
+.status-valid{border-left:4px solid #2ecc71;}
+.status-expiring{border-left:4px solid #f39c12;}
+.status-expired{border-left:4px solid #c0392b;}
+.status-missing{border-left:4px solid #c0392b;}
+
 .empty{color:#888;}
+a.link{color:#2c3e50;text-decoration:none;font-weight:bold;}
+a.link:hover{text-decoration:underline;}
 </style>
 </head>
 
@@ -81,7 +77,6 @@ h3{margin-top:0;}
 
   <h4>INITIATIVE</h4>
   <a href="index.html">All Initiatives - List</a>
-  <a href="add-initiative.html">Add New Initiative</a>
   <a href="dashboard.html">Dashboard</a>
 
   <h4>PEOPLE</h4>
@@ -98,12 +93,12 @@ h3{margin-top:0;}
 <h2>My Details</h2>
 
 <div class="container">
-  <h3>My Training / Competency Status</h3>
+  <h3>My Competency Status</h3>
   <div id="trainingSection">Loading...</div>
 </div>
 
 <div class="container">
-  <h3>My Initiatives (Project Owner)</h3>
+  <h3>My Initiatives</h3>
   <div id="initiativeSection">Loading...</div>
 </div>
 
@@ -113,142 +108,135 @@ h3{margin-top:0;}
 <script>
 
 const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";   // use same key
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-async function init(){
+let competencyTypes = [];
+let employeeCompetencies = [];
+let employeeRecord = null;
 
- const {data} = await supabaseClient.auth.getSession();
+function calculateExpiry(completionDate, validityYears){
+  const expiry=new Date(completionDate);
+  expiry.setFullYear(expiry.getFullYear()+validityYears);
+  return expiry.toISOString().split("T")[0];
+}
 
- if(!data.session){
+function calculateStatus(completionDate, validityYears){
+
+  if(!completionDate)
+    return { text:"Not Done", class:"status-missing" };
+
+  const expiryDate=calculateExpiry(completionDate,validityYears);
+  const expiry=new Date(expiryDate);
+  const today=new Date();
+  const twoMonthsBefore=new Date(expiry);
+  twoMonthsBefore.setMonth(twoMonthsBefore.getMonth()-2);
+
+  if(today>expiry)
+    return { text:"Expired", class:"status-expired", expiry:expiryDate };
+
+  if(today>=twoMonthsBefore)
+    return { text:"Expiring Soon", class:"status-expiring", expiry:expiryDate };
+
+  return { text:"Valid", class:"status-valid", expiry:expiryDate };
+}
+
+async function load(){
+
+ const { data: sessionData } = await supabaseClient.auth.getSession();
+ if(!sessionData.session){
    window.location.replace("login.html");
    return;
  }
 
- const userEmail = data.session.user.email;
+ const email = sessionData.session.user.email.toLowerCase();
 
- loadTraining(userEmail);
- loadInitiatives(userEmail);
-}
+ // Get employee record
+ const { data: emp } = await supabaseClient
+   .from("employees")
+   .select("*")
+   .ilike("email", email)
+   .maybeSingle();
 
-init();
-
-
-// =====================
-// LOAD TRAINING STATUS
-// =====================
-// =====================
-// LOAD TRAINING STATUS
-// =====================
-async function loadTraining(email){
-
- // Step 1: Get employee record
- const {data: employee, error: empError} = await supabaseClient
-   .from('employees')
-   .select('id')
-   .eq('email', email)
-   .single();
-
- if(empError || !employee){
+ if(!emp){
    document.getElementById("trainingSection").innerHTML =
      "<div class='empty'>Employee record not found.</div>";
-   console.log(empError);
    return;
  }
 
- // Step 2: Get competencies using employee_id
- const {data, error} = await supabaseClient
-   .from('employee_competencies')
-   .select(`
-     completion_date,
-     expiry_date,
-     competency_types (
-        competency_name
-     )
-   `)
-   .eq('employee_id', employee.id);
+ employeeRecord = emp;
+
+ // Load competency types
+ const { data: compTypes } =
+   await supabaseClient.from("competency_types").select("*");
+
+ competencyTypes = compTypes;
+
+ // Load employee competencies
+ const { data: empComp } =
+   await supabaseClient
+     .from("employee_competencies")
+     .select("*")
+     .eq("employee_id", emp.id);
+
+ employeeCompetencies = empComp;
+
+ renderCompetencies();
+ loadInitiatives(email);
+}
+
+function renderCompetencies(){
 
  const section = document.getElementById("trainingSection");
  section.innerHTML = "";
 
- if(error){
-   section.innerHTML = "<div class='empty'>Error loading competencies.</div>";
-   console.log(error);
-   return;
- }
+ competencyTypes.forEach(c=>{
 
- if(!data || data.length === 0){
-   section.innerHTML = "<div class='empty'>No competencies assigned.</div>";
-   return;
- }
+   const record = employeeCompetencies.find(ec =>
+     ec.employee_id===employeeRecord.id &&
+     ec.competency_type_id===c.id
+   );
 
- data.forEach(row=>{
+   if(record){
 
-   const name = row.competency_types?.competency_name || "Unknown";
-   const completion = row.completion_date || "Not Completed";
-   const expiry = row.expiry_date || "N/A";
+     const status = calculateStatus(record.completion_date,c.validity_years);
 
-   section.innerHTML += `
-     <div class="card">
-       <strong>${name}</strong><br>
-       Completed: ${completion}<br>
-       Expiry: ${expiry}
-     </div>
-   `;
+     section.innerHTML += `
+       <div class="card ${status.class}">
+         <strong>${c.name}</strong><br>
+         ${status.text}
+       </div>
+     `;
+   }
  });
+
+ if(section.innerHTML==="")
+   section.innerHTML="<div class='empty'>No competencies assigned.</div>";
 }
 
-// =====================
-// LOAD MY INITIATIVES
-// =====================
-// =====================
-// LOAD MY INITIATIVES
-// =====================
 async function loadInitiatives(email){
 
  const {data,error} = await supabaseClient
    .from('initiatives')
    .select('*')
-   .eq('project_owner_email', email)
-   .order('created_at', {ascending:false});
+   .ilike('project_owner_email', email)
+   .order('created_at',{ascending:false});
 
- const section = document.getElementById("initiativeSection");
- section.innerHTML = "";
+ const section=document.getElementById("initiativeSection");
+ section.innerHTML="";
 
- if(error){
-   section.innerHTML = "<div class='empty'>Error loading initiatives.</div>";
-   return;
- }
-
- if(!data || data.length === 0){
-   section.innerHTML = "<div class='empty'>No initiatives assigned.</div>";
+ if(!data || data.length===0){
+   section.innerHTML="<div class='empty'>No initiatives assigned.</div>";
    return;
  }
 
  data.forEach(row=>{
 
-   // Color coding based on status
-   let borderColor = "#76B531"; // default green
-
-   if(row.status === "Closed"){
-     borderColor = "#7f8c8d"; // grey
-   }
-   else if(row.status === "Dropped"){
-     borderColor = "#c0392b"; // red
-   }
-   else if(row.status === "Under Review"){
-     borderColor = "#f39c12"; // orange
-   }
-
-   section.innerHTML += `
-     <div class="card" style="border-left:4px solid ${borderColor}">
-       <strong>
-         <a href="initiative-detail.html?id=${row.id}" 
-            style="text-decoration:none;color:#2c3e50;">
-           ${row.initiative_name}
-         </a>
-       </strong>
-       <br>
+   section.innerHTML+=`
+     <div class="card">
+       <a class="link" href="initiative-detail.html?id=${row.id}">
+         ${row.initiative_name}
+       </a><br>
        Terminal: ${row.terminal_name}<br>
        Status: <strong>${row.status}</strong>
      </div>
@@ -261,7 +249,8 @@ async function logout(){
  window.location.replace("login.html");
 }
 
-</script>
+load();
 
+</script>
 </body>
 </html>
