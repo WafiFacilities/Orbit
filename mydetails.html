@@ -166,6 +166,9 @@ async function loadTraining(email){
 // =====================
 // LOAD MY INITIATIVES
 // =====================
+// =====================
+// LOAD MY INITIATIVES
+// =====================
 async function loadInitiatives(email){
 
  const {data,error} = await supabaseClient
@@ -177,22 +180,46 @@ async function loadInitiatives(email){
  const section = document.getElementById("initiativeSection");
  section.innerHTML = "";
 
+ if(error){
+   section.innerHTML = "<div class='empty'>Error loading initiatives.</div>";
+   return;
+ }
+
  if(!data || data.length === 0){
    section.innerHTML = "<div class='empty'>No initiatives assigned.</div>";
    return;
  }
 
  data.forEach(row=>{
+
+   // Color coding based on status
+   let borderColor = "#76B531"; // default green
+
+   if(row.status === "Closed"){
+     borderColor = "#7f8c8d"; // grey
+   }
+   else if(row.status === "Dropped"){
+     borderColor = "#c0392b"; // red
+   }
+   else if(row.status === "Under Review"){
+     borderColor = "#f39c12"; // orange
+   }
+
    section.innerHTML += `
-     <div class="card">
-       <strong>${row.initiative_name}</strong><br>
+     <div class="card" style="border-left:4px solid ${borderColor}">
+       <strong>
+         <a href="initiative-detail.html?id=${row.id}" 
+            style="text-decoration:none;color:#2c3e50;">
+           ${row.initiative_name}
+         </a>
+       </strong>
+       <br>
        Terminal: ${row.terminal_name}<br>
-       Status: ${row.status}
+       Status: <strong>${row.status}</strong>
      </div>
    `;
  });
 }
-
 
 async function logout(){
  await supabaseClient.auth.signOut();
