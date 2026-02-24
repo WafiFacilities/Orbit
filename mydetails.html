@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>My Details</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+    font-family: Arial;
+    background:#f4f6f9;
+    padding:40px;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.05);
+}
+
+h2{
+    border-bottom:1px solid #ddd;
+    padding-bottom:10px;
+}
+
+.section{
+    margin-top:30px;
+}
+
+.card{
+    background:#f9fafb;
+    padding:15px;
+    border-radius:6px;
+    margin-bottom:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>My Details</h1>
+
+    <div class="section">
+        <h2>Training Status</h2>
+        <div id="trainingList">Loading...</div>
+    </div>
+
+    <div class="section">
+        <h2>My Initiatives</h2>
+        <div id="initiativeList">Loading...</div>
+    </div>
+</div>
+
+<script>
+
+const supabase = window.supabase.createClient(
+    "https://YOUR_PROJECT_ID.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
+);
+
+async function loadMyDetails(){
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if(!user){
+        alert("Not logged in");
+        return;
+    }
+
+    const email = user.email;
+
+    // 1️⃣ Fetch Training Status
+    const { data: trainingData, error: trainingError } =
+        await supabase
+            .from('training_status')
+            .select('*')
+            .eq('email', email);
+
+    const trainingDiv = document.getElementById("trainingList");
+    trainingDiv.innerHTML = "";
+
+    if(trainingData && trainingData.length > 0){
+        trainingData.forEach(item=>{
+            trainingDiv.innerHTML += `
+                <div class="card">
+                    <strong>${item.training_name}</strong><br>
+                    Status: ${item.status}
+                </div>
+            `;
+        });
+    } else {
+        trainingDiv.innerHTML = "No training records found.";
+    }
+
+    // 2️⃣ Fetch Initiatives Owned by User
+    const { data: initiativeData, error: initiativeError } =
+        await supabase
+            .from('initiatives')
+            .select('*')
+            .eq('owner_email', email);
+
+    const initiativeDiv = document.getElementById("initiativeList");
+    initiativeDiv.innerHTML = "";
+
+    if(initiativeData && initiativeData.length > 0){
+        initiativeData.forEach(item=>{
+            initiativeDiv.innerHTML += `
+                <div class="card">
+                    <strong>${item.title}</strong><br>
+                    Status: ${item.status}
+                </div>
+            `;
+        });
+    } else {
+        initiativeDiv.innerHTML = "No initiatives assigned.";
+    }
+
+}
+
+loadMyDetails();
+
+</script>
+
+</body>
+</html>
