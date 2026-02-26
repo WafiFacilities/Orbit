@@ -176,32 +176,158 @@ let html="";
 /* ============================
    FINANCIAL
 ============================ */
+/* ============================
+   FINANCIAL SECTION
+============================ */
 
+const selectedYear = parseInt(year);
+const lastYear = selectedYear - 1;
+
+// Pull both years in one go
 let financialQuery = supabaseClient
-.from("v_snapshot_financial")
-.select("*")
-.eq("year",year);
+  .from("v_snapshot_financial")
+  .select("*")
+  .in("year", [selectedYear, lastYear]);
 
-if(depot) financialQuery = financialQuery.eq("depot",depot);
-if(month) financialQuery = financialQuery.eq("month",month);
+if(depot) financialQuery = financialQuery.eq("depot", depot);
 
-const {data:financial} = await financialQuery;
+const { data: financial } = await financialQuery;
 
-let totalCost=0,totalVolume=0;
+if(!financial || financial.length === 0){
+  snapshotContent.innerHTML += "<p>No financial data found.</p>";
+  return;
+}
 
-financial.forEach(r=>{
-totalCost+=r.total_cost;
-totalVolume+=r.volume;
+// Split data
+const currentYearData = financial.filter(r => r.year === selectedYear);
+const lastYearData = financial.filter(r => r.year === lastYear);
+
+// ---------------------------
+// 1️⃣ LAST YEAR FULL UC
+// ---------------------------
+let lastYearCost = 0;
+let lastYearVolume = 0;
+
+lastYearData.forEach(r => {
+  lastYearCost += (r.direct_cost || 0) + (r.indirect_cost || 0);
+  lastYearVolume += (r.volume || 0);
 });
 
-const unitCost = totalVolume ? (totalCost/totalVolume).toFixed(2) : 0;
+const lastYearUC = lastYearVolume > 0 
+  ? (lastYearCost / lastYearVolume)
+  : 0;
 
-html+=`
-<div class="section-title">Financial</div>
+// ---------------------------
+// 2️⃣ CURRENT YEAR YTD UC
+// ---------------------------
+
+let effectiveMonth;
+
+if(month){
+  effectiveMonth = parseInt(month);
+} else {
+  // get max available month
+  effectiveMonth = Math.max(...currentYearData.map(r => r.month));
+}
+
+let ytdCost = 0;
+let ytdVolume = 0;
+
+currentYearData
+  .filter(r => r.month <= effectiveMonth)
+  .forEach(r => {
+    ytdCost += (r.direct_cost || 0) + (r.indirect_cost || 0);
+    ytdVolume += (r.volume || 0);
+  });
+
+const ytdUC = ytdVolume > 0 
+  ? (ytdCost / ytdVolume)
+  : 0;
+
+// ---------------------------
+// 3️⃣ CURRENT MONTH UC
+// ---------------------------
+
+let currentMonthUC = "-";
+
+if(month){
+  const monthData = currentYearData.find(r => r.month === parseInt(month));
+
+  if(monthData && monthData.volume > 0){
+    const monthCost = (monthData.direct_cost || 0) + (monthData.indirect_cost || 0);
+    currentMonthUC = (monthCost / monthData.volume);
+  }
+}
+
+// ---------------------------
+// 4️⃣ VARIANCE % (YTD vs Last Year)
+// ---------------------------
+
+let variancePct = 0;
+
+if(lastYearUC > 0){
+  variancePct = ((ytdUC - lastYearUC) / lastYearUC) * 100;
+}
+
+// ---------------------------
+// FORMATTERS
+// ---------------------------
+
+function formatUC(val){
+  return val === "-" ? "-" : val.toFixed(2);
+}
+
+function formatMPKR(val){
+  return (val / 1000000).toFixed(2);
+}
+
+// ---------------------------
+// RENDER
+// ---------------------------
+
+snapshotContent.innerHTML += `
+<div class="section-title">Financial KPIs</div>
 <div class="kpis">
-<div class="card"><p>Total Cost (MPKR)</p><h3>${toMPKR(totalCost)}</h3></div>
-<div class="card"><p>Total Volume</p><h3>${totalVolume}</h3></div>
-<div class="card"><p>Unit Cost</p><h3>${unitCost}</h3></div>
+
+<div class="card">
+<p>Last Year UC</p>
+<h3>${formatUC(lastYearUC)}</h3>
+</div>
+
+<div class="card">
+<p>Current YTD UC</p>
+<h3>${formatUC(ytdUC)}</h3>
+</div>
+
+<div class="card">
+<p>Current Month UC</p>
+<h3>${formatUC(currentMonthUC)}</h3>
+</div>
+
+<div class="card">
+<p>YTD Variance vs LY</p>
+<h3>${variancePct.toFixed(1)}%</h3>
+</div>
+
+<div class="card">
+<p>YTD Direct Cost (MPKR)</p>
+<h3>${formatMPKR(ytdCost - (currentYearData
+  .filter(r => r.month <= effectiveMonth)
+  .reduce((sum, r) => sum + (r.indirect_cost || 0), 0)))}</h3>
+</div>
+
+<div class="card">
+<p>YTD Indirect Cost (MPKR)</p>
+<h3>${formatMPKR(currentYearData
+  .filter(r => r.month <= effectiveMonth)
+  .reduce((sum, r) => sum + (r.indirect_cost || 0), 0))}</h3>
+</div>
+
+<div class="card">
+<p>YTD Volume</p>
+<h3>${ytdVolume.toFixed(0)}</h3>
+</div>
+
 </div>
 `;
 
