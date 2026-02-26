@@ -42,18 +42,6 @@ box-shadow:0 2px 6px rgba(0,0,0,0.1);
 margin-bottom:20px;
 }
 
-.data-row{
-display:flex;
-margin-bottom:10px;
-}
-.data-row label{
-flex:0 0 200px;
-font-weight:bold;
-}
-.data-row div{
-flex:1;
-}
-
 .form-row{
 display:flex;
 align-items:center;
@@ -83,13 +71,8 @@ cursor:pointer;
 margin-top:10px;
 }
 
-.warning{
-color:#c0392b;
-font-weight:bold;
-}
-.success{
-color:green;
-}
+.warning{color:#c0392b;font-weight:bold;}
+.success{color:green;}
 </style>
 </head>
 
@@ -138,33 +121,39 @@ color:green;
 <input type="date" id="target_date">
 </div>
 
-<div class="form-row">
-<label>Evidence Link</label>
-<input id="evidence_link" placeholder="Paste SharePoint / Drive link">
-</div>
-
 <button onclick="save()">Save Changes</button>
 
 <p class="success" id="successMsg" style="display:none;">Updated Successfully</p>
 <p class="warning" id="lockedMsg" style="display:none;">
-Parent Assurance is Closed. Editing Disabled.
+You do not have permission to modify this finding.
 </p>
 
 </div>
-
 </div>
 </div>
 
 <script>
 
 const supabaseClient = supabase.createClient( "https://kqhbvmqxrwwspopwckah.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8" );
-
 const id = new URLSearchParams(window.location.search).get("id");
 
 let currentData=null;
-let parentClosed=false;
+let isSuperUser=false;
+let isAssuranceOwner=false;
+let isActionOwner=false;
+
+async function checkSuperUser(email){
+const {data}=await supabaseClient
+.from("superusers")
+.select("*")
+.eq("email",email);
+return data.length>0;
+}
 
 async function load(){
+
+const session = await supabaseClient.auth.getSession();
+const userEmail = session.data.session.user.email.toLowerCase();
 
 const {data:finding}=await supabaseClient
 .from("assurance_findings")
@@ -174,67 +163,82 @@ const {data:finding}=await supabaseClient
 
 currentData=finding;
 
-// Check parent assurance status
+// Get parent assurance
 const {data:assurance}=await supabaseClient
 .from("assurances")
-.select("status")
+.select("*")
 .eq("id",finding.assurance_id)
 .single();
 
-if(assurance.status==="Closed"){
-parentClosed=true;
-document.getElementById("lockedMsg").style.display="block";
-document.querySelectorAll("select,textarea,input,button")
-.forEach(el=>el.disabled=true);
-return;
-}
+isSuperUser = await checkSuperUser(userEmail);
+isAssuranceOwner = (assurance.assurance_owner_email||"").toLowerCase()===userEmail;
+isActionOwner = (finding.action_owner_email||"").toLowerCase()===userEmail;
 
+// Display
 viewSection.innerHTML=`
 <h2>${finding.finding_title}</h2>
-
-<div class="data-row"><label>Description:</label><div>${finding.finding_description||""}</div></div>
-<div class="data-row"><label>RAM Rating:</label><div>${finding.priority_rating||""}</div></div>
-<div class="data-row"><label>Type:</label><div>${finding.type_of_finding||""}</div></div>
-<div class="data-row"><label>Action Required:</label><div>${finding.action_required||""}</div></div>
-<div class="data-row"><label>Action Owner:</label><div>${finding.action_owner_email}</div></div>
-<div class="data-row"><label>Target Date:</label><div>${finding.target_date||""}</div></div>
-<div class="data-row"><label>Revision Count:</label><div>${finding.target_date_revision_count}</div></div>
-<div class="data-row"><label>Status:</label><div>${finding.status}</div></div>
+<p><b>RAM:</b> ${finding.priority_rating||""}</p>
+<p><b>Type:</b> ${finding.type_of_finding||""}</p>
+<p><b>Action Required:</b> ${finding.action_required||""}</p>
+<p><b>Revision Count:</b> ${finding.target_date_revision_count}</p>
 `;
 
 status.value=finding.status;
 action_taken.value=finding.action_taken||"";
 target_date.value=finding.target_date||"";
-evidence_link.value=finding.evidence_link||"";
+
+// Role Control
+if(isSuperUser || isAssuranceOwner){
+return; // full access
+}
+
+if(isActionOwner){
+target_date.disabled=true; // cannot change
+return;
+}
+
+// No access
+document.querySelectorAll("select,textarea,input,button")
+.forEach(el=>el.disabled=true);
+document.getElementById("lockedMsg").style.display="block";
 }
 
 async function save(){
 
-let revisionCount=currentData.target_date_revision_count;
+let updates={};
+
+// Action Owner can change only status & action_taken
+if(isActionOwner && !isSuperUser && !isAssuranceOwner){
+updates.status=status.value;
+updates.action_taken=action_taken.value;
+}
+else{
+// Superuser or Assurance Owner
+updates.status=status.value;
+updates.action_taken=action_taken.value;
 
 // Detect target date change
-if(target_date.value && target_date.value!==currentData.target_date){
-revisionCount++;
+if(target_date.value!==currentData.target_date){
+updates.target_date=target_date.value;
+updates.target_date_revision_count=
+(currentData.target_date_revision_count||0)+1;
+}
 }
 
-let closedDate=currentData.closed_date;
-
-// Auto set closed date
+// Auto closed date
 if(status.value==="Closed" && currentData.status!=="Closed"){
-closedDate=new Date().toISOString().split("T")[0];
+updates.closed_date=new Date().toISOString().split("T")[0];
 }
 
-await supabaseClient
+const {error}=await supabaseClient
 .from("assurance_findings")
-.update({
-status:status.value,
-action_taken:action_taken.value,
-target_date:target_date.value,
-target_date_revision_count:revisionCount,
-closed_date:closedDate,
-evidence_link:evidence_link.value
-})
+.update(updates)
 .eq("id",id);
+
+if(error){
+alert(error.message);
+return;
+}
 
 successMsg.style.display="block";
 load();
