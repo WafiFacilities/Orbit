@@ -46,6 +46,25 @@ margin-bottom:20px;
 .data-row label{flex:0 0 200px;font-weight:bold;}
 .data-row div{flex:1;}
 
+.form-row{
+display:flex;
+align-items:center;
+margin-bottom:10px;
+}
+.form-row label{
+flex:0 0 180px;
+font-weight:bold;
+}
+.form-row input,
+.form-row select,
+.form-row textarea{
+flex:1;
+padding:6px;
+border-radius:4px;
+border:1px solid #ccc;
+font-family:'72 Condensed';
+}
+
 table{
 width:100%;
 border-collapse:collapse;
@@ -60,7 +79,6 @@ border-radius:4px;
 color:white;
 font-weight:bold;
 }
-
 .open{background:#e67e22;}
 .closed{background:#777;}
 .overdue{background:#e74c3c;}
@@ -80,15 +98,6 @@ a.finding-link{
 color:#76B531;
 text-decoration:none;
 font-weight:bold;
-}
-
-input,select,textarea{
-width:100%;
-padding:6px;
-border-radius:4px;
-border:1px solid #ccc;
-font-family:'72 Condensed';
-margin-bottom:8px;
 }
 
 .warning{
@@ -119,10 +128,8 @@ margin-top:10px;
 
 <div class="main">
 
-<!-- Assurance Info -->
 <div class="container" id="assuranceInfo"></div>
 
-<!-- Findings Section -->
 <div class="container">
 
 <h3>Findings & Actions</h3>
@@ -133,6 +140,8 @@ margin-top:10px;
 <th>Finding</th>
 <th>RAM</th>
 <th>Type</th>
+<th>Action Required</th>
+<th>Action Taken</th>
 <th>Action Owner</th>
 <th>Target</th>
 <th>Revisions</th>
@@ -152,34 +161,48 @@ margin-top:10px;
 Cannot close assurance while open findings exist.
 </p>
 
-<!-- Add Finding Form -->
 <div id="addFindingSection" style="display:none;margin-top:20px;">
 
 <h4>Add New Finding & Action</h4>
 
-<input id="finding_title" placeholder="Finding Title">
+<div class="form-row">
+<label>Finding Title</label>
+<input id="finding_title">
+</div>
 
-<textarea id="finding_description" placeholder="Finding Description"></textarea>
+<div class="form-row">
+<label>Finding Description</label>
+<textarea id="finding_description"></textarea>
+</div>
 
-<textarea id="action_required" placeholder="Action Required"></textarea>
+<div class="form-row">
+<label>Action Required</label>
+<textarea id="action_required"></textarea>
+</div>
 
-<select id="priority_rating">
-<option value="">Select RAM Rating</option>
-<option>Low</option>
-<option>Medium</option>
-<option>High</option>
-<option>Critical</option>
-</select>
+<div class="form-row">
+<label>RAM Rating</label>
+<select id="priority_rating"></select>
+</div>
 
+<div class="form-row">
+<label>Type of Finding</label>
 <select id="type_of_finding">
-<option value="">Type of Finding</option>
+<option value="">Select Type</option>
 <option>One Off</option>
 <option>Repeat</option>
 </select>
+</div>
 
-<input id="action_owner" placeholder="Action Owner Email">
+<div class="form-row">
+<label>Action Owner Email</label>
+<input id="action_owner">
+</div>
 
+<div class="form-row">
+<label>Target Date</label>
 <input type="date" id="target_date">
+</div>
 
 <button onclick="saveFinding()">Save Finding</button>
 
@@ -191,34 +214,43 @@ Cannot close assurance while open findings exist.
 
 <script>
 
-
 const supabaseClient = supabase.createClient( "https://kqhbvmqxrwwspopwckah.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8" );
-
 const id = new URLSearchParams(window.location.search).get("id");
+
+function generateRAMOptions(){
+const letters=["A","B","C","D","E"];
+const select=document.getElementById("priority_rating");
+select.innerHTML="<option value=''>Select RAM</option>";
+
+for(let i=0;i<=5;i++){
+letters.forEach(l=>{
+const val=i+l;
+select.innerHTML+=`<option value="${val}">${val}</option>`;
+});
+}
+}
 
 async function load(){
 
-// Load assurance
-const {data:assurance} = await supabaseClient
+generateRAMOptions();
+
+const {data:assurance}=await supabaseClient
 .from("assurances")
 .select("*")
 .eq("id",id)
 .single();
 
-assuranceInfo.innerHTML = `
+assuranceInfo.innerHTML=`
 <h2>${assurance.assurance_name}</h2>
-
 <div class="data-row"><label>Depot:</label><div>${assurance.depot}</div></div>
-<div class="data-row"><label>Scope Area:</label><div>${assurance.scope_area || ""}</div></div>
-<div class="data-row"><label>Assurance Type:</label><div>${assurance.assurance_type || ""}</div></div>
-<div class="data-row"><label>Owner:</label><div>${assurance.assurance_owner_email}</div></div>
+<div class="data-row"><label>Scope Area:</label><div>${assurance.scope_area||""}</div></div>
+<div class="data-row"><label>Type:</label><div>${assurance.assurance_type||""}</div></div>
 <div class="data-row"><label>Status:</label>
 <div><span class="indicator ${assurance.status==="Closed"?"closed":"open"}">${assurance.status}</span></div>
 </div>
 `;
 
-// Load findings
-const {data:findings} = await supabaseClient
+const {data:findings}=await supabaseClient
 .from("assurance_findings")
 .select("*")
 .eq("assurance_id",id);
@@ -227,23 +259,20 @@ let html="";
 const today=new Date().toISOString().split("T")[0];
 
 findings.forEach(f=>{
-
 let indicator="open";
-
 if(f.status==="Closed") indicator="closed";
 else if(f.target_date && f.target_date<today) indicator="overdue";
 
 html+=`
 <tr>
-<td>
-<a class="finding-link" href="finding-detail.html?id=${f.id}">
-${f.finding_title}
-</a>
-</td>
-<td>${f.priority_rating || ""}</td>
-<td>${f.type_of_finding || ""}</td>
+<td><a class="finding-link" href="finding-detail.html?id=${f.id}">
+${f.finding_title}</a></td>
+<td>${f.priority_rating||""}</td>
+<td>${f.type_of_finding||""}</td>
+<td>${f.action_required||""}</td>
+<td>${f.action_taken||""}</td>
 <td>${f.action_owner_email}</td>
-<td>${f.target_date || ""}</td>
+<td>${f.target_date||""}</td>
 <td>${f.target_date_revision_count}</td>
 <td>${f.status}</td>
 <td><span class="indicator ${indicator}">${indicator}</span></td>
@@ -251,12 +280,11 @@ ${f.finding_title}
 });
 
 findingsTable.innerHTML=html;
-
 }
 
 function toggleAddFinding(){
 const section=document.getElementById("addFindingSection");
-section.style.display = section.style.display==="none"?"block":"none";
+section.style.display=section.style.display==="none"?"block":"none";
 }
 
 async function saveFinding(){
@@ -266,9 +294,7 @@ alert("Finding, Action Required and RAM Rating are mandatory.");
 return;
 }
 
-const {error} = await supabaseClient
-.from("assurance_findings")
-.insert([{
+await supabaseClient.from("assurance_findings").insert([{
 assurance_id:id,
 finding_title:finding_title.value,
 finding_description:finding_description.value,
@@ -279,18 +305,13 @@ action_owner_email:action_owner.value,
 target_date:target_date.value
 }]);
 
-if(error){
-alert(error.message);
-return;
-}
-
 toggleAddFinding();
 load();
 }
 
 async function closeAssurance(){
 
-const {data:openFindings} = await supabaseClient
+const {data:openFindings}=await supabaseClient
 .from("assurance_findings")
 .select("*")
 .eq("assurance_id",id)
@@ -301,8 +322,7 @@ document.getElementById("closeWarning").style.display="block";
 return;
 }
 
-await supabaseClient
-.from("assurances")
+await supabaseClient.from("assurances")
 .update({status:"Closed"})
 .eq("id",id);
 
