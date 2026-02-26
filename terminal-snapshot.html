@@ -177,122 +177,73 @@ const month = monthFilter.value;
 // FINANCIAL
 // =============================
 
-const lastYear = year - 1;
-
-let financialQuery = supabaseClient
-.from("v_snapshot_financial")
-.select("*")
-.in("year", [year, lastYear]);
-
-if(depot) financialQuery = financialQuery.eq("depot", depot);
-
-const { data: financial } = await financialQuery;
-
-if(financial && financial.length > 0){
-
-const currentYearData = financial.filter(r => r.year === year);
+// ---------------------------
+// SPLIT DATA
+// ---------------------------
+const currentYearData = financial.filter(r => r.year === selectedYear);
 const lastYearData = financial.filter(r => r.year === lastYear);
 
-// Last Year UC
+// ---------------------------
+// 1️⃣ LAST YEAR FULL UC
+// ---------------------------
 let lastYearCost = 0;
 let lastYearVolume = 0;
 
 lastYearData.forEach(r => {
-lastYearCost += (r.direct_cost || 0) + (r.indirect_cost || 0);
-lastYearVolume += (r.volume || 0);
+  lastYearCost += (r.total_cost || 0);
+  lastYearVolume += (r.volume || 0);
 });
 
-const lastYearUC = lastYearVolume > 0 ? lastYearCost / lastYearVolume : 0;
+const lastYearUC = lastYearVolume > 0 
+  ? (lastYearCost / lastYearVolume)
+  : 0;
 
-// YTD UC
+// ---------------------------
+// 2️⃣ CURRENT YEAR YTD UC
+// ---------------------------
 let effectiveMonth;
 
 if(month){
-effectiveMonth = parseInt(month);
+  effectiveMonth = parseInt(month);
 } else {
-effectiveMonth = Math.max(...currentYearData.map(r => r.month));
+  effectiveMonth = Math.max(...currentYearData.map(r => r.month));
 }
 
 let ytdCost = 0;
 let ytdVolume = 0;
 
 currentYearData
-.filter(r => r.month <= effectiveMonth)
-.forEach(r => {
-ytdCost += (r.direct_cost || 0) + (r.indirect_cost || 0);
-ytdVolume += (r.volume || 0);
-});
+  .filter(r => r.month <= effectiveMonth)
+  .forEach(r => {
+    ytdCost += (r.total_cost || 0);
+    ytdVolume += (r.volume || 0);
+  });
 
-const ytdUC = ytdVolume > 0 ? ytdCost / ytdVolume : 0;
+const ytdUC = ytdVolume > 0 
+  ? (ytdCost / ytdVolume)
+  : 0;
 
-// Current Month UC
+// ---------------------------
+// 3️⃣ CURRENT MONTH UC
+// ---------------------------
 let currentMonthUC = "-";
 
 if(month){
-const monthData = currentYearData.find(r => r.month === parseInt(month));
-if(monthData && monthData.volume > 0){
-const monthCost = (monthData.direct_cost || 0) + (monthData.indirect_cost || 0);
-currentMonthUC = monthCost / monthData.volume;
-}
+  const monthData = currentYearData.find(r => r.month === parseInt(month));
+
+  if(monthData && monthData.volume > 0){
+    currentMonthUC = (monthData.total_cost / monthData.volume);
+  }
 }
 
-// Variance %
+// ---------------------------
+// 4️⃣ VARIANCE %
+// ---------------------------
 let variancePct = 0;
+
 if(lastYearUC > 0){
-variancePct = ((ytdUC - lastYearUC) / lastYearUC) * 100;
+  variancePct = ((ytdUC - lastYearUC) / lastYearUC) * 100;
 }
-
-html += `
-<div class="section-title">Financial KPIs</div>
-<div class="kpis">
-
-<div class="card">
-<p>Last Year UC</p>
-<h3>${formatUC(lastYearUC)}</h3>
-</div>
-
-<div class="card">
-<p>Current YTD UC</p>
-<h3>${formatUC(ytdUC)}</h3>
-</div>
-
-<div class="card">
-<p>Current Month UC</p>
-<h3>${month ? formatUC(currentMonthUC) : "-"}</h3>
-</div>
-
-<div class="card">
-<p>YTD Variance vs LY</p>
-<h3>${variancePct.toFixed(1)}%</h3>
-</div>
-
-<div class="card">
-<p>YTD Direct Cost (MPKR)</p>
-<h3>${formatMPKR(
-currentYearData
-.filter(r => r.month <= effectiveMonth)
-.reduce((sum, r) => sum + (r.direct_cost || 0), 0)
-)}</h3>
-</div>
-
-<div class="card">
-<p>YTD Indirect Cost (MPKR)</p>
-<h3>${formatMPKR(
-currentYearData
-.filter(r => r.month <= effectiveMonth)
-.reduce((sum, r) => sum + (r.indirect_cost || 0), 0)
-)}</h3>
-</div>
-
-<div class="card">
-<p>YTD Volume</p>
-<h3>${ytdVolume.toFixed(0)}</h3>
-</div>
-
-</div>
-`;
-}
-console.log(financial);
 // =============================
 // INITIATIVES
 // =============================
