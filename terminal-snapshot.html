@@ -5,6 +5,8 @@
 <title>Terminal Snapshot</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
 <style>
 @font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
@@ -66,6 +68,16 @@ margin:0;
 font-size:26px;
 color:#76B531;
 }
+
+.chart-box{
+background:white;
+padding:15px;
+border-radius:6px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+margin-top:20px;
+}
+
+canvas{max-height:300px;}
 </style>
 </head>
 
@@ -156,257 +168,182 @@ const supabaseClient = supabase.createClient(
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
 );
 
-function formatUC(val){
-return val ? val.toFixed(2) : "0.00";
-}
+let ucChart=null;
 
-function formatMPKR(val){
-return val ? (val / 1000000).toFixed(2) : "0.00";
-}
+function formatUC(val){ return val ? val.toFixed(2) : "0.00"; }
+function formatMPKR(val){ return val ? (val/1000000).toFixed(2) : "0.00"; }
 
 async function loadSnapshot(){
 
-snapshotContent.innerHTML = "";
-let html = "";
+snapshotContent.innerHTML="";
+let html="";
 
-const depot = depotFilter.value;
-const year = parseInt(yearFilter.value);
-const month = monthFilter.value;
+const depot=depotFilter.value;
+const year=parseInt(yearFilter.value);
+const month=monthFilter.value;
 
-const selectedYear = year;
-const lastYear = selectedYear - 1;
+const selectedYear=year;
+const lastYear=year-1;
 
-/* =============================
-   FINANCIAL
-============================= */
+/* ================= FINANCIAL ================= */
 
-let financialQuery = supabaseClient
-  .from("v_snapshot_financial")
-  .select("*")
-  .in("year", [selectedYear, lastYear]);
+let query=supabaseClient
+.from("v_snapshot_financial")
+.select("*")
+.in("year",[selectedYear,lastYear]);
 
-if(depot) financialQuery = financialQuery.eq("depot", depot);
+if(depot) query=query.eq("depot",depot);
 
-const { data: financial, error } = await financialQuery;
+const {data:financial,error}=await query;
 
-if(error){
-  console.error(error);
-  snapshotContent.innerHTML = "<p>Error loading financial data</p>";
-  return;
+if(error||!financial){
+snapshotContent.innerHTML="<p>Error loading financial data</p>";
+return;
 }
 
-if(!financial || financial.length === 0){
-  snapshotContent.innerHTML = "<p>No financial data found.</p>";
-  return;
-}
+const currentYearData=financial.filter(r=>r.year===selectedYear);
+const lastYearData=financial.filter(r=>r.year===lastYear);
 
-/* ---- SPLIT YEARS ---- */
+/* ---- Last Year UC ---- */
 
-const currentYearData = financial.filter(r => r.year === selectedYear);
-const lastYearData = financial.filter(r => r.year === lastYear);
+let lastCost=0,lastVol=0;
+lastYearData.forEach(r=>{
+lastCost+=r.total_cost||0;
+lastVol+=r.volume||0;
+});
+const lastUC=lastVol?lastCost/lastVol:0;
 
-/* ---- LAST YEAR FULL UC ---- */
+/* ---- YTD ---- */
 
-let lastYearCost = 0;
-let lastYearVolume = 0;
+let effectiveMonth=month?parseInt(month):
+Math.max(...currentYearData.map(r=>r.month));
 
-lastYearData.forEach(r => {
-  lastYearCost += (r.total_cost || 0);
-  lastYearVolume += (r.volume || 0);
+let ytdCost=0,ytdVol=0;
+
+currentYearData.filter(r=>r.month<=effectiveMonth)
+.forEach(r=>{
+ytdCost+=r.total_cost||0;
+ytdVol+=r.volume||0;
 });
 
-const lastYearUC = lastYearVolume > 0 
-  ? (lastYearCost / lastYearVolume)
-  : 0;
+const ytdUC=ytdVol?ytdCost/ytdVol:0;
 
-/* ---- CURRENT YEAR YTD ---- */
+/* ---- Month ---- */
 
-let effectiveMonth;
-
+let monthUC=0;
 if(month){
-  effectiveMonth = parseInt(month);
-} else {
-  effectiveMonth = Math.max(...currentYearData.map(r => r.month));
+const m=currentYearData.find(r=>r.month==month);
+if(m&&m.volume) monthUC=m.total_cost/m.volume;
 }
 
-let ytdCost = 0;
-let ytdVolume = 0;
+/* ---- Variance ---- */
 
-currentYearData
-  .filter(r => r.month <= effectiveMonth)
-  .forEach(r => {
-    ytdCost += (r.total_cost || 0);
-    ytdVolume += (r.volume || 0);
-  });
+const variance=lastUC?((ytdUC-lastUC)/lastUC)*100:0;
 
-const ytdUC = ytdVolume > 0 
-  ? (ytdCost / ytdVolume)
-  : 0;
+/* ---- Render KPIs ---- */
 
-/* ---- CURRENT MONTH UC ---- */
-
-let currentMonthUC = 0;
-
-if(month){
-  const monthData = currentYearData.find(r => r.month === parseInt(month));
-  if(monthData && monthData.volume > 0){
-    currentMonthUC = monthData.total_cost / monthData.volume;
-  }
-}
-
-/* ---- VARIANCE ---- */
-
-let variancePct = 0;
-
-if(lastYearUC > 0){
-  variancePct = ((ytdUC - lastYearUC) / lastYearUC) * 100;
-}
-
-/* ---- RENDER FINANCIAL ---- */
-
-html += `
+html+=`
 <div class="section-title">Financial KPIs</div>
 <div class="kpis">
 
-<div class="card">
-<p>Last Year UC</p>
-<h3>${formatUC(lastYearUC)}</h3>
+<div class="card"><p>Last Year UC</p><h3>${formatUC(lastUC)}</h3></div>
+<div class="card"><p>Current YTD UC</p><h3>${formatUC(ytdUC)}</h3></div>
+<div class="card"><p>Current Month UC</p><h3>${formatUC(monthUC)}</h3></div>
+<div class="card"><p>YTD Variance vs LY</p><h3>${variance.toFixed(1)}%</h3></div>
+<div class="card"><p>YTD Cost (MPKR)</p><h3>${formatMPKR(ytdCost)}</h3></div>
+<div class="card"><p>YTD Volume</p><h3>${ytdVol.toLocaleString()}</h3></div>
+
 </div>
 
-<div class="card">
-<p>Current YTD UC</p>
-<h3>${formatUC(ytdUC)}</h3>
-</div>
-
-<div class="card">
-<p>Current Month UC</p>
-<h3>${formatUC(currentMonthUC)}</h3>
-</div>
-
-<div class="card">
-<p>YTD Variance vs LY</p>
-<h3>${variancePct.toFixed(1)}%</h3>
-</div>
-
-<div class="card">
-<p>YTD Cost (MPKR)</p>
-<h3>${formatMPKR(ytdCost)}</h3>
-</div>
-
-<div class="card">
-<p>YTD Volume</p>
-<h3>${ytdVolume.toLocaleString()}</h3>
-</div>
-
+<div class="chart-box">
+<h3>Monthly Unit Cost vs Target</h3>
+<canvas id="ucChart"></canvas>
+<p style="font-size:13px;color:#555;margin-top:6px;">
+Target = 90% × (Current Year YTD Cost ÷ Previous Year YTD Volume)
+</p>
 </div>
 `;
 
-/* =============================
-   INITIATIVES
-============================= */
+snapshotContent.innerHTML=html;
 
-let initQuery = supabaseClient
-.from("v_snapshot_initiatives")
-.select("*")
-.eq("year",year);
+/* ---- Render Chart ---- */
 
-if(depot) initQuery = initQuery.eq("depot",depot);
+renderChart(currentYearData,lastYearData);
 
-const {data:init} = await initQuery;
-
-if(init){
-const totalInit = init.length;
-const closedInit = init.filter(x=>x.status==="Closed").length;
-
-html += `
-<div class="section-title">Initiatives</div>
-<div class="kpis">
-<div class="card"><p>Total</p><h3>${totalInit}</h3></div>
-<div class="card"><p>Closed</p><h3>${closedInit}</h3></div>
-</div>
-`;
 }
 
-/* =============================
-   ASSURANCE
-============================= */
+/* ================= CHART FUNCTION ================= */
 
-let assQuery = supabaseClient
-.from("v_snapshot_assurance")
-.select("*")
-.eq("year",year);
+function renderChart(curr,last){
 
-if(depot) assQuery = assQuery.eq("depot",depot);
+if(ucChart) ucChart.destroy();
 
-const {data:ass} = await assQuery;
+const months=[1,2,3,4,5,6,7,8,9,10,11,12];
+const labels=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-if(ass){
-const totalActions = ass.length;
-const closedActions = ass.filter(x=>x.action_status==="Closed").length;
+let unit=[],volume=[],target=[];
+let cumCost=0,cumPrevVol=0;
 
-html += `
-<div class="section-title">Assurance</div>
-<div class="kpis">
-<div class="card"><p>Total Actions</p><h3>${totalActions}</h3></div>
-<div class="card"><p>Closed</p><h3>${closedActions}</h3></div>
-</div>
-`;
+months.forEach(m=>{
+const c=curr.find(x=>x.month==m);
+const p=last.find(x=>x.month==m);
+
+const cost=c?.total_cost||0;
+const vol=c?.volume||0;
+const prevVol=p?.volume||0;
+
+volume.push(vol);
+unit.push(vol?(cost/vol).toFixed(2):0);
+
+cumCost+=cost;
+cumPrevVol+=prevVol;
+
+target.push(cumPrevVol?(0.9*(cumCost/cumPrevVol)).toFixed(2):null);
+});
+
+ucChart=new Chart(document.getElementById("ucChart"),{
+type:"line",
+data:{
+labels,
+datasets:[
+{
+label:"Unit Cost",
+data:unit,
+borderColor:"#76B531",
+tension:0.3,
+yAxisID:"y",
+datalabels:{color:"#000",anchor:"end",align:"top"}
+},
+{
+label:"Target",
+data:target,
+borderColor:"#e67e22",
+borderDash:[6,6],
+borderWidth:2,
+pointRadius:0,
+yAxisID:"y",
+datalabels:{display:false}
+},
+{
+label:"Volume",
+data:volume,
+type:"bar",
+backgroundColor:"#e6e6e6",
+yAxisID:"y1",
+datalabels:{display:false}
 }
-
-/* =============================
-   PROJECTS
-============================= */
-
-let projQuery = supabaseClient
-.from("v_snapshot_projects")
-.select("*")
-.eq("year",year);
-
-if(depot) projQuery = projQuery.eq("depot",depot);
-
-const {data:proj} = await projQuery;
-
-if(proj){
-const totalProj = proj.length;
-const capex = proj.filter(x=>x.project_type==="Capex").length;
-
-html += `
-<div class="section-title">Projects</div>
-<div class="kpis">
-<div class="card"><p>Total Projects</p><h3>${totalProj}</h3></div>
-<div class="card"><p>Capex</p><h3>${capex}</h3></div>
-</div>
-`;
+]
+},
+options:{
+plugins:{datalabels:{display:true}},
+scales:{
+y:{position:"left",title:{display:true,text:"Unit Cost"}},
+y1:{position:"right",title:{display:true,text:"Volume"}}
 }
+},
+plugins:[ChartDataLabels]
+});
 
-/* =============================
-   FLBM
-============================= */
-
-let flbmQuery = supabaseClient
-.from("v_snapshot_flbm")
-.select("*");
-
-if(depot) flbmQuery = flbmQuery.eq("depot",depot);
-
-const {data:flbm} = await flbmQuery;
-
-if(flbm){
-const totalTrain = flbm.length;
-const completed = flbm.filter(x=>x.training_status==="Completed").length;
-const overdue = flbm.filter(x=>x.training_status==="Overdue").length;
-
-html += `
-<div class="section-title">FLBM Competency</div>
-<div class="kpis">
-<div class="card"><p>Total Trainings</p><h3>${totalTrain}</h3></div>
-<div class="card"><p>Completed</p><h3>${completed}</h3></div>
-<div class="card"><p>Overdue</p><h3>${overdue}</h3></div>
-</div>
-`;
-}
-
-snapshotContent.innerHTML = html;
 }
 
 async function logout(){
