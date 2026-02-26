@@ -8,29 +8,93 @@
 
 <style>
 @font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
+
 body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
-.header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;}
+
+.header{
+display:flex;align-items:center;justify-content:space-between;
+padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;
+}
 .header-left{display:flex;align-items:center;gap:12px;}
 .header-left img{height:40px;}
 .wafi-logo{height:40px;}
-.header-title{font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;}
+.header-title{
+font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
+}
+
 .layout{display:flex;height:calc(100vh - 62px);}
-.sidebar{width:220px;background:#404040;color:white;display:flex;flex-direction:column;padding-top:20px;}
+
+.sidebar{
+width:220px;background:#404040;color:white;
+display:flex;flex-direction:column;padding-top:20px;
+}
 .sidebar h4{padding:10px 20px;margin:0;}
 .sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
 .sidebar a:hover{background:#505050;}
 .sidebar .logout{margin-top:auto;border-top:1px solid #555;}
+
 .main{flex:1;padding:20px;overflow-y:auto;}
-table{width:100%;border-collapse:collapse;background:white;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-th,td{border:1px solid #ddd;padding:10px;}
-th{background:#76B531;color:white;font-weight:bold;}
+
+.kpis{
+display:flex;
+gap:15px;
+margin-bottom:20px;
+flex-wrap:wrap;
+}
+
+.kpi-card{
+flex:1;
+min-width:180px;
+background:white;
+padding:15px;
+border-radius:6px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+text-align:center;
+}
+
+.kpi-card h3{
+margin:0;
+font-size:28px;
+color:#76B531;
+}
+
+.filters{
+display:flex;flex-wrap:wrap;gap:10px;margin-bottom:15px;
+}
+.filters select{
+padding:6px;border-radius:4px;border:1px solid #ccc;
+font-family:'72 Condensed';
+}
+
+table{
+width:100%;border-collapse:collapse;background:white;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+th,td{border:1px solid #ddd;padding:10px;text-align:center;}
+th{background:#76B531;color:white;}
+
 tr:nth-child(even){background:#f9f9f9;}
 tr:hover{background:#eef3f8;}
-.indicator{padding:4px 8px;border-radius:4px;font-weight:bold;text-align:center;}
-.open{background:#e67e22;color:white;}
-.closed{background:#777;color:white;}
-.overdue{background:#e74c3c;color:white;}
-a.assurance-link{color:#76B531;text-decoration:none;font-weight:bold;}
+
+.indicator{
+padding:4px 8px;border-radius:4px;color:white;font-weight:bold;
+}
+.open{background:#e67e22;}
+.closed{background:#777;}
+.overdue{background:#e74c3c;}
+
+a.assurance-link{
+color:#76B531;text-decoration:none;font-weight:bold;
+}
+
+.pagination{
+margin-top:10px;display:flex;gap:5px;justify-content:flex-end;
+}
+.pagination button{
+padding:6px 12px;border:none;border-radius:4px;
+background:#404040;color:white;cursor:pointer;
+}
 </style>
 </head>
 
@@ -50,81 +114,193 @@ a.assurance-link{color:#76B531;text-decoration:none;font-weight:bold;}
 <h4>ASSURANCE</h4>
 <a href="assurances.html">All Assurances</a>
 <a href="add-assurance.html">Add Assurance</a>
-
-<h4>INITIATIVE</h4>
-<a href="index.html">All Initiatives</a>
-
-<h4>PROJECTS</h4>
-<a href="projects.html">All Projects</a>
-
 <a href="#" onclick="logout()" class="logout">Logout</a>
 </div>
 
 <div class="main">
 
-<h2>Assurance List</h2>
+<h2>Assurance Register</h2>
+
+<!-- KPI SECTION -->
+<div class="kpis">
+<div class="kpi-card">
+<p>Total Assurances</p>
+<h3 id="kpiTotal">0</h3>
+</div>
+
+<div class="kpi-card">
+<p>Open Assurances</p>
+<h3 id="kpiOpen">0</h3>
+</div>
+
+<div class="kpi-card">
+<p>Total Open Findings</p>
+<h3 id="kpiFindings">0</h3>
+</div>
+
+<div class="kpi-card">
+<p>Overdue Findings</p>
+<h3 id="kpiOverdue">0</h3>
+</div>
+</div>
+
+<!-- FILTERS -->
+<div class="filters">
+
+<select id="filterDepot">
+<option value="">All Depots</option>
+<option>KMR</option><option>CKL</option><option>MCH</option>
+<option>SKP</option><option>DLP</option><option>TJB</option>
+<option>BHK</option><option>SSH</option><option>VHR</option>
+<option>GTI</option><option>MMK</option>
+</select>
+
+<select id="filterStatus">
+<option value="">All Status</option>
+<option>Open</option>
+<option>Closed</option>
+</select>
+
+<select id="filterType">
+<option value="">All Types</option>
+<option>LOD1</option>
+<option>LOD2</option>
+<option>LOD3</option>
+</select>
+
+<select id="filterYear">
+<option value="">All Years</option>
+</select>
+
+</div>
 
 <table>
 <thead>
 <tr>
-<th>S.No</th>
 <th>Depot</th>
-<th>Assurance Name</th>
+<th>Assurance</th>
+<th>Type</th>
 <th>Owner</th>
+<th>Start</th>
 <th>Status</th>
-<th>Total Findings</th>
-<th>Open</th>
+<th>Open Findings</th>
 <th>Overdue</th>
 </tr>
 </thead>
 <tbody id="tableBody"></tbody>
 </table>
 
+<div class="pagination">
+<button onclick="prevPage()">Prev</button>
+<span id="pageInfo">Page 1</span>
+<button onclick="nextPage()">Next</button>
+</div>
+
 </div>
 </div>
 
 <script>
+
 const supabaseClient = supabase.createClient( "https://kqhbvmqxrwwspopwckah.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8" );
+
+let currentPage=1;
+const pageSize=15;
+
+async function populateYears(){
+const {data}=await supabaseClient
+.from("assurances")
+.select("planned_start_date");
+
+let years=[...new Set(
+data
+.filter(x=>x.planned_start_date)
+.map(x=>new Date(x.planned_start_date).getFullYear())
+)].sort();
+
+years.forEach(y=>{
+filterYear.innerHTML+=`<option>${y}</option>`;
+});
+}
 
 async function loadData(){
 
-const {data:assurances} = await supabaseClient.from("assurances").select("*");
-const {data:findings} = await supabaseClient.from("assurance_findings").select("*");
+let query=supabaseClient.from("assurances").select("*",{count:"exact"});
 
-let html="";
+if(filterDepot.value)
+query=query.eq("depot",filterDepot.value);
+
+if(filterStatus.value)
+query=query.eq("status",filterStatus.value);
+
+if(filterType.value)
+query=query.eq("assurance_type",filterType.value);
+
+if(filterYear.value)
+query=query.gte("planned_start_date",`${filterYear.value}-01-01`)
+            .lte("planned_start_date",`${filterYear.value}-12-31`);
+
+const {data,count}=await query;
+
+kpiTotal.innerText=count;
+kpiOpen.innerText=data.filter(x=>x.status==="Open").length;
+
+let totalOpenFindings=0;
+let totalOverdue=0;
 const today=new Date().toISOString().split("T")[0];
 
-assurances.forEach((a,index)=>{
+let html="";
 
-const related=findings.filter(f=>f.assurance_id===a.id);
-const total=related.length;
-const open=related.filter(f=>f.status!=="Closed").length;
-const overdue=related.filter(f=>f.status!=="Closed" && f.target_date && f.target_date<today).length;
+for(const row of data){
 
-let indicatorClass=a.status==="Closed"?"closed":"open";
+const {data:findings}=await supabaseClient
+.from("assurance_findings")
+.select("*")
+.eq("assurance_id",row.id);
+
+const openCount=findings.filter(f=>f.status!=="Closed").length;
+const overdueCount=findings.filter(f=>f.status!=="Closed" && f.target_date && f.target_date<today).length;
+
+totalOpenFindings+=openCount;
+totalOverdue+=overdueCount;
 
 html+=`
 <tr>
-<td>${index+1}</td>
-<td>${a.depot}</td>
-<td><a class="assurance-link" href="assurance-detail.html?id=${a.id}">${a.assurance_name}</a></td>
-<td>${a.assurance_owner_email}</td>
-<td><div class="indicator ${indicatorClass}">${a.status}</div></td>
-<td>${total}</td>
-<td>${open}</td>
-<td><div class="indicator ${overdue>0?"overdue":"open"}">${overdue}</div></td>
+<td>${row.depot||""}</td>
+<td><a class="assurance-link" href="assurance-detail.html?id=${row.id}">
+${row.assurance_name}
+</a></td>
+<td>${row.assurance_type||""}</td>
+<td>${row.assurance_owner_email||""}</td>
+<td>${row.planned_start_date||""}</td>
+<td><span class="indicator ${row.status==="Closed"?"closed":"open"}">
+${row.status}</span></td>
+<td>${openCount}</td>
+<td>${overdueCount}</td>
 </tr>`;
-});
-
-document.getElementById("tableBody").innerHTML=html;
 }
+
+kpiFindings.innerText=totalOpenFindings;
+kpiOverdue.innerText=totalOverdue;
+
+tableBody.innerHTML=html;
+pageInfo.innerText=`Total: ${count}`;
+}
+
+function nextPage(){currentPage++;loadData();}
+function prevPage(){if(currentPage>1){currentPage--;loadData();}}
+
+["filterDepot","filterStatus","filterType","filterYear"]
+.forEach(id=>document.getElementById(id)
+.addEventListener("change",()=>{currentPage=1;loadData();}));
 
 async function logout(){
 await supabaseClient.auth.signOut();
 window.location="login.html";
 }
 
+populateYears();
 loadData();
+
 </script>
 
 </body>
