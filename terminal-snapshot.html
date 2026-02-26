@@ -180,8 +180,28 @@ const month = monthFilter.value;
 // ---------------------------
 // SPLIT DATA
 // ---------------------------
-const currentYearData = financial.filter(r => r.year === selectedYear);
-const lastYearData = financial.filter(r => r.year === lastYear);
+const selectedYear = parseInt(year);
+const lastYear = selectedYear - 1;
+
+let financialQuery = supabaseClient
+  .from("v_snapshot_financial")
+  .select("*")
+  .in("year", [selectedYear, lastYear]);
+
+if(depot) financialQuery = financialQuery.eq("depot", depot);
+
+const { data: financial, error } = await financialQuery;
+
+if(error){
+  console.error(error);
+  snapshotContent.innerHTML = "<p>Error loading financial data</p>";
+  return;
+}
+
+if(!financial || financial.length === 0){
+  snapshotContent.innerHTML = "<p>No financial data found.</p>";
+  return;
+}
 
 // ---------------------------
 // 1️⃣ LAST YEAR FULL UC
