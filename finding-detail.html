@@ -209,12 +209,12 @@ let updates={};
 
 // Action Owner can change only status & action_taken
 if(isActionOwner && !isSuperUser && !isAssuranceOwner){
-updates.status=status.value;
+updates.status=document.getElementById("status").value;
 updates.action_taken=action_taken.value;
 }
 else{
 // Superuser or Assurance Owner
-updates.status=status.value;
+updates.status=document.getElementById("status").value;
 updates.action_taken=action_taken.value;
 
 // Detect target date change
@@ -230,11 +230,14 @@ if(status.value==="Closed" && currentData.status!=="Closed"){
 updates.closed_date=new Date().toISOString().split("T")[0];
 }
 
-const {error}=await supabaseClient
+const {data,error} = await supabaseClient
 .from("assurance_findings")
 .update(updates)
-.eq("id",id);
+.eq("id",id)
+.select();
 
+console.log(data,error);
+  
 if(error){
 alert(error.message);
 return;
