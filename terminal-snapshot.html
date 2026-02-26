@@ -249,36 +249,83 @@ ${buildLOD("LOD3")}
 
 /* ================= INITIATIVES ================= */
 
-let initQuery=supabaseClient.from("v_snapshot_initiatives").select("*").eq("year",year);
-if(depot) initQuery=initQuery.eq("depot",depot);
+/* ================= INITIATIVES & DELIVERY ================= */
 
-const {data:init}=await initQuery;
-const strategic=init.filter(x=>x.initiative_type==="Strategic");
+let initQuery = supabaseClient
+  .from("initiatives")
+  .select("*")
+  .eq("year", year);
 
-function sum(arr,field){return arr.reduce((a,b)=>a+(b[field]||0),0);}
+if(depot) initQuery = initQuery.eq("terminal_name", depot);
 
-html+=`
-<div class="section-title">Strategy & Delivery</div>
-<div class="kpis">
+const { data: init } = await initQuery;
 
-<div class="card green-border" style="flex:2;">
-<h3>Strategic Initiatives</h3>
-<p>Total: ${strategic.length}</p>
-<p class="green">Closed: ${strategic.filter(x=>x.status==="Closed").length}</p>
-<p class="orange">Open: ${strategic.filter(x=>x.status!=="Closed").length}</p>
+if(init){
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
-<div class="metric-chip">Savings R: ${formatMPKR(sum(strategic,"realized_cost_saving"))}</div>
-<div class="metric-chip">Savings P: ${formatMPKR(sum(strategic,"pipeline_cost_saving"))}</div>
-<div class="metric-chip">Avoid R: ${formatMPKR(sum(strategic,"realized_cost_avoidance"))}</div>
-<div class="metric-chip">Avoid P: ${formatMPKR(sum(strategic,"pipeline_cost_avoidance"))}</div>
-<div class="metric-chip">Capacity R: ${sum(strategic,"realized_capacity")}</div>
-<div class="metric-chip">Capacity P: ${sum(strategic,"pipeline_capacity")}</div>
-<div class="metric-chip">G2G R: ${sum(strategic,"realized_g2g")}</div>
-<div class="metric-chip">G2G P: ${sum(strategic,"pipeline_g2g")}</div>
-</div>
-</div>
-`;
+  const validPipeline = x =>
+    x.status !== "Closed" &&
+    x.status !== "Dropped";
+
+  function sum(arr){
+    return arr.reduce((a,b)=>a+(b.impact_amount||0),0);
+  }
+
+  // ---- FILTER BY IMPACT TYPE ----
+
+  const saving = init.filter(x=>x.impact_type==="Cost Saving (PKR)");
+  const avoid = init.filter(x=>x.impact_type==="Cost Avoidance (PKR)");
+  const capacity = init.filter(x=>x.impact_type==="Capacity Enhancement (MT)");
+  const g2g = init.filter(x=>x.impact_type==="G2G Improvement (Minutes)");
+
+  function split(arr){
+    return {
+      realized: sum(arr.filter(x=>x.status==="Closed")),
+      pipeline: sum(arr.filter(validPipeline))
+    };
+  }
+
+  const savingData = split(saving);
+  const avoidData = split(avoid);
+  const capData = split(capacity);
+  const g2gData = split(g2g);
+
+  html += `
+  <div class="section-title">Strategy & Delivery</div>
+
+  <div class="kpis">
+
+  <!-- BOX 1 -->
+  <div class="card green-border" style="flex:2;">
+    <h3>Strategic Initiatives</h3>
+
+    <p><b>Total Initiatives:</b> ${init.length}</p>
+    <p class="green"><b>Closed (Realized):</b> ${init.filter(x=>x.status==="Closed").length}</p>
+    <p class="orange"><b>Open / Pipeline:</b> ${init.filter(validPipeline).length}</p>
+
+    <hr style="margin:15px 0;opacity:0.2;">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+
+      <div>
+        <h4>Realized</h4>
+        <p>Savings: ${formatMPKR(savingData.realized)}</p>
+        <p>Avoidance: ${formatMPKR(avoidData.realized)}</p>
+        <p>Capacity: ${capData.realized}</p>
+        <p>G2G: ${g2gData.realized}</p>
+      </div>
+
+      <div>
+        <h4>Pipeline</h4>
+        <p>Savings: ${formatMPKR(savingData.pipeline)}</p>
+        <p>Avoidance: ${formatMPKR(avoidData.pipeline)}</p>
+        <p>Capacity: ${capData.pipeline}</p>
+        <p>G2G: ${g2gData.pipeline}</p>
+      </div>
+
+    </div>
+  </div>
+  `;
+}
 
 /* ================= PROJECTS ================= */
 
