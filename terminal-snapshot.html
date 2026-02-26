@@ -273,7 +273,9 @@ ${buildLOD("LOD2")}
 ${buildLOD("LOD3")}
 </div>
 `;
-
+snapshotContent.innerHTML=html;
+renderChart(curr,prev);
+}
 /* ================= CHART ================= */
 
 function renderChart(curr,prev){
