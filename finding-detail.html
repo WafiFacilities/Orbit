@@ -96,11 +96,18 @@ margin-top:10px;
 
 <div class="main">
 
-<div class="container" id="viewSection"></div>
-
 <div class="container">
+<h3>Finding Details</h3>
 
-<h3>Update Finding</h3>
+<div class="form-row">
+<label>Finding Title</label>
+<input id="finding_title">
+</div>
+
+<div class="form-row">
+<label>Action Required</label>
+<textarea id="action_required"></textarea>
+</div>
 
 <div class="form-row">
 <label>Status</label>
@@ -134,7 +141,11 @@ You do not have permission to modify this finding.
 
 <script>
 
-const supabaseClient = supabase.createClient( "https://kqhbvmqxrwwspopwckah.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8" );
+const supabaseClient = supabase.createClient(
+"https://kqhbvmqxrwwspopwckah.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
+);
+
 const id = new URLSearchParams(window.location.search).get("id");
 
 let currentData=null;
@@ -163,7 +174,6 @@ const {data:finding}=await supabaseClient
 
 currentData=finding;
 
-// Get parent assurance
 const {data:assurance}=await supabaseClient
 .from("assurances")
 .select("*")
@@ -174,32 +184,39 @@ isSuperUser = await checkSuperUser(userEmail);
 isAssuranceOwner = (assurance.assurance_owner_email||"").toLowerCase()===userEmail;
 isActionOwner = (finding.action_owner_email||"").toLowerCase()===userEmail;
 
-// Display
-viewSection.innerHTML=`
-<h2>${finding.finding_title}</h2>
-<p><b>RAM:</b> ${finding.priority_rating||""}</p>
-<p><b>Type:</b> ${finding.type_of_finding||""}</p>
-<p><b>Action Required:</b> ${finding.action_required||""}</p>
-<p><b>Revision Count:</b> ${finding.target_date_revision_count}</p>
-`;
+// Populate fields fresh
+document.getElementById("finding_title").value=finding.finding_title||"";
+document.getElementById("action_required").value=finding.action_required||"";
+document.getElementById("status").value=finding.status;
+document.getElementById("action_taken").value=finding.action_taken||"";
+document.getElementById("target_date").value=finding.target_date||"";
 
-status.value=finding.status;
-action_taken.value=finding.action_taken||"";
-target_date.value=finding.target_date||"";
+// Default disable all
+document.querySelectorAll("input,textarea,select")
+.forEach(el=>el.disabled=true);
 
-// Role Control
+// Superuser & Assurance Owner
 if(isSuperUser || isAssuranceOwner){
-return; // full access
-}
-
-if(isActionOwner){
-target_date.disabled=true; // cannot change
+document.querySelectorAll("input,textarea,select")
+.forEach(el=>el.disabled=false);
 return;
 }
 
-// No access
-document.querySelectorAll("select,textarea,input,button")
-.forEach(el=>el.disabled=true);
+// Action Owner
+if(isActionOwner){
+
+// Can update status only if not already closed
+if(finding.status!=="Closed"){
+document.getElementById("status").disabled=false;
+}
+
+// Can update action taken always
+document.getElementById("action_taken").disabled=false;
+
+return;
+}
+
+// Others
 document.getElementById("lockedMsg").style.display="block";
 }
 
@@ -207,44 +224,47 @@ async function save(){
 
 let updates={};
 
-// Action Owner can change only status & action_taken
+const newStatus=document.getElementById("status").value;
+
+// Prevent reopening
+if(currentData.status==="Closed" &&
+newStatus!=="Closed" &&
+!(isSuperUser||isAssuranceOwner)){
+alert("Closed findings cannot be reopened.");
+return;
+}
+
+// Action Owner
 if(isActionOwner && !isSuperUser && !isAssuranceOwner){
-updates.status=document.getElementById("status").value;
-updates.action_taken=action_taken.value;
+updates.status=newStatus;
+updates.action_taken=document.getElementById("action_taken").value;
 }
 else{
-// Superuser or Assurance Owner
-updates.status=document.getElementById("status").value;
-updates.action_taken=action_taken.value;
+// Full control
+updates.finding_title=document.getElementById("finding_title").value;
+updates.action_required=document.getElementById("action_required").value;
+updates.status=newStatus;
+updates.action_taken=document.getElementById("action_taken").value;
 
-// Detect target date change
-if(target_date.value!==currentData.target_date){
-updates.target_date=target_date.value;
+if(document.getElementById("target_date").value!==currentData.target_date){
+updates.target_date=document.getElementById("target_date").value;
 updates.target_date_revision_count=
 (currentData.target_date_revision_count||0)+1;
 }
 }
 
 // Auto closed date
-if(status.value==="Closed" && currentData.status!=="Closed"){
+if(newStatus==="Closed" && currentData.status!=="Closed"){
 updates.closed_date=new Date().toISOString().split("T")[0];
 }
 
-const {data,error} = await supabaseClient
+await supabaseClient
 .from("assurance_findings")
 .update(updates)
-.eq("id",id)
-.select();
-
-console.log(data,error);
-  
-if(error){
-alert(error.message);
-return;
-}
+.eq("id",id);
 
 successMsg.style.display="block";
-load();
+load(); // reload fresh values
 }
 
 async function logout(){
