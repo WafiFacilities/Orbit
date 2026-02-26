@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Add Assurance</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+@font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
+body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
+
+.header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;}
+.header-left{display:flex;align-items:center;gap:12px;}
+.header-left img{height:40px;}
+.wafi-logo{height:40px;}
+.header-title{font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;}
+
+.layout{display:flex;height:calc(100vh - 62px);}
+.sidebar{width:220px;background:#404040;color:white;display:flex;flex-direction:column;padding-top:20px;}
+.sidebar h4{padding:10px 20px;margin:0;}
+.sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
+.sidebar a:hover{background:#505050;}
+.sidebar .logout{margin-top:auto;border-top:1px solid #555;}
+
+.main{flex:1;padding:20px;overflow-y:auto;}
+.container{background:white;padding:20px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.1);max-width:900px;}
+
+.field-row{display:flex;margin-bottom:12px;align-items:center;}
+.field-row label{flex:0 0 220px;font-weight:bold;}
+.field-row input,.field-row select,.field-row textarea{
+flex:1;padding:6px;border-radius:4px;border:1px solid #ccc;font-family:'72 Condensed';
+}
+
+button{padding:8px 16px;background:#76B531;color:white;border:none;border-radius:4px;cursor:pointer;}
+.success{color:green;}
+.error{color:red;}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<div class="header-left">
+<img src="orbit-logo.png">
+<h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+</div>
+<img src="wafi-logo.png" class="wafi-logo">
+</div>
+
+<div class="layout">
+
+<div class="sidebar">
+<h4>ASSURANCE</h4>
+<a href="assurances.html">All Assurances</a>
+<a href="add-assurance.html">Add Assurance</a>
+<a href="#" onclick="logout()" class="logout">Logout</a>
+</div>
+
+<div class="main">
+<h2>Add New Assurance</h2>
+
+<div class="container">
+
+<form id="assuranceForm">
+
+<div class="field-row">
+<label>Assurance Name:</label>
+<input id="assurance_name" required>
+</div>
+
+<div class="field-row">
+<label>Depot:</label>
+<select id="depot" required>
+<option value="">Select Depot</option>
+<option>KMR</option><option>CKL</option><option>MCH</option>
+<option>SKP</option><option>DLP</option><option>TJB</option>
+<option>BHK</option><option>SSH</option><option>VHR</option>
+<option>GTI</option>
+</select>
+</div>
+
+<div class="field-row">
+<label>Scope Area:</label>
+<select id="scope_area" required>
+<option value="">Select Scope Area</option>
+<option>Operational Controls</option>
+<option>Emergency Response</option>
+<option>HEMP</option>
+<option>Local Scope Areas</option>
+<option>Management of Change (MOC)</option>
+<option>Product Quality</option>
+<option>Not Applicable</option>
+<option>Statement of Fitness</option>
+<option>Inspection & Maintenance</option>
+<option>Permit to Work</option>
+</select>
+</div>
+
+<div class="field-row">
+<label>Assurance Type:</label>
+<select id="assurance_type" required>
+<option value="">Select Type</option>
+<option>LOD1</option>
+<option>LOD2</option>
+<option>LOD3</option>
+</select>
+</div>
+
+<div class="field-row">
+<label>Owner Email:</label>
+<input type="email" id="owner_email" required>
+</div>
+
+<div class="field-row">
+<label>Planned Start Date:</label>
+<input type="date" id="start_date">
+</div>
+
+<div class="field-row">
+<label>Planned Finish Date:</label>
+<input type="date" id="finish_date">
+</div>
+
+<div class="field-row">
+<label>Description:</label>
+<textarea id="description"></textarea>
+</div>
+
+<button type="submit">Create Assurance</button>
+
+<p class="success" id="successMsg" style="display:none;">Assurance Created</p>
+<p class="error" id="errorMsg"></p>
+
+</form>
+</div>
+</div>
+</div>
+
+<script>
+const supabaseClient = supabase.createClient("YOUR_URL","YOUR_KEY");
+
+document.getElementById("assuranceForm").addEventListener("submit", async (e)=>{
+e.preventDefault();
+
+const session = await supabaseClient.auth.getSession();
+
+const {error} = await supabaseClient.from("assurances").insert([{
+assurance_name: assurance_name.value,
+depot: depot.value,
+scope_area: scope_area.value,
+assurance_type: assurance_type.value,
+assurance_owner_email: owner_email.value,
+planned_start_date: start_date.value || null,
+planned_finish_date: finish_date.value || null,
+brief_description: description.value,
+created_by_email: session.data.session.user.email
+}]);
+
+if(error){
+errorMsg.innerText = error.message;
+return;
+}
+
+successMsg.style.display="block";
+assuranceForm.reset();
+});
+
+async function logout(){
+await supabaseClient.auth.signOut();
+window.location="login.html";
+}
+</script>
+
+</body>
+</html>
