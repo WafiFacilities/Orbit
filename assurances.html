@@ -180,6 +180,7 @@ background:#404040;color:white;cursor:pointer;
 <th>Depot</th>
 <th>Assurance</th>
 <th>Type</th>
+<th>Scope Area</th>
 <th>Owner</th>
 <th>Start</th>
 <th>Status</th>
@@ -266,14 +267,20 @@ totalOverdue+=overdueCount;
 html+=`
 <tr>
 <td>${row.depot||""}</td>
-<td><a class="assurance-link" href="assurance-detail.html?id=${row.id}">
+<td>
+<a class="assurance-link" href="assurance-detail.html?id=${row.id}">
 ${row.assurance_name}
-</a></td>
+</a>
+</td>
 <td>${row.assurance_type||""}</td>
+<td>${row.scope_area||""}</td>
 <td>${row.assurance_owner_email||""}</td>
 <td>${row.planned_start_date||""}</td>
-<td><span class="indicator ${row.status==="Closed"?"closed":"open"}">
-${row.status}</span></td>
+<td>
+<span class="indicator ${row.status==="Closed"?"closed":"open"}">
+${row.status}
+</span>
+</td>
 <td>${openCount}</td>
 <td>${overdueCount}</td>
 </tr>`;
