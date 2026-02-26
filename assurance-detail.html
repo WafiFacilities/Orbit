@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Assurance Detail</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+@font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
+body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
+
+.header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;}
+.header-left{display:flex;align-items:center;gap:12px;}
+.header-left img{height:40px;}
+.wafi-logo{height:40px;}
+.header-title{font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;}
+
+.layout{display:flex;height:calc(100vh - 62px);}
+.sidebar{width:220px;background:#404040;color:white;display:flex;flex-direction:column;padding-top:20px;}
+.sidebar h4{padding:10px 20px;margin:0;}
+.sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
+.sidebar a:hover{background:#505050;}
+.sidebar .logout{margin-top:auto;border-top:1px solid #555;}
+
+.main{flex:1;padding:20px;overflow-y:auto;}
+
+.container{
+background:white;
+padding:20px;
+border-radius:6px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+margin-bottom:20px;
+}
+
+.data-row{display:flex;margin-bottom:10px;}
+.data-row label{flex:0 0 200px;font-weight:bold;}
+.data-row div{flex:1;}
+
+table{width:100%;border-collapse:collapse;}
+th,td{border:1px solid #ddd;padding:8px;text-align:center;}
+th{background:#76B531;color:white;}
+
+.indicator{padding:4px 8px;border-radius:4px;color:white;font-weight:bold;}
+.open{background:#e67e22;}
+.closed{background:#777;}
+.overdue{background:#e74c3c;}
+
+button{
+padding:8px 14px;
+background:#76B531;
+color:white;
+border:none;
+border-radius:4px;
+cursor:pointer;
+margin-top:10px;
+}
+
+a.finding-link{
+color:#76B531;
+text-decoration:none;
+font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<div class="header-left">
+<img src="orbit-logo.png">
+<h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+</div>
+<img src="wafi-logo.png" class="wafi-logo">
+</div>
+
+<div class="layout">
+
+<div class="sidebar">
+<h4>ASSURANCE</h4>
+<a href="assurances.html">All Assurances</a>
+<a href="#" onclick="logout()" class="logout">Logout</a>
+</div>
+
+<div class="main">
+
+<div class="container" id="assuranceInfo"></div>
+
+<div class="container">
+<h3>Findings</h3>
+
+<table>
+<thead>
+<tr>
+<th>Finding</th>
+<th>Action Owner</th>
+<th>Target Date</th>
+<th>Revisions</th>
+<th>Status</th>
+<th>Indicator</th>
+</tr>
+</thead>
+<tbody id="findingsTable"></tbody>
+</table>
+
+<button onclick="toggleAddFinding()">+ Add Finding</button>
+<button onclick="closeAssurance()">Close Assurance</button>
+
+<div id="addFindingSection" style="display:none;margin-top:20px;">
+
+<h4>Add New Finding</h4>
+
+<input id="finding_title" placeholder="Finding Title"><br><br>
+<input id="action_owner" placeholder="Action Owner Email"><br><br>
+<input type="date" id="target_date"><br><br>
+
+<button onclick="saveFinding()">Save Finding</button>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+<script>
+const supabaseClient = supabase.createClient( "https://kqhbvmqxrwwspopwckah.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8" );
+const id = new URLSearchParams(window.location.search).get("id");
+
+async function load(){
+
+const {data:assurance} = await supabaseClient
+.from("assurances")
+.select("*")
+.eq("id",id)
+.single();
+
+assuranceInfo.innerHTML = `
+<h2>${assurance.assurance_name}</h2>
+
+<div class="data-row"><label>Depot:</label><div>${assurance.depot}</div></div>
+<div class="data-row"><label>Scope Area:</label><div>${assurance.scope_area || ""}</div></div>
+<div class="data-row"><label>Assurance Type:</label><div>${assurance.assurance_type || ""}</div></div>
+<div class="data-row"><label>Owner:</label><div>${assurance.assurance_owner_email}</div></div>
+<div class="data-row"><label>Status:</label><div><span class="indicator ${assurance.status==="Closed"?"closed":"open"}">${assurance.status}</span></div></div>
+`;
+
+const {data:findings} = await supabaseClient
+.from("assurance_findings")
+.select("*")
+.eq("assurance_id",id);
+
+let html="";
+const today=new Date().toISOString().split("T")[0];
+
+findings.forEach(f=>{
+
+let indicator="open";
+if(f.status==="Closed") indicator="closed";
+else if(f.target_date && f.target_date<today) indicator="overdue";
+
+html+=`
+<tr>
+<td>
+<a class="finding-link" href="finding-detail.html?id=${f.id}">
+${f.finding_title}
+</a>
+</td>
+<td>${f.action_owner_email}</td>
+<td>${f.target_date || ""}</td>
+<td>${f.target_date_revision_count}</td>
+<td>${f.status}</td>
+<td><span class="indicator ${indicator}">${indicator}</span></td>
+</tr>`;
+});
+
+findingsTable.innerHTML=html;
+}
+
+function toggleAddFinding(){
+const section=document.getElementById("addFindingSection");
+section.style.display = section.style.display==="none"?"block":"none";
+}
+
+async function saveFinding(){
+
+await supabaseClient.from("assurance_findings").insert([{
+assurance_id:id,
+finding_title:finding_title.value,
+action_owner_email:action_owner.value,
+target_date:target_date.value
+}]);
+
+toggleAddFinding();
+load();
+}
+
+async function closeAssurance(){
+
+const {data:openFindings} = await supabaseClient
+.from("assurance_findings")
+.select("*")
+.eq("assurance_id",id)
+.neq("status","Closed");
+
+if(openFindings.length>0){
+alert("Cannot close assurance. Open findings exist.");
+return;
+}
+
+await supabaseClient
+.from("assurances")
+.update({status:"Closed"})
+.eq("id",id);
+
+load();
+}
+
+async function logout(){
+await supabaseClient.auth.signOut();
+window.location="login.html";
+}
+
+load();
+</script>
+
+</body>
+</html>
