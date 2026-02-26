@@ -157,11 +157,11 @@ const supabaseClient = supabase.createClient(
 );
 
 function formatUC(val){
-return val.toFixed(2);
+return val ? val.toFixed(2) : "0.00";
 }
 
 function formatMPKR(val){
-return (val / 1000000).toFixed(2);
+return val ? (val / 1000000).toFixed(2) : "0.00";
 }
 
 async function loadSnapshot(){
@@ -173,15 +173,12 @@ const depot = depotFilter.value;
 const year = parseInt(yearFilter.value);
 const month = monthFilter.value;
 
-// =============================
-// FINANCIAL
-// =============================
-
-// ---------------------------
-// SPLIT DATA
-// ---------------------------
-const selectedYear = parseInt(year);
+const selectedYear = year;
 const lastYear = selectedYear - 1;
+
+/* =============================
+   FINANCIAL
+============================= */
 
 let financialQuery = supabaseClient
   .from("v_snapshot_financial")
@@ -203,9 +200,13 @@ if(!financial || financial.length === 0){
   return;
 }
 
-// ---------------------------
-// 1️⃣ LAST YEAR FULL UC
-// ---------------------------
+/* ---- SPLIT YEARS ---- */
+
+const currentYearData = financial.filter(r => r.year === selectedYear);
+const lastYearData = financial.filter(r => r.year === lastYear);
+
+/* ---- LAST YEAR FULL UC ---- */
+
 let lastYearCost = 0;
 let lastYearVolume = 0;
 
@@ -218,9 +219,8 @@ const lastYearUC = lastYearVolume > 0
   ? (lastYearCost / lastYearVolume)
   : 0;
 
-// ---------------------------
-// 2️⃣ CURRENT YEAR YTD UC
-// ---------------------------
+/* ---- CURRENT YEAR YTD ---- */
+
 let effectiveMonth;
 
 if(month){
@@ -243,30 +243,67 @@ const ytdUC = ytdVolume > 0
   ? (ytdCost / ytdVolume)
   : 0;
 
-// ---------------------------
-// 3️⃣ CURRENT MONTH UC
-// ---------------------------
-let currentMonthUC = "-";
+/* ---- CURRENT MONTH UC ---- */
+
+let currentMonthUC = 0;
 
 if(month){
   const monthData = currentYearData.find(r => r.month === parseInt(month));
-
   if(monthData && monthData.volume > 0){
-    currentMonthUC = (monthData.total_cost / monthData.volume);
+    currentMonthUC = monthData.total_cost / monthData.volume;
   }
 }
 
-// ---------------------------
-// 4️⃣ VARIANCE %
-// ---------------------------
+/* ---- VARIANCE ---- */
+
 let variancePct = 0;
 
 if(lastYearUC > 0){
   variancePct = ((ytdUC - lastYearUC) / lastYearUC) * 100;
 }
-// =============================
-// INITIATIVES
-// =============================
+
+/* ---- RENDER FINANCIAL ---- */
+
+html += `
+<div class="section-title">Financial KPIs</div>
+<div class="kpis">
+
+<div class="card">
+<p>Last Year UC</p>
+<h3>${formatUC(lastYearUC)}</h3>
+</div>
+
+<div class="card">
+<p>Current YTD UC</p>
+<h3>${formatUC(ytdUC)}</h3>
+</div>
+
+<div class="card">
+<p>Current Month UC</p>
+<h3>${formatUC(currentMonthUC)}</h3>
+</div>
+
+<div class="card">
+<p>YTD Variance vs LY</p>
+<h3>${variancePct.toFixed(1)}%</h3>
+</div>
+
+<div class="card">
+<p>YTD Cost (MPKR)</p>
+<h3>${formatMPKR(ytdCost)}</h3>
+</div>
+
+<div class="card">
+<p>YTD Volume</p>
+<h3>${ytdVolume.toLocaleString()}</h3>
+</div>
+
+</div>
+`;
+
+/* =============================
+   INITIATIVES
+============================= */
 
 let initQuery = supabaseClient
 .from("v_snapshot_initiatives")
@@ -290,9 +327,9 @@ html += `
 `;
 }
 
-// =============================
-// ASSURANCE
-// =============================
+/* =============================
+   ASSURANCE
+============================= */
 
 let assQuery = supabaseClient
 .from("v_snapshot_assurance")
@@ -316,9 +353,9 @@ html += `
 `;
 }
 
-// =============================
-// PROJECTS
-// =============================
+/* =============================
+   PROJECTS
+============================= */
 
 let projQuery = supabaseClient
 .from("v_snapshot_projects")
@@ -342,9 +379,9 @@ html += `
 `;
 }
 
-// =============================
-// FLBM
-// =============================
+/* =============================
+   FLBM
+============================= */
 
 let flbmQuery = supabaseClient
 .from("v_snapshot_flbm")
@@ -380,6 +417,5 @@ window.location="login.html";
 loadSnapshot();
 
 </script>
-
 </body>
 </html>
