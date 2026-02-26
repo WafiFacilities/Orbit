@@ -38,46 +38,45 @@ display:flex;flex-direction:column;padding-top:20px;
 .main{flex:1;padding:20px;overflow-y:auto;}
 
 .filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
-.filters select{
-padding:6px;border-radius:4px;border:1px solid #ccc;
-font-family:'72 Condensed';
-}
+.filters select{padding:6px;border-radius:4px;border:1px solid #ccc;}
 
-.section-title{
-font-size:18px;font-weight:bold;margin:25px 0 10px;
-}
+.section-title{font-size:18px;font-weight:bold;margin:30px 0 15px;}
 
 .kpis{display:flex;flex-wrap:wrap;gap:15px;}
 
 .card{
 background:white;
-padding:15px;
-border-radius:6px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
+padding:18px;
+border-radius:8px;
+box-shadow:0 3px 8px rgba(0,0,0,0.08);
 flex:1;
-min-width:220px;
+min-width:240px;
 }
 
-.card h3{
-margin:0;
-font-size:22px;
-color:#76B531;
-}
-
-.card p{
-margin:4px 0;
-font-size:14px;
-}
+.card h3{margin:0;font-size:22px;color:#76B531;}
+.card p{margin:5px 0;font-size:14px;}
 
 .chart-box{
 background:white;
-padding:15px;
-border-radius:6px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
+padding:18px;
+border-radius:8px;
+box-shadow:0 3px 8px rgba(0,0,0,0.08);
 margin-top:20px;
 }
 
 canvas{max-height:300px;}
+
+.metric-chip{
+background:#f4f6f9;
+padding:6px 10px;
+border-radius:4px;
+font-size:13px;
+}
+.green{color:#2ecc71;}
+.orange{color:#e67e22;}
+.red{color:#e74c3c;}
+.blue-border{border-left:6px solid #3498db;}
+.green-border{border-left:6px solid #76B531;}
 </style>
 </head>
 
@@ -157,8 +156,8 @@ const supabaseClient = supabase.createClient(
 
 let ucChart=null;
 
-function formatUC(val){ return val?val.toFixed(2):"0.00"; }
-function formatMPKR(val){ return val?(val/1000000).toFixed(2):"0.00"; }
+function formatUC(val){return val?val.toFixed(2):"0.00";}
+function formatMPKR(val){return val?(val/1000000).toFixed(2):"0.00";}
 
 async function loadSnapshot(){
 
@@ -195,24 +194,15 @@ curr.filter(r=>r.month<=effMonth)
 .forEach(r=>{ytdCost+=r.total_cost||0;ytdVol+=r.volume||0;});
 
 const ytdUC=ytdVol?ytdCost/ytdVol:0;
-
-let monthUC=0;
-if(month){
-const m=curr.find(r=>r.month==month);
-if(m&&m.volume) monthUC=m.total_cost/m.volume;
-}
-
 const variance=lastUC?((ytdUC-lastUC)/lastUC)*100:0;
 
 html+=`
-<div class="section-title">Financial KPIs</div>
+<div class="section-title">Financial Performance</div>
 <div class="kpis">
-<div class="card"><h3>${formatUC(lastUC)}</h3><p>Last Year UC</p></div>
-<div class="card"><h3>${formatUC(ytdUC)}</h3><p>Current YTD UC</p></div>
-<div class="card"><h3>${formatUC(monthUC)}</h3><p>Current Month UC</p></div>
-<div class="card"><h3>${variance.toFixed(1)}%</h3><p>YTD Variance vs LY</p></div>
-<div class="card"><h3>${formatMPKR(ytdCost)}</h3><p>YTD Cost (MPKR)</p></div>
-<div class="card"><h3>${ytdVol.toLocaleString()}</h3><p>YTD Volume</p></div>
+<div class="card green-border"><h3>${formatUC(lastUC)}</h3><p>Last Year UC</p></div>
+<div class="card green-border"><h3>${formatUC(ytdUC)}</h3><p>Current YTD UC</p></div>
+<div class="card green-border"><h3>${variance.toFixed(1)}%</h3><p>Variance vs LY</p></div>
+<div class="card green-border"><h3>${formatMPKR(ytdCost)}</h3><p>YTD Cost (MPKR)</p></div>
 </div>
 
 <div class="chart-box">
@@ -223,65 +213,101 @@ html+=`
 
 /* ================= ASSURANCE ================= */
 
-/* ================= ASSURANCE (USING WORKING VIEW) ================= */
+let assQuery=supabaseClient.from("v_snapshot_assurance").select("*").eq("year",year);
+if(depot) assQuery=assQuery.eq("depot",depot);
 
-let assQuery = supabaseClient
-  .from("v_snapshot_assurance")
-  .select("*")
-  .eq("year", year);
+const {data:ass}=await assQuery;
+const today=new Date().toISOString().split("T")[0];
 
-if(depot) assQuery = assQuery.eq("depot", depot);
+function buildLOD(lod){
+const data=ass.filter(x=>x.assurance_type===lod);
+const unique=[...new Set(data.map(x=>x.assurance_id))].length;
+const total=data.length;
+const closed=data.filter(x=>x.action_status==="Closed").length;
+const open=data.filter(x=>x.action_status!=="Closed").length;
+const overdue=data.filter(x=>x.action_status!=="Closed"&&x.target_date&&x.target_date<today).length;
 
-const { data: ass } = await assQuery;
-
-const today = new Date().toISOString().split("T")[0];
-
-function buildLOD(lodType){
-
-  const data = ass.filter(x => x.assurance_type === lodType);
-
-  const uniqueAssurances = [...new Set(data.map(x => x.assurance_id))];
-
-  const totalActions = data.length;
-
-  const closed = data.filter(x => x.action_status === "Closed").length;
-
-  const open = data.filter(x => x.action_status !== "Closed").length;
-
-  const overdue = data.filter(x =>
-      x.action_status !== "Closed" &&
-      x.target_date &&
-      x.target_date < today
-  ).length;
-
-  return `
-  <div class="card">
-    <h3>${lodType}</h3>
-    <p># Assurance Conducted: ${uniqueAssurances.length}</p>
-    <p># Total Actions: ${totalActions}</p>
-    <p># Actions Closed: ${closed}</p>
-    <p># Actions Open: ${open}</p>
-    <p># Actions Overdue: ${overdue}</p>
-  </div>`;
+return `
+<div class="card">
+<h3>${lod}</h3>
+<p><b>Assurance Conducted:</b> ${unique}</p>
+<p>Total Actions: ${total}</p>
+<p class="green">Closed: ${closed}</p>
+<p class="orange">Open: ${open}</p>
+<p class="red">Overdue: ${overdue}</p>
+</div>`;
 }
 
-html += `
-<div class="section-title">Assurance Overview</div>
+html+=`
+<div class="section-title">Assurance Governance</div>
 <div class="kpis">
 ${buildLOD("LOD1")}
 ${buildLOD("LOD2")}
 ${buildLOD("LOD3")}
 </div>
 `;
+
+/* ================= INITIATIVES ================= */
+
+let initQuery=supabaseClient.from("v_snapshot_initiatives").select("*").eq("year",year);
+if(depot) initQuery=initQuery.eq("depot",depot);
+
+const {data:init}=await initQuery;
+const strategic=init.filter(x=>x.initiative_type==="Strategic");
+
+function sum(arr,field){return arr.reduce((a,b)=>a+(b[field]||0),0);}
+
+html+=`
+<div class="section-title">Strategy & Delivery</div>
+<div class="kpis">
+
+<div class="card green-border" style="flex:2;">
+<h3>Strategic Initiatives</h3>
+<p>Total: ${strategic.length}</p>
+<p class="green">Closed: ${strategic.filter(x=>x.status==="Closed").length}</p>
+<p class="orange">Open: ${strategic.filter(x=>x.status!=="Closed").length}</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+<div class="metric-chip">Savings R: ${formatMPKR(sum(strategic,"realized_cost_saving"))}</div>
+<div class="metric-chip">Savings P: ${formatMPKR(sum(strategic,"pipeline_cost_saving"))}</div>
+<div class="metric-chip">Avoid R: ${formatMPKR(sum(strategic,"realized_cost_avoidance"))}</div>
+<div class="metric-chip">Avoid P: ${formatMPKR(sum(strategic,"pipeline_cost_avoidance"))}</div>
+<div class="metric-chip">Capacity R: ${sum(strategic,"realized_capacity")}</div>
+<div class="metric-chip">Capacity P: ${sum(strategic,"pipeline_capacity")}</div>
+<div class="metric-chip">G2G R: ${sum(strategic,"realized_g2g")}</div>
+<div class="metric-chip">G2G P: ${sum(strategic,"pipeline_g2g")}</div>
+</div>
+</div>
+`;
+
+/* ================= PROJECTS ================= */
+
+let projQuery=supabaseClient.from("v_snapshot_projects").select("*").eq("year",year);
+if(depot) projQuery=projQuery.eq("depot",depot);
+
+const {data:proj}=await projQuery;
+const opex=proj.filter(x=>x.project_type==="Opex");
+
+html+=`
+<div class="card blue-border">
+<h3>Opex Projects</h3>
+<p>Total: ${opex.length}</p>
+<p class="green">Closed: ${opex.filter(x=>x.status==="Closed").length}</p>
+<p class="orange">Open: ${opex.filter(x=>x.status!=="Closed").length}</p>
+<p class="red">Overdue: ${opex.filter(x=>x.status!=="Closed"&&x.target_date&&x.target_date<today).length}</p>
+</div>
+
+</div>
+`;
+
 snapshotContent.innerHTML=html;
 renderChart(curr,prev);
 }
+
 /* ================= CHART ================= */
 
 function renderChart(curr,prev){
-
 if(ucChart) ucChart.destroy();
-
 const months=[1,2,3,4,5,6,7,8,9,10,11,12];
 const labels=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
@@ -291,14 +317,11 @@ let cumCost=0,cumPrevVol=0;
 months.forEach(m=>{
 const c=curr.find(x=>x.month==m);
 const p=prev.find(x=>x.month==m);
-
 const cost=c?.total_cost||0;
 const vol=c?.volume||0;
 const prevVol=p?.volume||0;
-
 volume.push(vol);
 unit.push(vol?(cost/vol).toFixed(2):0);
-
 cumCost+=cost;
 cumPrevVol+=prevVol;
 target.push(cumPrevVol?(0.9*(cumCost/cumPrevVol)).toFixed(2):null);
@@ -306,18 +329,12 @@ target.push(cumPrevVol?(0.9*(cumCost/cumPrevVol)).toFixed(2):null);
 
 ucChart=new Chart(document.getElementById("ucChart"),{
 type:"line",
-data:{
-labels,
-datasets:[
+data:{labels,datasets:[
 {label:"Unit Cost",data:unit,borderColor:"#76B531",yAxisID:"y"},
 {label:"Target",data:target,borderColor:"#e67e22",borderDash:[6,6],yAxisID:"y"},
 {label:"Volume",data:volume,type:"bar",backgroundColor:"#e6e6e6",yAxisID:"y1"}
 ]},
-options:{
-scales:{
-y:{position:"left"},
-y1:{position:"right"}
-}},
+options:{scales:{y:{position:"left"},y1:{position:"right"}}},
 plugins:[ChartDataLabels]
 });
 }
