@@ -205,13 +205,14 @@ return;
 // Action Owner
 if(isActionOwner){
 
-// Can update status only if not already closed
-if(finding.status!=="Closed"){
-document.getElementById("status").disabled=false;
+// If already closed → completely locked
+if(finding.status === "Closed"){
+return; // keep everything disabled
 }
 
-// Can update action taken always
-document.getElementById("action_taken").disabled=false;
+// If not closed:
+document.getElementById("status").disabled = false;
+document.getElementById("action_taken").disabled = false;
 
 return;
 }
