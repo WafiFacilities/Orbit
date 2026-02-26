@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Terminal Snapshot</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+@font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
+
+body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
+
+.header{
+display:flex;align-items:center;justify-content:space-between;
+padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;
+}
+.header-left{display:flex;align-items:center;gap:12px;}
+.header-left img{height:40px;}
+.wafi-logo{height:40px;}
+.header-title{
+font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
+}
+
+.layout{display:flex;height:calc(100vh - 62px);}
+
+.sidebar{
+width:220px;background:#404040;color:white;
+display:flex;flex-direction:column;padding-top:20px;
+}
+.sidebar h4{padding:10px 20px;margin:0;}
+.sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
+.sidebar a:hover{background:#505050;}
+.sidebar .logout{margin-top:auto;border-top:1px solid #555;}
+
+.main{flex:1;padding:20px;overflow-y:auto;}
+
+.filters{
+display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;
+}
+.filters select{
+padding:6px;border-radius:4px;border:1px solid #ccc;
+font-family:'72 Condensed';
+}
+
+.section-title{
+font-size:18px;font-weight:bold;margin:25px 0 10px;
+}
+
+.kpis{
+display:flex;flex-wrap:wrap;gap:15px;
+}
+
+.card{
+background:white;
+padding:15px;
+border-radius:6px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+flex:1;
+min-width:200px;
+text-align:center;
+}
+
+.card h3{
+margin:0;
+font-size:26px;
+color:#76B531;
+}
+
+.small{
+font-size:13px;
+color:#777;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <img src="orbit-logo.png">
+    <h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+  </div>
+  <img src="wafi-logo.png" class="wafi-logo">
+</div>
+
+<div class="layout">
+
+<div class="sidebar">
+  <h4>DASHBOARD</h4>
+  <a href="terminal-snapshot.html">Terminal Snapshot</a>
+
+  <h4>INITIATIVE</h4>
+  <a href="index.html">All Initiatives</a>
+
+  <h4>PROJECTS</h4>
+  <a href="projects.html">All Projects</a>
+
+  <h4>ASSURANCE</h4>
+  <a href="assurances.html">All Assurances</a>
+
+  <h4>PEOPLE</h4>
+  <a href="people-employees.html">Competency Tracker</a>
+
+  <a href="#" onclick="logout()" class="logout">Logout</a>
+</div>
+
+<div class="main">
+
+<h2>Terminal Executive Snapshot</h2>
+
+<div class="filters">
+<select id="depotFilter">
+<option value="">All Depots</option>
+<option>KMR</option>
+<option>CKL</option>
+<option>MCH</option>
+<option>SKP</option>
+<option>DLP</option>
+<option>TJB</option>
+<option>BHK</option>
+<option>SSH</option>
+<option>VHR</option>
+<option>GTI</option>
+<option>MMK</option>
+</select>
+
+<select id="yearFilter">
+<option>2025</option>
+<option>2026</option>
+</select>
+
+<select id="monthFilter">
+<option value="">Full Year</option>
+<option value="1">Jan</option>
+<option value="2">Feb</option>
+<option value="3">Mar</option>
+<option value="4">Apr</option>
+<option value="5">May</option>
+<option value="6">Jun</option>
+<option value="7">Jul</option>
+<option value="8">Aug</option>
+<option value="9">Sep</option>
+<option value="10">Oct</option>
+<option value="11">Nov</option>
+<option value="12">Dec</option>
+</select>
+
+<button onclick="loadSnapshot()">Refresh</button>
+</div>
+
+<div id="snapshotContent"></div>
+
+</div>
+</div>
+
+<script>
+
+const supabaseClient = supabase.createClient(
+"https://kqhbvmqxrwwspopwckah.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
+);
+
+function toMPKR(val){
+return (val/1000000).toFixed(2);
+}
+
+async function loadSnapshot(){
+
+const depot = depotFilter.value;
+const year = yearFilter.value;
+const month = monthFilter.value;
+
+let html="";
+
+/* ============================
+   FINANCIAL
+============================ */
+
+let financialQuery = supabaseClient
+.from("v_snapshot_financial")
+.select("*")
+.eq("year",year);
+
+if(depot) financialQuery = financialQuery.eq("depot",depot);
+if(month) financialQuery = financialQuery.eq("month",month);
+
+const {data:financial} = await financialQuery;
+
+let totalCost=0,totalVolume=0;
+
+financial.forEach(r=>{
+totalCost+=r.total_cost;
+totalVolume+=r.volume;
+});
+
+const unitCost = totalVolume ? (totalCost/totalVolume).toFixed(2) : 0;
+
+html+=`
+<div class="section-title">Financial</div>
+<div class="kpis">
+<div class="card"><p>Total Cost (MPKR)</p><h3>${toMPKR(totalCost)}</h3></div>
+<div class="card"><p>Total Volume</p><h3>${totalVolume}</h3></div>
+<div class="card"><p>Unit Cost</p><h3>${unitCost}</h3></div>
+</div>
+`;
+
+/* ============================
+   INITIATIVES
+============================ */
+
+let initQuery = supabaseClient
+.from("v_snapshot_initiatives")
+.select("*")
+.eq("year",year);
+
+if(depot) initQuery = initQuery.eq("depot",depot);
+
+const {data:init} = await initQuery;
+
+const totalInit = init.length;
+const closedInit = init.filter(x=>x.status==="Closed").length;
+
+html+=`
+<div class="section-title">Initiatives</div>
+<div class="kpis">
+<div class="card"><p>Total</p><h3>${totalInit}</h3></div>
+<div class="card"><p>Closed</p><h3>${closedInit}</h3></div>
+</div>
+`;
+
+/* ============================
+   ASSURANCE
+============================ */
+
+let assQuery = supabaseClient
+.from("v_snapshot_assurance")
+.select("*")
+.eq("year",year);
+
+if(depot) assQuery = assQuery.eq("depot",depot);
+
+const {data:ass} = await assQuery;
+
+const totalActions = ass.length;
+const closedActions = ass.filter(x=>x.action_status==="Closed").length;
+
+html+=`
+<div class="section-title">Assurance</div>
+<div class="kpis">
+<div class="card"><p>Total Actions</p><h3>${totalActions}</h3></div>
+<div class="card"><p>Closed</p><h3>${closedActions}</h3></div>
+</div>
+`;
+
+/* ============================
+   PROJECTS
+============================ */
+
+let projQuery = supabaseClient
+.from("v_snapshot_projects")
+.select("*")
+.eq("year",year);
+
+if(depot) projQuery = projQuery.eq("depot",depot);
+
+const {data:proj} = await projQuery;
+
+const totalProj = proj.length;
+const capex = proj.filter(x=>x.project_type==="Capex").length;
+
+html+=`
+<div class="section-title">Projects</div>
+<div class="kpis">
+<div class="card"><p>Total Projects</p><h3>${totalProj}</h3></div>
+<div class="card"><p>Capex</p><h3>${capex}</h3></div>
+</div>
+`;
+
+/* ============================
+   FLBM
+============================ */
+
+let flbmQuery = supabaseClient
+.from("v_snapshot_flbm")
+.select("*");
+
+if(depot) flbmQuery = flbmQuery.eq("depot",depot);
+
+const {data:flbm} = await flbmQuery;
+
+const totalTrain = flbm.length;
+const completed = flbm.filter(x=>x.training_status==="Completed").length;
+const overdue = flbm.filter(x=>x.training_status==="Overdue").length;
+
+html+=`
+<div class="section-title">FLBM Competency</div>
+<div class="kpis">
+<div class="card"><p>Total Trainings</p><h3>${totalTrain}</h3></div>
+<div class="card"><p>Completed</p><h3>${completed}</h3></div>
+<div class="card"><p>Overdue</p><h3>${overdue}</h3></div>
+</div>
+`;
+
+snapshotContent.innerHTML = html;
+}
+
+async function logout(){
+await supabaseClient.auth.signOut();
+window.location="login.html";
+}
+
+loadSnapshot();
+
+</script>
+
+</body>
+</html>
