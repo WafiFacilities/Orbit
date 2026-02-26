@@ -37,9 +37,7 @@ display:flex;flex-direction:column;padding-top:20px;
 
 .main{flex:1;padding:20px;overflow-y:auto;}
 
-.filters{
-display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;
-}
+.filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
 .filters select{
 padding:6px;border-radius:4px;border:1px solid #ccc;
 font-family:'72 Condensed';
@@ -49,9 +47,7 @@ font-family:'72 Condensed';
 font-size:18px;font-weight:bold;margin:25px 0 10px;
 }
 
-.kpis{
-display:flex;flex-wrap:wrap;gap:15px;
-}
+.kpis{display:flex;flex-wrap:wrap;gap:15px;}
 
 .card{
 background:white;
@@ -59,14 +55,18 @@ padding:15px;
 border-radius:6px;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 flex:1;
-min-width:200px;
-text-align:center;
+min-width:220px;
 }
 
 .card h3{
 margin:0;
-font-size:26px;
+font-size:22px;
 color:#76B531;
+}
+
+.card p{
+margin:4px 0;
+font-size:14px;
 }
 
 .chart-box{
@@ -119,17 +119,10 @@ canvas{max-height:300px;}
 <div class="filters">
 <select id="depotFilter">
 <option value="">All Depots</option>
-<option>KMR</option>
-<option>CKL</option>
-<option>MCH</option>
-<option>SKP</option>
-<option>DLP</option>
-<option>TJB</option>
-<option>BHK</option>
-<option>SSH</option>
-<option>VHR</option>
-<option>GTI</option>
-<option>MMK</option>
+<option>KMR</option><option>CKL</option><option>MCH</option>
+<option>SKP</option><option>DLP</option><option>TJB</option>
+<option>BHK</option><option>SSH</option><option>VHR</option>
+<option>GTI</option><option>MMK</option>
 </select>
 
 <select id="yearFilter">
@@ -139,18 +132,12 @@ canvas{max-height:300px;}
 
 <select id="monthFilter">
 <option value="">Full Year</option>
-<option value="1">Jan</option>
-<option value="2">Feb</option>
-<option value="3">Mar</option>
-<option value="4">Apr</option>
-<option value="5">May</option>
-<option value="6">Jun</option>
-<option value="7">Jul</option>
-<option value="8">Aug</option>
-<option value="9">Sep</option>
-<option value="10">Oct</option>
-<option value="11">Nov</option>
-<option value="12">Dec</option>
+<option value="1">Jan</option><option value="2">Feb</option>
+<option value="3">Mar</option><option value="4">Apr</option>
+<option value="5">May</option><option value="6">Jun</option>
+<option value="7">Jul</option><option value="8">Aug</option>
+<option value="9">Sep</option><option value="10">Oct</option>
+<option value="11">Nov</option><option value="12">Dec</option>
 </select>
 
 <button onclick="loadSnapshot()">Refresh</button>
@@ -170,8 +157,8 @@ const supabaseClient = supabase.createClient(
 
 let ucChart=null;
 
-function formatUC(val){ return val ? val.toFixed(2) : "0.00"; }
-function formatMPKR(val){ return val ? (val/1000000).toFixed(2) : "0.00"; }
+function formatUC(val){ return val?val.toFixed(2):"0.00"; }
+function formatMPKR(val){ return val?(val/1000000).toFixed(2):"0.00"; }
 
 async function loadSnapshot(){
 
@@ -181,100 +168,95 @@ let html="";
 const depot=depotFilter.value;
 const year=parseInt(yearFilter.value);
 const month=monthFilter.value;
-
-const selectedYear=year;
 const lastYear=year-1;
 
 /* ================= FINANCIAL ================= */
 
-let query=supabaseClient
+let finQuery=supabaseClient
 .from("v_snapshot_financial")
 .select("*")
-.in("year",[selectedYear,lastYear]);
+.in("year",[year,lastYear]);
 
-if(depot) query=query.eq("depot",depot);
+if(depot) finQuery=finQuery.eq("depot",depot);
 
-const {data:financial,error}=await query;
+const {data:financial}=await finQuery;
 
-if(error||!financial){
-snapshotContent.innerHTML="<p>Error loading financial data</p>";
-return;
-}
-
-const currentYearData=financial.filter(r=>r.year===selectedYear);
-const lastYearData=financial.filter(r=>r.year===lastYear);
-
-/* ---- Last Year UC ---- */
+const curr=financial.filter(r=>r.year===year);
+const prev=financial.filter(r=>r.year===lastYear);
 
 let lastCost=0,lastVol=0;
-lastYearData.forEach(r=>{
-lastCost+=r.total_cost||0;
-lastVol+=r.volume||0;
-});
+prev.forEach(r=>{lastCost+=r.total_cost||0;lastVol+=r.volume||0;});
 const lastUC=lastVol?lastCost/lastVol:0;
 
-/* ---- YTD ---- */
-
-let effectiveMonth=month?parseInt(month):
-Math.max(...currentYearData.map(r=>r.month));
+let effMonth=month?parseInt(month):Math.max(...curr.map(r=>r.month));
 
 let ytdCost=0,ytdVol=0;
-
-currentYearData.filter(r=>r.month<=effectiveMonth)
-.forEach(r=>{
-ytdCost+=r.total_cost||0;
-ytdVol+=r.volume||0;
-});
+curr.filter(r=>r.month<=effMonth)
+.forEach(r=>{ytdCost+=r.total_cost||0;ytdVol+=r.volume||0;});
 
 const ytdUC=ytdVol?ytdCost/ytdVol:0;
 
-/* ---- Month ---- */
-
 let monthUC=0;
 if(month){
-const m=currentYearData.find(r=>r.month==month);
+const m=curr.find(r=>r.month==month);
 if(m&&m.volume) monthUC=m.total_cost/m.volume;
 }
 
-/* ---- Variance ---- */
-
 const variance=lastUC?((ytdUC-lastUC)/lastUC)*100:0;
-
-/* ---- Render KPIs ---- */
 
 html+=`
 <div class="section-title">Financial KPIs</div>
 <div class="kpis">
-
-<div class="card"><p>Last Year UC</p><h3>${formatUC(lastUC)}</h3></div>
-<div class="card"><p>Current YTD UC</p><h3>${formatUC(ytdUC)}</h3></div>
-<div class="card"><p>Current Month UC</p><h3>${formatUC(monthUC)}</h3></div>
-<div class="card"><p>YTD Variance vs LY</p><h3>${variance.toFixed(1)}%</h3></div>
-<div class="card"><p>YTD Cost (MPKR)</p><h3>${formatMPKR(ytdCost)}</h3></div>
-<div class="card"><p>YTD Volume</p><h3>${ytdVol.toLocaleString()}</h3></div>
-
+<div class="card"><h3>${formatUC(lastUC)}</h3><p>Last Year UC</p></div>
+<div class="card"><h3>${formatUC(ytdUC)}</h3><p>Current YTD UC</p></div>
+<div class="card"><h3>${formatUC(monthUC)}</h3><p>Current Month UC</p></div>
+<div class="card"><h3>${variance.toFixed(1)}%</h3><p>YTD Variance vs LY</p></div>
+<div class="card"><h3>${formatMPKR(ytdCost)}</h3><p>YTD Cost (MPKR)</p></div>
+<div class="card"><h3>${ytdVol.toLocaleString()}</h3><p>YTD Volume</p></div>
 </div>
 
 <div class="chart-box">
 <h3>Monthly Unit Cost vs Target</h3>
 <canvas id="ucChart"></canvas>
-<p style="font-size:13px;color:#555;margin-top:6px;">
-Target = 90% × (Current Year YTD Cost ÷ Previous Year YTD Volume)
-</p>
+</div>
+`;
+
+/* ================= ASSURANCE ================= */
+
+let assQuery=supabaseClient.from("v_snapshot_assurance").select("*").eq("year",year);
+if(depot) assQuery=assQuery.eq("depot",depot);
+
+const {data:ass}=await assQuery;
+
+function buildLOD(lod){
+const data=ass.filter(x=>x.lod_level===lod);
+return `
+<div class="card">
+<h3>${lod}</h3>
+<p># Assurance Conducted: ${[...new Set(data.map(x=>x.assurance_id))].length}</p>
+<p># Total Actions: ${data.length}</p>
+<p># Actions Closed: ${data.filter(x=>x.action_status==="Closed").length}</p>
+<p># Actions Open: ${data.filter(x=>x.action_status==="Open").length}</p>
+<p># Actions Overdue: ${data.filter(x=>x.is_overdue===true).length}</p>
+</div>`;
+}
+
+html+=`
+<div class="section-title">Assurance Overview</div>
+<div class="kpis">
+${buildLOD("LOD1")}
+${buildLOD("LOD2")}
+${buildLOD("LOD3")}
 </div>
 `;
 
 snapshotContent.innerHTML=html;
-
-/* ---- Render Chart ---- */
-
-renderChart(currentYearData,lastYearData);
-
+renderChart(curr,prev);
 }
 
-/* ================= CHART FUNCTION ================= */
+/* ================= CHART ================= */
 
-function renderChart(curr,last){
+function renderChart(curr,prev){
 
 if(ucChart) ucChart.destroy();
 
@@ -286,7 +268,7 @@ let cumCost=0,cumPrevVol=0;
 
 months.forEach(m=>{
 const c=curr.find(x=>x.month==m);
-const p=last.find(x=>x.month==m);
+const p=prev.find(x=>x.month==m);
 
 const cost=c?.total_cost||0;
 const vol=c?.volume||0;
@@ -297,7 +279,6 @@ unit.push(vol?(cost/vol).toFixed(2):0);
 
 cumCost+=cost;
 cumPrevVol+=prevVol;
-
 target.push(cumPrevVol?(0.9*(cumCost/cumPrevVol)).toFixed(2):null);
 });
 
@@ -306,44 +287,17 @@ type:"line",
 data:{
 labels,
 datasets:[
-{
-label:"Unit Cost",
-data:unit,
-borderColor:"#76B531",
-tension:0.3,
-yAxisID:"y",
-datalabels:{color:"#000",anchor:"end",align:"top"}
-},
-{
-label:"Target",
-data:target,
-borderColor:"#e67e22",
-borderDash:[6,6],
-borderWidth:2,
-pointRadius:0,
-yAxisID:"y",
-datalabels:{display:false}
-},
-{
-label:"Volume",
-data:volume,
-type:"bar",
-backgroundColor:"#e6e6e6",
-yAxisID:"y1",
-datalabels:{display:false}
-}
-]
-},
+{label:"Unit Cost",data:unit,borderColor:"#76B531",yAxisID:"y"},
+{label:"Target",data:target,borderColor:"#e67e22",borderDash:[6,6],yAxisID:"y"},
+{label:"Volume",data:volume,type:"bar",backgroundColor:"#e6e6e6",yAxisID:"y1"}
+]},
 options:{
-plugins:{datalabels:{display:true}},
 scales:{
-y:{position:"left",title:{display:true,text:"Unit Cost"}},
-y1:{position:"right",title:{display:true,text:"Volume"}}
-}
-},
+y:{position:"left"},
+y1:{position:"right"}
+}},
 plugins:[ChartDataLabels]
 });
-
 }
 
 async function logout(){
