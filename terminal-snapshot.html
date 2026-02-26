@@ -223,25 +223,49 @@ html+=`
 
 /* ================= ASSURANCE ================= */
 
-let assQuery=supabaseClient.from("v_snapshot_assurance").select("*").eq("year",year);
-if(depot) assQuery=assQuery.eq("depot",depot);
+/* ================= ASSURANCE (USING WORKING VIEW) ================= */
 
-const {data:ass}=await assQuery;
+let assQuery = supabaseClient
+  .from("v_snapshot_assurance")
+  .select("*")
+  .eq("year", year);
 
-function buildLOD(lod){
-const data=ass.filter(x=>x.lod_level===lod);
-return `
-<div class="card">
-<h3>${lod}</h3>
-<p># Assurance Conducted: ${[...new Set(data.map(x=>x.assurance_id))].length}</p>
-<p># Total Actions: ${data.length}</p>
-<p># Actions Closed: ${data.filter(x=>x.action_status==="Closed").length}</p>
-<p># Actions Open: ${data.filter(x=>x.action_status==="Open").length}</p>
-<p># Actions Overdue: ${data.filter(x=>x.is_overdue===true).length}</p>
-</div>`;
+if(depot) assQuery = assQuery.eq("depot", depot);
+
+const { data: ass } = await assQuery;
+
+const today = new Date().toISOString().split("T")[0];
+
+function buildLOD(lodType){
+
+  const data = ass.filter(x => x.assurance_type === lodType);
+
+  const uniqueAssurances = [...new Set(data.map(x => x.assurance_id))];
+
+  const totalActions = data.length;
+
+  const closed = data.filter(x => x.action_status === "Closed").length;
+
+  const open = data.filter(x => x.action_status !== "Closed").length;
+
+  const overdue = data.filter(x =>
+      x.action_status !== "Closed" &&
+      x.target_date &&
+      x.target_date < today
+  ).length;
+
+  return `
+  <div class="card">
+    <h3>${lodType}</h3>
+    <p># Assurance Conducted: ${uniqueAssurances.length}</p>
+    <p># Total Actions: ${totalActions}</p>
+    <p># Actions Closed: ${closed}</p>
+    <p># Actions Open: ${open}</p>
+    <p># Actions Overdue: ${overdue}</p>
+  </div>`;
 }
 
-html+=`
+html += `
 <div class="section-title">Assurance Overview</div>
 <div class="kpis">
 ${buildLOD("LOD1")}
@@ -249,10 +273,6 @@ ${buildLOD("LOD2")}
 ${buildLOD("LOD3")}
 </div>
 `;
-
-snapshotContent.innerHTML=html;
-renderChart(curr,prev);
-}
 
 /* ================= CHART ================= */
 
