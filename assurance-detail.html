@@ -242,11 +242,49 @@ const {data:assurance}=await supabaseClient
 
 assuranceInfo.innerHTML=`
 <h2>${assurance.assurance_name}</h2>
-<div class="data-row"><label>Depot:</label><div>${assurance.depot}</div></div>
-<div class="data-row"><label>Scope Area:</label><div>${assurance.scope_area||""}</div></div>
-<div class="data-row"><label>Type:</label><div>${assurance.assurance_type||""}</div></div>
-<div class="data-row"><label>Status:</label>
-<div><span class="indicator ${assurance.status==="Closed"?"closed":"open"}">${assurance.status}</span></div>
+
+<div class="data-row">
+<label>Depot:</label>
+<div>${assurance.depot || ""}</div>
+</div>
+
+<div class="data-row">
+<label>Scope Area:</label>
+<div>${assurance.scope_area || ""}</div>
+</div>
+
+<div class="data-row">
+<label>Type:</label>
+<div>${assurance.assurance_type || ""}</div>
+</div>
+
+<div class="data-row">
+<label>Description:</label>
+<div>${assurance.description || ""}</div>
+</div>
+
+<div class="data-row">
+<label>Planned Start Date:</label>
+<div>${assurance.planned_start_date || ""}</div>
+</div>
+
+<div class="data-row">
+<label>Planned Finish Date:</label>
+<div>${assurance.planned_finish_date || ""}</div>
+</div>
+
+<div class="data-row">
+<label>Owner Email:</label>
+<div>${assurance.assurance_owner_email || ""}</div>
+</div>
+
+<div class="data-row">
+<label>Status:</label>
+<div>
+<span class="indicator ${assurance.status==="Closed"?"closed":"open"}">
+${assurance.status}
+</span>
+</div>
 </div>
 `;
 
