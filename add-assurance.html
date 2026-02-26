@@ -145,7 +145,9 @@ e.preventDefault();
 
 const session = await supabaseClient.auth.getSession();
 
-const {error} = await supabaseClient.from("assurances").insert([{
+const {data, error} = await supabaseClient
+.from("assurances")
+.insert([{
 assurance_name: assurance_name.value,
 depot: depot.value,
 scope_area: scope_area.value,
@@ -155,15 +157,17 @@ planned_start_date: start_date.value || null,
 planned_finish_date: finish_date.value || null,
 brief_description: description.value,
 created_by_email: session.data.session.user.email
-}]);
+}])
+.select();   // IMPORTANT → return inserted row
 
 if(error){
 errorMsg.innerText = error.message;
 return;
 }
 
-successMsg.style.display="block";
-assuranceForm.reset();
+// Redirect to detail page
+const newId = data[0].id;
+window.location = `assurance-detail.html?id=${newId}`;
 });
 
 async function logout(){
