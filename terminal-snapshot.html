@@ -66,43 +66,38 @@ margin:0;
 font-size:26px;
 color:#76B531;
 }
-
-.small{
-font-size:13px;
-color:#777;
-}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-  <div class="header-left">
-    <img src="orbit-logo.png">
-    <h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
-  </div>
-  <img src="wafi-logo.png" class="wafi-logo">
+<div class="header-left">
+<img src="orbit-logo.png">
+<h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+</div>
+<img src="wafi-logo.png" class="wafi-logo">
 </div>
 
 <div class="layout">
 
 <div class="sidebar">
-  <h4>DASHBOARD</h4>
-  <a href="terminal-snapshot.html">Terminal Snapshot</a>
+<h4>DASHBOARD</h4>
+<a href="terminal-snapshot.html">Terminal Snapshot</a>
 
-  <h4>INITIATIVE</h4>
-  <a href="index.html">All Initiatives</a>
+<h4>INITIATIVE</h4>
+<a href="index.html">All Initiatives</a>
 
-  <h4>PROJECTS</h4>
-  <a href="projects.html">All Projects</a>
+<h4>PROJECTS</h4>
+<a href="projects.html">All Projects</a>
 
-  <h4>ASSURANCE</h4>
-  <a href="assurances.html">All Assurances</a>
+<h4>ASSURANCE</h4>
+<a href="assurances.html">All Assurances</a>
 
-  <h4>PEOPLE</h4>
-  <a href="people-employees.html">Competency Tracker</a>
+<h4>PEOPLE</h4>
+<a href="people-employees.html">Competency Tracker</a>
 
-  <a href="#" onclick="logout()" class="logout">Logout</a>
+<a href="#" onclick="logout()" class="logout">Logout</a>
 </div>
 
 <div class="main">
@@ -161,131 +156,93 @@ const supabaseClient = supabase.createClient(
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
 );
 
-function toMPKR(val){
-return (val/1000000).toFixed(2);
+function formatUC(val){
+return val.toFixed(2);
+}
+
+function formatMPKR(val){
+return (val / 1000000).toFixed(2);
 }
 
 async function loadSnapshot(){
 
+snapshotContent.innerHTML = "";
+let html = "";
+
 const depot = depotFilter.value;
-const year = yearFilter.value;
+const year = parseInt(yearFilter.value);
 const month = monthFilter.value;
 
-let html="";
+// =============================
+// FINANCIAL
+// =============================
 
-/* ============================
-   FINANCIAL
-============================ */
-/* ============================
-   FINANCIAL SECTION
-============================ */
+const lastYear = year - 1;
 
-const selectedYear = parseInt(year);
-const lastYear = selectedYear - 1;
-
-// Pull both years in one go
 let financialQuery = supabaseClient
-  .from("v_snapshot_financial")
-  .select("*")
-  .in("year", [selectedYear, lastYear]);
+.from("v_snapshot_financial")
+.select("*")
+.in("year", [year, lastYear]);
 
 if(depot) financialQuery = financialQuery.eq("depot", depot);
 
 const { data: financial } = await financialQuery;
 
-if(!financial || financial.length === 0){
-  snapshotContent.innerHTML += "<p>No financial data found.</p>";
-  return;
-}
+if(financial && financial.length > 0){
 
-// Split data
-const currentYearData = financial.filter(r => r.year === selectedYear);
+const currentYearData = financial.filter(r => r.year === year);
 const lastYearData = financial.filter(r => r.year === lastYear);
 
-// ---------------------------
-// 1️⃣ LAST YEAR FULL UC
-// ---------------------------
+// Last Year UC
 let lastYearCost = 0;
 let lastYearVolume = 0;
 
 lastYearData.forEach(r => {
-  lastYearCost += (r.direct_cost || 0) + (r.indirect_cost || 0);
-  lastYearVolume += (r.volume || 0);
+lastYearCost += (r.direct_cost || 0) + (r.indirect_cost || 0);
+lastYearVolume += (r.volume || 0);
 });
 
-const lastYearUC = lastYearVolume > 0 
-  ? (lastYearCost / lastYearVolume)
-  : 0;
+const lastYearUC = lastYearVolume > 0 ? lastYearCost / lastYearVolume : 0;
 
-// ---------------------------
-// 2️⃣ CURRENT YEAR YTD UC
-// ---------------------------
-
+// YTD UC
 let effectiveMonth;
 
 if(month){
-  effectiveMonth = parseInt(month);
+effectiveMonth = parseInt(month);
 } else {
-  // get max available month
-  effectiveMonth = Math.max(...currentYearData.map(r => r.month));
+effectiveMonth = Math.max(...currentYearData.map(r => r.month));
 }
 
 let ytdCost = 0;
 let ytdVolume = 0;
 
 currentYearData
-  .filter(r => r.month <= effectiveMonth)
-  .forEach(r => {
-    ytdCost += (r.direct_cost || 0) + (r.indirect_cost || 0);
-    ytdVolume += (r.volume || 0);
-  });
+.filter(r => r.month <= effectiveMonth)
+.forEach(r => {
+ytdCost += (r.direct_cost || 0) + (r.indirect_cost || 0);
+ytdVolume += (r.volume || 0);
+});
 
-const ytdUC = ytdVolume > 0 
-  ? (ytdCost / ytdVolume)
-  : 0;
+const ytdUC = ytdVolume > 0 ? ytdCost / ytdVolume : 0;
 
-// ---------------------------
-// 3️⃣ CURRENT MONTH UC
-// ---------------------------
-
+// Current Month UC
 let currentMonthUC = "-";
 
 if(month){
-  const monthData = currentYearData.find(r => r.month === parseInt(month));
-
-  if(monthData && monthData.volume > 0){
-    const monthCost = (monthData.direct_cost || 0) + (monthData.indirect_cost || 0);
-    currentMonthUC = (monthCost / monthData.volume);
-  }
+const monthData = currentYearData.find(r => r.month === parseInt(month));
+if(monthData && monthData.volume > 0){
+const monthCost = (monthData.direct_cost || 0) + (monthData.indirect_cost || 0);
+currentMonthUC = monthCost / monthData.volume;
+}
 }
 
-// ---------------------------
-// 4️⃣ VARIANCE % (YTD vs Last Year)
-// ---------------------------
-
+// Variance %
 let variancePct = 0;
-
 if(lastYearUC > 0){
-  variancePct = ((ytdUC - lastYearUC) / lastYearUC) * 100;
+variancePct = ((ytdUC - lastYearUC) / lastYearUC) * 100;
 }
 
-// ---------------------------
-// FORMATTERS
-// ---------------------------
-
-function formatUC(val){
-  return val === "-" ? "-" : val.toFixed(2);
-}
-
-function formatMPKR(val){
-  return (val / 1000000).toFixed(2);
-}
-
-// ---------------------------
-// RENDER
-// ---------------------------
-
-snapshotContent.innerHTML += `
+html += `
 <div class="section-title">Financial KPIs</div>
 <div class="kpis">
 
@@ -301,7 +258,7 @@ snapshotContent.innerHTML += `
 
 <div class="card">
 <p>Current Month UC</p>
-<h3>${formatUC(currentMonthUC)}</h3>
+<h3>${month ? formatUC(currentMonthUC) : "-"}</h3>
 </div>
 
 <div class="card">
@@ -311,16 +268,20 @@ snapshotContent.innerHTML += `
 
 <div class="card">
 <p>YTD Direct Cost (MPKR)</p>
-<h3>${formatMPKR(ytdCost - (currentYearData
-  .filter(r => r.month <= effectiveMonth)
-  .reduce((sum, r) => sum + (r.indirect_cost || 0), 0)))}</h3>
+<h3>${formatMPKR(
+currentYearData
+.filter(r => r.month <= effectiveMonth)
+.reduce((sum, r) => sum + (r.direct_cost || 0), 0)
+)}</h3>
 </div>
 
 <div class="card">
 <p>YTD Indirect Cost (MPKR)</p>
-<h3>${formatMPKR(currentYearData
-  .filter(r => r.month <= effectiveMonth)
-  .reduce((sum, r) => sum + (r.indirect_cost || 0), 0))}</h3>
+<h3>${formatMPKR(
+currentYearData
+.filter(r => r.month <= effectiveMonth)
+.reduce((sum, r) => sum + (r.indirect_cost || 0), 0)
+)}</h3>
 </div>
 
 <div class="card">
@@ -330,10 +291,11 @@ snapshotContent.innerHTML += `
 
 </div>
 `;
+}
 
-/* ============================
-   INITIATIVES
-============================ */
+// =============================
+// INITIATIVES
+// =============================
 
 let initQuery = supabaseClient
 .from("v_snapshot_initiatives")
@@ -344,20 +306,22 @@ if(depot) initQuery = initQuery.eq("depot",depot);
 
 const {data:init} = await initQuery;
 
+if(init){
 const totalInit = init.length;
 const closedInit = init.filter(x=>x.status==="Closed").length;
 
-html+=`
+html += `
 <div class="section-title">Initiatives</div>
 <div class="kpis">
 <div class="card"><p>Total</p><h3>${totalInit}</h3></div>
 <div class="card"><p>Closed</p><h3>${closedInit}</h3></div>
 </div>
 `;
+}
 
-/* ============================
-   ASSURANCE
-============================ */
+// =============================
+// ASSURANCE
+// =============================
 
 let assQuery = supabaseClient
 .from("v_snapshot_assurance")
@@ -368,20 +332,22 @@ if(depot) assQuery = assQuery.eq("depot",depot);
 
 const {data:ass} = await assQuery;
 
+if(ass){
 const totalActions = ass.length;
 const closedActions = ass.filter(x=>x.action_status==="Closed").length;
 
-html+=`
+html += `
 <div class="section-title">Assurance</div>
 <div class="kpis">
 <div class="card"><p>Total Actions</p><h3>${totalActions}</h3></div>
 <div class="card"><p>Closed</p><h3>${closedActions}</h3></div>
 </div>
 `;
+}
 
-/* ============================
-   PROJECTS
-============================ */
+// =============================
+// PROJECTS
+// =============================
 
 let projQuery = supabaseClient
 .from("v_snapshot_projects")
@@ -392,20 +358,22 @@ if(depot) projQuery = projQuery.eq("depot",depot);
 
 const {data:proj} = await projQuery;
 
+if(proj){
 const totalProj = proj.length;
 const capex = proj.filter(x=>x.project_type==="Capex").length;
 
-html+=`
+html += `
 <div class="section-title">Projects</div>
 <div class="kpis">
 <div class="card"><p>Total Projects</p><h3>${totalProj}</h3></div>
 <div class="card"><p>Capex</p><h3>${capex}</h3></div>
 </div>
 `;
+}
 
-/* ============================
-   FLBM
-============================ */
+// =============================
+// FLBM
+// =============================
 
 let flbmQuery = supabaseClient
 .from("v_snapshot_flbm")
@@ -415,11 +383,12 @@ if(depot) flbmQuery = flbmQuery.eq("depot",depot);
 
 const {data:flbm} = await flbmQuery;
 
+if(flbm){
 const totalTrain = flbm.length;
 const completed = flbm.filter(x=>x.training_status==="Completed").length;
 const overdue = flbm.filter(x=>x.training_status==="Overdue").length;
 
-html+=`
+html += `
 <div class="section-title">FLBM Competency</div>
 <div class="kpis">
 <div class="card"><p>Total Trainings</p><h3>${totalTrain}</h3></div>
@@ -427,6 +396,7 @@ html+=`
 <div class="card"><p>Overdue</p><h3>${overdue}</h3></div>
 </div>
 `;
+}
 
 snapshotContent.innerHTML = html;
 }
