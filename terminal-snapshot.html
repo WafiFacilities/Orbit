@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Terminal Executive Snapshot</title>
+<title>Country Ops Command Dashboard</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -10,115 +10,125 @@
 @font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
 
 body{
-  font-family:'72 Condensed',Arial;
   margin:0;
-  background:#f6f8fa;
+  font-family:'72 Condensed',Arial;
+  background:#0f172a;
+  color:white;
 }
+
+/* HEADER */
 
 .header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:10px 20px;
-  background:white;
-  border-bottom:1px solid #e5e7eb;
-}
-
-.header-title{
-  font-size:20px;
-  font-weight:600;
-  color:#404040;
+  padding:15px 30px;
+  background:#111827;
+  border-bottom:2px solid #1f2937;
+  font-size:22px;
+  font-weight:700;
   letter-spacing:1px;
 }
 
-.layout{display:flex;height:calc(100vh - 60px);}
-
-.sidebar{
-  width:200px;
-  background:#404040;
-  color:white;
-  padding-top:20px;
-  display:flex;
-  flex-direction:column;
-}
-
-.sidebar h4{padding:8px 20px;margin:0;font-size:13px;color:#ccc;}
-.sidebar a{padding:8px 25px;color:white;text-decoration:none;font-size:13px;}
-.sidebar a:hover{background:#505050;}
-.sidebar .logout{margin-top:auto;border-top:1px solid #555;}
+/* MAIN */
 
 .main{
-  flex:1;
-  padding:20px 30px;
-  overflow-y:auto;
+  padding:25px 35px;
 }
 
-.filters{
-  margin-bottom:15px;
-}
-
-.filters select{
-  padding:6px 8px;
-  border:1px solid #ccc;
-  border-radius:4px;
-}
+/* SECTION TITLE */
 
 .section-title{
   font-size:14px;
-  font-weight:600;
-  color:#555;
-  margin:20px 0 10px;
-  letter-spacing:0.5px;
+  letter-spacing:2px;
+  color:#9ca3af;
+  margin:30px 0 15px;
 }
+
+/* GRID */
 
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:12px;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:20px;
 }
 
-.card{
-  background:white;
-  border:1px solid #e5e7eb;
-  border-radius:6px;
-  padding:12px;
+/* KPI CARD */
+
+.kpi{
+  background:linear-gradient(145deg,#111827,#0b1220);
+  border:1px solid #1f2937;
+  border-radius:8px;
+  padding:20px;
+  position:relative;
 }
 
-.card h3{
+.kpi-title{
   font-size:13px;
-  font-weight:600;
-  margin-bottom:8px;
-  color:#333;
+  color:#9ca3af;
+  margin-bottom:15px;
+  letter-spacing:1px;
 }
 
-.metric-row{
-  display:flex;
-  justify-content:space-between;
-  font-size:13px;
-  margin:4px 0;
+.kpi-big{
+  font-size:48px;
+  font-weight:700;
+  line-height:1;
 }
 
-.metric-row span:last-child{
-  font-weight:600;
-}
-
-.delta-up{color:#2ecc71;}
-.delta-down{color:#e74c3c;}
-.subtle{color:#888;font-size:12px;}
-
-.small-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
+.kpi-sub{
+  font-size:18px;
   margin-top:8px;
+  color:#94a3b8;
+}
+
+.delta{
+  position:absolute;
+  top:20px;
+  right:20px;
+  font-size:18px;
+  font-weight:700;
+}
+
+.up{color:#22c55e;}
+.down{color:#ef4444;}
+.warn{color:#f59e0b;}
+
+/* MINI COMPARISON */
+
+.compare{
+  margin-top:15px;
+  font-size:14px;
+  color:#94a3b8;
+}
+
+.compare span{
+  display:block;
+  margin-top:4px;
+}
+
+/* STRATEGY CHIPS */
+
+.chip-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:15px;
 }
 
 .chip{
-  background:#f2f4f7;
-  padding:6px;
-  border-radius:4px;
-  font-size:12px;
+  background:#111827;
+  border:1px solid #1f2937;
+  padding:15px;
+  border-radius:6px;
   text-align:center;
+}
+
+.chip h4{
+  font-size:12px;
+  color:#9ca3af;
+  margin-bottom:8px;
+}
+
+.chip .value{
+  font-size:22px;
+  font-weight:700;
 }
 
 </style>
@@ -127,33 +137,13 @@ body{
 <body>
 
 <div class="header">
-  <div class="header-title">M&D FACILITIES – COUNTRY OPERATIONS SNAPSHOT</div>
-</div>
-
-<div class="layout">
-
-<div class="sidebar">
-<h4>DASHBOARD</h4>
-<a href="terminal-snapshot.html">Executive Snapshot</a>
-<a href="#" onclick="logout()" class="logout">Logout</a>
+COUNTRY OPERATIONS COMMAND DASHBOARD
 </div>
 
 <div class="main">
 
-<div class="filters">
-<select id="depotFilter">
-<option value="">All Depots</option>
-<option>KMR</option><option>CKL</option><option>MCH</option>
-<option>SKP</option><option>DLP</option><option>TJB</option>
-<option>BHK</option><option>SSH</option><option>VHR</option>
-<option>GTI</option><option>MMK</option>
-</select>
-<button onclick="loadSnapshot()">Refresh</button>
-</div>
-
 <div id="snapshotContent"></div>
 
-</div>
 </div>
 
 <script>
@@ -171,31 +161,20 @@ function formatUC(val){ return val?val.toFixed(2):"0.00"; }
 
 async function loadSnapshot(){
 
-snapshotContent.innerHTML="";
 let html="";
 
-const depot=depotFilter.value;
+/* FINANCIAL */
 
-/* ================= FINANCIAL ================= */
-
-let finQuery=supabaseClient
+const {data:financial} = await supabaseClient
 .from("v_snapshot_financial")
 .select("*")
 .in("year",[previousYear,currentYear]);
-
-if(depot) finQuery=finQuery.eq("depot",depot);
-
-const {data:financial}=await finQuery;
 
 function compute(year){
   const data=financial.filter(r=>r.year===year);
   let cost=0,vol=0;
   data.forEach(r=>{cost+=r.total_cost||0;vol+=r.volume||0;});
-  return {
-    cost,
-    vol,
-    uc:vol?cost/vol:0
-  };
+  return {cost,vol,uc:vol?cost/vol:0};
 }
 
 const prev=compute(previousYear);
@@ -203,125 +182,118 @@ const curr=compute(currentYear);
 
 const deltaUC=((curr.uc-prev.uc)/prev.uc)*100 || 0;
 
-/* ================= ASSURANCE ================= */
+/* ASSURANCE */
 
-let assQuery=supabaseClient
+const {data:ass} = await supabaseClient
 .from("v_snapshot_assurance")
 .select("*")
 .in("year",[previousYear,currentYear]);
 
-if(depot) assQuery=assQuery.eq("depot",depot);
+const openAssurance = ass.filter(x=>x.year===currentYear && x.action_status!=="Closed").length;
 
-const {data:ass}=await assQuery;
+/* INITIATIVES */
 
-function buildAssurance(year){
-  const data=ass.filter(x=>x.year===year);
-  return data.filter(x=>x.action_status!=="Closed").length;
-}
-
-/* ================= INITIATIVES ================= */
-
-let initQuery=supabaseClient
+const {data:init} = await supabaseClient
 .from("initiatives")
 .select("*")
-.in("year",[previousYear,currentYear]);
+.eq("year",currentYear);
 
-if(depot) initQuery=initQuery.eq("terminal_name",depot);
+const closedInit = init.filter(x=>x.status==="Closed").length;
+const openInit = init.filter(x=>x.status!=="Closed"&&x.status!=="Dropped").length;
 
-const {data:init}=await initQuery;
+/* OPEX */
 
-function buildInitiatives(year){
-  const data=init.filter(x=>x.year===year);
-  const closed=data.filter(x=>x.status==="Closed").length;
-  const open=data.filter(x=>x.status!=="Closed"&&x.status!=="Dropped").length;
-  return {total:data.length,closed,open};
-}
-
-/* ================= OPEX ================= */
-
-let projQuery=supabaseClient
+const {data:proj} = await supabaseClient
 .from("projects")
 .select("*")
 .eq("project_type","Opex")
-.in("year",[previousYear,currentYear]);
+.eq("year",currentYear);
 
-if(depot) projQuery=projQuery.eq("terminal_name",depot);
+const openOpex = proj.filter(x=>x.status!=="Closed").length;
 
-const {data:proj}=await projQuery;
-
-function buildOpex(year){
-  const data=proj.filter(x=>x.year===year);
-  return {
-    total:data.length,
-    open:data.filter(x=>x.status!=="Closed").length
-  };
-}
+/* BUILD HTML */
 
 html+=`
 
-<div class="section-title">FINANCIAL PERFORMANCE</div>
+<div class="section-title">FINANCIAL DOMINANCE</div>
+
 <div class="grid">
 
-<div class="card">
-<h3>Unit Cost (YTD)</h3>
-<div class="metric-row"><span>${previousYear}</span><span>${formatUC(prev.uc)}</span></div>
-<div class="metric-row"><span>${currentYear}</span><span>${formatUC(curr.uc)}</span></div>
-<div class="metric-row subtle"><span>Δ</span><span class="${deltaUC<0?'delta-up':'delta-down'}">${deltaUC.toFixed(1)}%</span></div>
+<div class="kpi">
+<div class="kpi-title">UNIT COST (YTD)</div>
+<div class="kpi-big">${formatUC(curr.uc)}</div>
+<div class="kpi-sub">${currentYear}</div>
+<div class="delta ${deltaUC<0?'up':'down'}">
+${deltaUC.toFixed(1)}%
+</div>
+<div class="compare">
+<span>${previousYear}: ${formatUC(prev.uc)}</span>
+</div>
 </div>
 
-<div class="card">
-<h3>YTD Cost (MPKR)</h3>
-<div class="metric-row"><span>${previousYear}</span><span>${formatMPKR(prev.cost)}</span></div>
-<div class="metric-row"><span>${currentYear}</span><span>${formatMPKR(curr.cost)}</span></div>
+<div class="kpi">
+<div class="kpi-title">TOTAL COST (MPKR)</div>
+<div class="kpi-big">${formatMPKR(curr.cost)}</div>
+<div class="kpi-sub">${currentYear}</div>
+<div class="compare">
+<span>${previousYear}: ${formatMPKR(prev.cost)}</span>
+</div>
 </div>
 
-<div class="card">
-<h3>YTD Volume</h3>
-<div class="metric-row"><span>${previousYear}</span><span>${prev.vol.toLocaleString()}</span></div>
-<div class="metric-row"><span>${currentYear}</span><span>${curr.vol.toLocaleString()}</span></div>
+<div class="kpi">
+<div class="kpi-title">VOLUME</div>
+<div class="kpi-big">${curr.vol.toLocaleString()}</div>
+<div class="kpi-sub">${currentYear}</div>
+<div class="compare">
+<span>${previousYear}: ${prev.vol.toLocaleString()}</span>
+</div>
 </div>
 
 </div>
 
-<div class="section-title">ASSURANCE GOVERNANCE</div>
+<div class="section-title">GOVERNANCE PRESSURE</div>
+
 <div class="grid">
 
-<div class="card">
-<h3>Open Actions</h3>
-<div class="metric-row"><span>${previousYear}</span><span>${buildAssurance(previousYear)}</span></div>
-<div class="metric-row"><span>${currentYear}</span><span>${buildAssurance(currentYear)}</span></div>
+<div class="kpi">
+<div class="kpi-title">OPEN ASSURANCE ACTIONS</div>
+<div class="kpi-big ${openAssurance>20?'down':'up'}">
+${openAssurance}
+</div>
+</div>
+
+<div class="kpi">
+<div class="kpi-title">OPEN OPEX PROJECTS</div>
+<div class="kpi-big ${openOpex>10?'warn':'up'}">
+${openOpex}
+</div>
 </div>
 
 </div>
 
-<div class="section-title">STRATEGY & DELIVERY</div>
-<div class="grid">
+<div class="section-title">STRATEGY DELIVERY</div>
 
-<div class="card">
-<h3>Initiatives</h3>
-<div class="metric-row"><span>${previousYear}</span><span>${buildInitiatives(previousYear).closed} Closed</span></div>
-<div class="metric-row"><span>${currentYear}</span><span>${buildInitiatives(currentYear).closed} Closed</span></div>
+<div class="chip-grid">
+
+<div class="chip">
+<h4>CLOSED INITIATIVES</h4>
+<div class="value">${closedInit}</div>
 </div>
 
-<div class="card">
-<h3>Opex Projects</h3>
-<div class="metric-row"><span>${previousYear}</span><span>${buildOpex(previousYear).open} Open</span></div>
-<div class="metric-row"><span>${currentYear}</span><span>${buildOpex(currentYear).open} Open</span></div>
+<div class="chip">
+<h4>PIPELINE INITIATIVES</h4>
+<div class="value">${openInit}</div>
 </div>
 
 </div>
 `;
 
-snapshotContent.innerHTML=html;
-}
-
-async function logout(){
-await supabaseClient.auth.signOut();
-window.location="login.html";
+document.getElementById("snapshotContent").innerHTML=html;
 }
 
 loadSnapshot();
 
 </script>
+
 </body>
 </html>
