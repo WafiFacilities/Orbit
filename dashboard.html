@@ -41,7 +41,19 @@ font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
 
 .layout{display:flex;height:calc(100vh - 62px);}
 
-
+.sidebar{
+width:220px;background:#404040;color:white;
+display:flex;flex-direction:column;padding-top:20px;
+}
+.sidebar h4{
+  padding:10px 20px;
+  margin:10px 0 5px 0;
+  background:#2f2f2f;
+  border-left:4px solid #16a34a;
+}
+.sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
+.sidebar a:hover{background:#505050;}
+.sidebar .logout{margin-top:auto;border-top:1px solid #555;}
 
 .main{flex:1;padding:20px;overflow-y:auto;}
 
@@ -387,6 +399,7 @@ loadKPIs();
 
 </body>
 </html>
+
 
 
 
