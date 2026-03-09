@@ -264,7 +264,7 @@ let query = supabaseClient
 .from("assurance_findings")
 .select(`
 *,
-assurances(id,assurance_name,depot)
+assurances(id,assurance_name,depot,assurance_type)
 `);
 
 if(status) query=query.eq("status",status);
