@@ -186,6 +186,10 @@ font-weight:bold;
 <option value="">All Depots</option>
 </select>
 
+<select id="filterType" onchange="loadActions()">
+<option value="">All Assurance Types</option>
+</select>
+
 <select id="filterStatus" onchange="loadActions()">
 <option value="">All Status</option>
 <option>Open</option>
@@ -207,6 +211,7 @@ font-weight:bold;
 <thead>
 <tr>
 <th>Finding</th>
+<th>Assurance Type</th>
 <th>Assurance</th>
 <th>RAM</th>
 <th>Nature</th>
@@ -253,6 +258,7 @@ async function loadActions(){
 const depot=filterDepot.value;
 const status=filterStatus.value;
 const nature=filterNature.value;
+const type=filterType.value;
 
 let query = supabaseClient
 .from("assurance_findings")
@@ -274,6 +280,7 @@ const today=new Date().toISOString().split("T")[0];
 actions.forEach(a=>{
 
 if(depot && a.assurances?.depot!==depot) return;
+if(type && a.assurances?.assurance_type!==type) return;
 
 total++;
 
@@ -299,6 +306,8 @@ html+=`
 ${a.finding_title}
 </a>
 </td>
+
+<td>${a.assurances?.assurance_type || ""}</td>
 
 <td>
 <a class="link" href="assurance-detail.html?id=${a.assurance_id}">
