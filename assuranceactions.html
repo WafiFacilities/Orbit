@@ -243,12 +243,17 @@ async function loadFilters(){
 
 const {data:assurances} = await supabaseClient
 .from("assurances")
-.select("depot");
+.select("depot,assurance_type");
 
 const depots=[...new Set(assurances.map(a=>a.depot).filter(Boolean))];
+const types=[...new Set(assurances.map(a=>a.assurance_type).filter(Boolean))];
 
 depots.forEach(d=>{
 filterDepot.innerHTML+=`<option>${d}</option>`;
+});
+
+types.forEach(t=>{
+filterType.innerHTML+=`<option>${t}</option>`;
 });
 
 }
