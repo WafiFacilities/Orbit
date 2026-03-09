@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Assurance Actions</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+@font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
+
+body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
+
+.header{
+display:flex;align-items:center;justify-content:space-between;
+padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;
+}
+
+.header-left{display:flex;align-items:center;gap:12px;}
+.header-left img{height:40px;}
+
+.wafi-logo{height:40px;}
+
+.header-title{
+font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
+}
+
+.layout{display:flex;height:calc(100vh - 62px);}
+
+.sidebar{
+width:220px;background:#404040;color:white;
+display:flex;flex-direction:column;padding-top:20px;
+}
+
+.sidebar h4{
+padding:10px 20px;
+margin:10px 0 5px 0;
+background:#2f2f2f;
+border-left:4px solid #16a34a;
+}
+
+.sidebar a{
+color:white;
+padding:10px 30px;
+text-decoration:none;
+display:block;
+}
+
+.sidebar a:hover{background:#505050;}
+
+.sidebar .logout{
+margin-top:auto;
+border-top:1px solid #555;
+}
+
+.main{
+flex:1;
+padding:20px;
+overflow-y:auto;
+}
+
+.container{
+background:white;
+padding:20px;
+border-radius:6px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+margin-bottom:20px;
+}
+
+.kpi{
+display:flex;
+gap:40px;
+font-size:18px;
+font-weight:bold;
+}
+
+.kpi div{
+background:#f4f6f9;
+padding:10px 20px;
+border-radius:6px;
+}
+
+.filters{
+display:flex;
+gap:20px;
+margin-bottom:20px;
+}
+
+.filters select{
+padding:6px;
+border-radius:4px;
+border:1px solid #ccc;
+font-family:'72 Condensed';
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+text-align:center;
+}
+
+th{
+background:#76B531;
+color:white;
+}
+
+.indicator{
+padding:4px 8px;
+border-radius:4px;
+color:white;
+font-weight:bold;
+}
+
+.open{background:#e67e22;}
+.closed{background:#777;}
+.overdue{background:#e74c3c;}
+
+a.link{
+color:#76B531;
+text-decoration:none;
+font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<div class="header-left">
+<img src="orbit-logo.png">
+<h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+</div>
+<img src="wafi-logo.png" class="wafi-logo">
+</div>
+
+<div class="layout">
+
+<div class="sidebar">
+
+<a href="dashboard.html"><h4>INITIATIVE</h4></a>
+
+<a href="projects.html"><h4>PROJECTS</h4></a>
+
+<a href="assurances.html"><h4>ASSURANCE</h4></a>
+<a href="assurances.html">Assurance List</a>
+<a href="assuranceactions.html">Actions List</a>
+<a href="add-assurance.html">Add New Assurance</a>
+
+<a href="people-employees.html"><h4>PEOPLE</h4></a>
+
+<a href="financial-dashboard.html"><h4>FINANCIAL</h4></a>
+
+<a href="mydetails.html" class="logout">My Details</a>
+<a href="#" onclick="logout()" class="logout">Logout</a>
+
+</div>
+
+<div class="main">
+
+<div class="container">
+
+<h3>Actions KPI</h3>
+
+<div class="kpi">
+<div>Total Actions: <span id="kpiTotal">0</span></div>
+<div>Open: <span id="kpiOpen">0</span></div>
+<div>Overdue: <span id="kpiOverdue">0</span></div>
+<div>Closed: <span id="kpiClosed">0</span></div>
+</div>
+
+</div>
+
+<div class="container">
+
+<h3>Filters</h3>
+
+<div class="filters">
+
+<select id="filterDepot" onchange="loadActions()">
+<option value="">All Depots</option>
+</select>
+
+<select id="filterStatus" onchange="loadActions()">
+<option value="">All Status</option>
+<option>Open</option>
+<option>Closed</option>
+</select>
+
+<select id="filterNature" onchange="loadActions()">
+<option value="">All Nature</option>
+<option>Procedural</option>
+<option>Behavioral</option>
+<option>Competence</option>
+<option>Others</option>
+</select>
+
+</div>
+
+<table>
+
+<thead>
+<tr>
+<th>Finding</th>
+<th>Assurance</th>
+<th>RAM</th>
+<th>Nature</th>
+<th>Action Required</th>
+<th>Action Owner</th>
+<th>Target Date</th>
+<th>Revisions</th>
+<th>Status</th>
+<th>Indicator</th>
+</tr>
+</thead>
+
+<tbody id="actionsTable"></tbody>
+
+</table>
+
+</div>
+</div>
+</div>
+
+<script>
+
+const supabaseClient = supabase.createClient(
+"https://kqhbvmqxrwwspopwckah.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+);
+
+async function loadFilters(){
+
+const {data:assurances} = await supabaseClient
+.from("assurances")
+.select("depot");
+
+const depots=[...new Set(assurances.map(a=>a.depot).filter(Boolean))];
+
+depots.forEach(d=>{
+filterDepot.innerHTML+=`<option>${d}</option>`;
+});
+
+}
+
+async function loadActions(){
+
+const depot=filterDepot.value;
+const status=filterStatus.value;
+const nature=filterNature.value;
+
+let query = supabaseClient
+.from("assurance_findings")
+.select(`
+*,
+assurances(id,assurance_name,depot)
+`);
+
+if(status) query=query.eq("status",status);
+if(nature) query=query.eq("type_of_finding",nature);
+
+const {data:actions}=await query;
+
+let html="";
+let total=0,open=0,closed=0,overdue=0;
+
+const today=new Date().toISOString().split("T")[0];
+
+actions.forEach(a=>{
+
+if(depot && a.assurances?.depot!==depot) return;
+
+total++;
+
+let indicator="open";
+
+if(a.status==="Closed"){
+indicator="closed";
+closed++;
+}
+else if(a.target_date && a.target_date<today){
+indicator="overdue";
+overdue++;
+}
+else{
+open++;
+}
+
+html+=`
+<tr>
+
+<td>
+<a class="link" href="finding-detail.html?id=${a.id}">
+${a.finding_title}
+</a>
+</td>
+
+<td>
+<a class="link" href="assurance-detail.html?id=${a.assurance_id}">
+${a.assurances?.assurance_name || ""}
+</a>
+</td>
+
+<td>${a.priority_rating || ""}</td>
+<td>${a.type_of_finding || ""}</td>
+<td>${a.action_required || ""}</td>
+<td>${a.action_owner_email || ""}</td>
+<td>${a.target_date || ""}</td>
+<td>${a.target_date_revision_count || 0}</td>
+<td>${a.status || "Open"}</td>
+
+<td>
+<span class="indicator ${indicator}">
+${indicator}
+</span>
+</td>
+
+</tr>
+`;
+});
+
+actionsTable.innerHTML=html;
+
+kpiTotal.innerText=total;
+kpiOpen.innerText=open;
+kpiClosed.innerText=closed;
+kpiOverdue.innerText=overdue;
+
+}
+
+async function logout(){
+await supabaseClient.auth.signOut();
+window.location="login.html";
+}
+
+loadFilters();
+loadActions();
+
+</script>
+
+</body>
+</html>
