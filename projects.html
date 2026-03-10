@@ -63,8 +63,6 @@ padding:6px;border-radius:4px;border:1px solid #ccc;
 font-family:'72 Condensed';
 }
 
-/* KPI */
-
 .kpi{
 display:flex;
 gap:20px;
@@ -96,9 +94,6 @@ th{
 background:#76B531;color:white;font-weight:bold;cursor:pointer;
 }
 
-th.sorted-asc::after{content:" ▲";}
-th.sorted-desc::after{content:" ▼";}
-
 tr:nth-child(even){background:#f9f9f9;}
 tr:hover{background:#eef3f8;}
 
@@ -121,7 +116,6 @@ padding:4px 8px;border-radius:4px;font-weight:bold;text-align:center;
 
 .commentary-cell{max-width:220px;}
 .commentary-box{max-height:70px;overflow-y:auto;padding:4px;}
-
 </style>
 </head>
 
@@ -186,33 +180,13 @@ Overdue Projects: <span id="kpiOverdue">0</span>
 
 <select id="filterTerminal">
 <option value="">All Terminals</option>
-<option>KMR</option><option>CKL</option><option>MCH</option>
-<option>SKP</option><option>DLP</option><option>TJB</option>
-<option>BHK</option><option>SSH</option><option>VHR</option>
-<option>GTI</option><option>MMK</option>
 </select>
 
-<select id="filterYear" multiple size="6">
-<option>2025</option>
-<option>2026</option>
-<option>2027</option>
-<option>2028</option>
-<option>2029</option>
-<option>2030</option>
-</select>
+<select id="filterYear" multiple size="6"></select>
 
-<select id="filterStatus" multiple size="5">
-<option>Open - Initiated</option>
-<option>Open - Under Execution</option>
-<option>Under MOC</option>
-<option>Closed</option>
-<option>Dropped</option>
-</select>
+<select id="filterStatus" multiple size="6"></select>
 
-<select id="filterType" multiple size="2">
-<option>Opex</option>
-<option>Capex</option>
-</select>
+<select id="filterType" multiple size="3"></select>
 
 </div>
 
@@ -220,15 +194,15 @@ Overdue Projects: <span id="kpiOverdue">0</span>
 <thead>
 <tr>
 <th>S.No</th>
-<th data-column="terminal_name">Terminal</th>
-<th data-column="year">Year</th>
-<th data-column="project_name">Project Name</th>
-<th data-column="project_type">Type</th>
-<th data-column="project_category">Category</th>
-<th data-column="status">Status</th>
+<th>Terminal</th>
+<th>Year</th>
+<th>Project Name</th>
+<th>Type</th>
+<th>Category</th>
+<th>Status</th>
 <th>Indicator</th>
-<th data-column="planned_pkr">Planned PKR</th>
-<th data-column="target_date">Target</th>
+<th>Planned PKR</th>
+<th>Target</th>
 <th>Commentary</th>
 </tr>
 </thead>
@@ -253,15 +227,40 @@ const supabaseClient = supabase.createClient(
 
 let currentPage=1;
 const pageSize=25;
-let sortColumn="created_at";
-let sortOrder="desc";
 
 async function init(){
 const {data}=await supabaseClient.auth.getSession();
 if(!data.session) window.location="login.html";
+
+await loadFilters();
 loadData();
 }
 init();
+
+async function loadFilters(){
+
+const {data}=await supabaseClient
+.from("projects")
+.select("terminal_name,year,status,project_type");
+
+const terminals=[...new Set(data.map(d=>d.terminal_name).filter(Boolean))].sort();
+const years=[...new Set(data.map(d=>d.year).filter(Boolean))].sort();
+const statuses=[...new Set(data.map(d=>d.status).filter(Boolean))].sort();
+const types=[...new Set(data.map(d=>d.project_type).filter(Boolean))].sort();
+
+const terminalSelect=document.getElementById("filterTerminal");
+terminals.forEach(v=>terminalSelect.innerHTML+=`<option>${v}</option>`);
+
+const yearSelect=document.getElementById("filterYear");
+years.forEach(v=>yearSelect.innerHTML+=`<option>${v}</option>`);
+
+const statusSelect=document.getElementById("filterStatus");
+statuses.forEach(v=>statusSelect.innerHTML+=`<option>${v}</option>`);
+
+const typeSelect=document.getElementById("filterType");
+types.forEach(v=>typeSelect.innerHTML+=`<option>${v}</option>`);
+
+}
 
 async function loadData(){
 
@@ -271,7 +270,6 @@ const to=from+pageSize-1;
 let query=supabaseClient
 .from("projects")
 .select("*",{count:"exact"})
-.order(sortColumn,{ascending:sortOrder==="asc"})
 .range(from,to);
 
 if(filterName.value)
@@ -361,9 +359,9 @@ function prevPage(){if(currentPage>1){currentPage--;loadData();}}
 .forEach(id=>document.getElementById(id)
 .addEventListener("change",()=>{currentPage=1;loadData();}));
 
-document.getElementById("filterYear").addEventListener("change",()=>{currentPage=1;loadData();});
-document.getElementById("filterStatus").addEventListener("change",()=>{currentPage=1;loadData();});
-document.getElementById("filterType").addEventListener("change",()=>{currentPage=1;loadData();});
+["filterYear","filterStatus","filterType"]
+.forEach(id=>document.getElementById(id)
+.addEventListener("change",()=>{currentPage=1;loadData();}));
 
 async function logout(){
 await supabaseClient.auth.signOut();
