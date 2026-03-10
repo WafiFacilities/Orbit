@@ -10,17 +10,17 @@
 @font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
 body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 
-  .project-link{
-  color:#76B531;
-  text-decoration:none;
-  font-weight:bold;
+.project-link{
+color:#76B531;
+text-decoration:none;
+font-weight:bold;
 }
 
 .project-link:hover{
-  text-decoration:underline;
-  color:#5a8f26;
+text-decoration:underline;
+color:#5a8f26;
 }
-  
+
 .header{
 display:flex;align-items:center;justify-content:space-between;
 padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;
@@ -29,6 +29,7 @@ padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;
 .header-left{display:flex;align-items:center;gap:12px;}
 .header-left img{height:40px;}
 .wafi-logo{height:40px;}
+
 .header-title{
 font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
 }
@@ -39,16 +40,17 @@ font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
 width:220px;background:#404040;color:white;
 display:flex;flex-direction:column;padding-top:20px;
 }
+
 .sidebar h4{
-  padding:10px 20px;
-  margin:10px 0 5px 0;
-  background:#2f2f2f;
-  border-left:4px solid #16a34a;
+padding:10px 20px;
+margin:10px 0 5px 0;
+background:#2f2f2f;
+border-left:4px solid #16a34a;
 }
+
 .sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
 .sidebar a:hover{background:#505050;}
 .sidebar .logout{margin-top:auto;border-top:1px solid #555;}
-
 
 .main{flex:1;padding:20px;overflow-y:auto;}
 
@@ -61,15 +63,39 @@ padding:6px;border-radius:4px;border:1px solid #ccc;
 font-family:'72 Condensed';
 }
 
+/* KPI BARS */
+
+.kpi{
+display:flex;
+gap:20px;
+margin-bottom:20px;
+}
+
+.kpi-box{
+background:white;
+padding:12px 20px;
+border-radius:6px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+font-size:16px;
+font-weight:bold;
+}
+
+.kpi-total{border-left:5px solid #404040;}
+.kpi-open{border-left:5px solid #76B531;}
+.kpi-closed{border-left:5px solid #777;}
+.kpi-overdue{border-left:5px solid #e74c3c;}
+
 table{
 width:100%;border-collapse:collapse;background:white;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 th,td{border:1px solid #ddd;padding:10px;}
+
 th{
 background:#76B531;color:white;font-weight:bold;cursor:pointer;
 }
+
 th.sorted-asc::after{content:" ▲";}
 th.sorted-desc::after{content:" ▼";}
 
@@ -88,54 +114,73 @@ background:#404040;color:white;cursor:pointer;
 .indicator{
 padding:4px 8px;border-radius:4px;font-weight:bold;text-align:center;
 }
+
 .overdue{background:#e74c3c;color:white;}
 .ontime{background:#76B531;color:white;}
 .closed{background:#777777;color:white;}
 
-.project-link{
-color:#76B531;text-decoration:none;font-weight:bold;
-}
-
 .commentary-cell{max-width:220px;}
 .commentary-box{max-height:70px;overflow-y:auto;padding:4px;}
+
 </style>
 </head>
 
 <body>
 
 <div class="header">
-  <div class="header-left">
-    <img src="orbit-logo.png">
-    <h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
-  </div>
-  <img src="wafi-logo.png" class="wafi-logo">
+<div class="header-left">
+<img src="orbit-logo.png">
+<h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+</div>
+<img src="wafi-logo.png" class="wafi-logo">
 </div>
 
 <div class="layout">
 
 <div class="sidebar">
 
-  <a href="dashboard.html"><h4>INITIATIVE</h4></a>
+<a href="dashboard.html"><h4>INITIATIVE</h4></a>
 
-   <a href="projects.html"><h4>PROJECTS</h4></a>
-      <a href="projects.html">All Projects - List</a>
-  <a href="add-project.html">Add New Project</a>
+<a href="projects.html"><h4>PROJECTS</h4></a>
+<a href="projects.html">All Projects - List</a>
+<a href="add-project.html">Add New Project</a>
 
-   <a href="assurances.html"><h4>ASSURANCE</h4></a>
+<a href="assurances.html"><h4>ASSURANCE</h4></a>
 
+<a href="people-employees.html"><h4>PEOPLE</h4></a>
 
-   <a href="people-employees.html"><h4>PEOPLE</h4></a>
+<a href="financial-dashboard.html"><h4>FINANCIAL</h4></a>
 
-   <a href="financial-dashboard.html"><h4>FINANCIAL</h4></a>
-  
-  <a href="mydetails.html" class="logout">My Details</a>
-  <a href="#" onclick="logout()" class="logout">Logout</a>
+<a href="mydetails.html" class="logout">My Details</a>
+<a href="#" onclick="logout()" class="logout">Logout</a>
 
 </div>
 
 <div class="main">
 
 <h2>Opex / Capex Projects</h2>
+
+<!-- KPI SECTION -->
+
+<div class="kpi">
+
+<div class="kpi-box kpi-total">
+Total Projects: <span id="kpiTotal">0</span>
+</div>
+
+<div class="kpi-box kpi-open">
+Open Projects: <span id="kpiOpen">0</span>
+</div>
+
+<div class="kpi-box kpi-closed">
+Closed Projects: <span id="kpiClosed">0</span>
+</div>
+
+<div class="kpi-box kpi-overdue">
+Overdue Projects: <span id="kpiOverdue">0</span>
+</div>
+
+</div>
 
 <div class="filters">
 
@@ -185,9 +230,7 @@ color:#76B531;text-decoration:none;font-weight:bold;
 <th data-column="status">Status</th>
 <th>Indicator</th>
 <th data-column="planned_pkr">Planned PKR</th>
-
 <th data-column="target_date">Target</th>
-
 <th>Commentary</th>
 </tr>
 </thead>
@@ -207,7 +250,7 @@ color:#76B531;text-decoration:none;font-weight:bold;
 
 const supabaseClient = supabase.createClient(
 "https://kqhbvmqxrwwspopwckah.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8" 
 );
 
 let currentPage=1;
@@ -256,16 +299,29 @@ pageInfo.innerText=`Page ${currentPage} / ${Math.ceil(count/pageSize)}`;
 
 const today=new Date().toISOString().split("T")[0];
 
+let total=0;
+let open=0;
+let closed=0;
+let overdue=0;
+
 data.forEach((row,index)=>{
+
+total++;
 
 let indicatorClass="ontime";
 let indicatorText="On-time";
 
 if(row.status && row.status.toLowerCase().startsWith("closed")){
-indicatorClass="closed";indicatorText="Closed";
+indicatorClass="closed";
+indicatorText="Closed";
+closed++;
 }
-else if(row.target_date && row.target_date<today){
-indicatorClass="overdue";indicatorText="Overdue";
+else{
+open++;
+}
+
+if(row.target_date && row.target_date<today && !(row.status && row.status.toLowerCase().startsWith("closed"))){
+overdue++;
 }
 
 tbody.innerHTML+=`
@@ -274,9 +330,9 @@ tbody.innerHTML+=`
 <td>${row.terminal_name||''}</td>
 <td>${row.year||''}</td>
 <td>
-  <a class="project-link" href="project-detail.html?id=${row.id}">
-    ${row.project_name||''}
-  </a>
+<a class="project-link" href="project-detail.html?id=${row.id}">
+${row.project_name||''}
+</a>
 </td>
 <td>${row.project_type||''}</td>
 <td>${row.project_category||''}</td>
@@ -285,10 +341,16 @@ tbody.innerHTML+=`
 <td>${row.planned_pkr||''}</td>
 <td>${row.target_date||''}</td>
 <td class="commentary-cell">
-  <div class="commentary-box">${row.commentary||''}</div>
+<div class="commentary-box">${row.commentary||''}</div>
 </td>
 </tr>`;
 });
+
+kpiTotal.innerText=total;
+kpiOpen.innerText=open;
+kpiClosed.innerText=closed;
+kpiOverdue.innerText=overdue;
+
 }
 
 function nextPage(){currentPage++;loadData();}
