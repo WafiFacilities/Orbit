@@ -201,8 +201,7 @@ Overdue Projects: <span id="kpiOverdue">0</span>
 <option>2029</option><option>2030</option>
 </select>
 
-<select id="filterStatus">
-<option value="">All Status</option>
+<select id="filterStatus" multiple size="5">
 <option>Open - Initiated</option>
 <option>Open - Under Execution</option>
 <option>Under MOC</option>
@@ -285,8 +284,13 @@ query=query.eq("terminal_name",filterTerminal.value);
 if(filterYear.value)
 query=query.eq("year",parseInt(filterYear.value));
 
-if(filterStatus.value)
-query=query.eq("status",filterStatus.value);
+const selectedStatuses =
+[...document.getElementById("filterStatus").selectedOptions]
+.map(o=>o.value);
+
+if(selectedStatuses.length>0){
+query=query.in("status",selectedStatuses);
+}
 
 if(filterType.value)
 query=query.eq("project_type",filterType.value);
@@ -356,7 +360,13 @@ kpiOverdue.innerText=overdue;
 function nextPage(){currentPage++;loadData();}
 function prevPage(){if(currentPage>1){currentPage--;loadData();}}
 
-["filterName","filterTerminal","filterYear","filterStatus","filterType"]
+["filterName","filterTerminal","filterYear","filterType"]
+  document.getElementById("filterStatus")
+.addEventListener("change",()=>{
+currentPage=1;
+loadData();
+});
+  
 .forEach(id=>document.getElementById(id)
 .addEventListener("change",()=>{currentPage=1;loadData();}));
 
