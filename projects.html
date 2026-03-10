@@ -63,7 +63,7 @@ padding:6px;border-radius:4px;border:1px solid #ccc;
 font-family:'72 Condensed';
 }
 
-/* KPI BARS */
+/* KPI */
 
 .kpi{
 display:flex;
@@ -160,8 +160,6 @@ padding:4px 8px;border-radius:4px;font-weight:bold;text-align:center;
 
 <h2>Opex / Capex Projects</h2>
 
-<!-- KPI SECTION -->
-
 <div class="kpi">
 
 <div class="kpi-box kpi-total">
@@ -194,11 +192,13 @@ Overdue Projects: <span id="kpiOverdue">0</span>
 <option>GTI</option><option>MMK</option>
 </select>
 
-<select id="filterYear">
-<option value="">All Years</option>
-<option>2025</option><option>2026</option>
-<option>2027</option><option>2028</option>
-<option>2029</option><option>2030</option>
+<select id="filterYear" multiple size="6">
+<option>2025</option>
+<option>2026</option>
+<option>2027</option>
+<option>2028</option>
+<option>2029</option>
+<option>2030</option>
 </select>
 
 <select id="filterStatus" multiple size="5">
@@ -209,8 +209,7 @@ Overdue Projects: <span id="kpiOverdue">0</span>
 <option>Dropped</option>
 </select>
 
-<select id="filterType">
-<option value="">All Types</option>
+<select id="filterType" multiple size="2">
 <option>Opex</option>
 <option>Capex</option>
 </select>
@@ -281,19 +280,17 @@ query=query.ilike("project_name",`%${filterName.value}%`);
 if(filterTerminal.value)
 query=query.eq("terminal_name",filterTerminal.value);
 
-if(filterYear.value)
-query=query.eq("year",parseInt(filterYear.value));
+const years=[...filterYear.selectedOptions].map(o=>parseInt(o.value));
+if(years.length>0)
+query=query.in("year",years);
 
-const selectedStatuses =
-[...document.getElementById("filterStatus").selectedOptions]
-.map(o=>o.value);
+const statuses=[...filterStatus.selectedOptions].map(o=>o.value);
+if(statuses.length>0)
+query=query.in("status",statuses);
 
-if(selectedStatuses.length>0){
-query=query.in("status",selectedStatuses);
-}
-
-if(filterType.value)
-query=query.eq("project_type",filterType.value);
+const types=[...filterType.selectedOptions].map(o=>o.value);
+if(types.length>0)
+query=query.in("project_type",types);
 
 const {data,count}=await query;
 
@@ -360,15 +357,13 @@ kpiOverdue.innerText=overdue;
 function nextPage(){currentPage++;loadData();}
 function prevPage(){if(currentPage>1){currentPage--;loadData();}}
 
-["filterName","filterTerminal","filterYear","filterType"]
-  document.getElementById("filterStatus")
-.addEventListener("change",()=>{
-currentPage=1;
-loadData();
-});
-  
+["filterName","filterTerminal"]
 .forEach(id=>document.getElementById(id)
 .addEventListener("change",()=>{currentPage=1;loadData();}));
+
+document.getElementById("filterYear").addEventListener("change",()=>{currentPage=1;loadData();});
+document.getElementById("filterStatus").addEventListener("change",()=>{currentPage=1;loadData();});
+document.getElementById("filterType").addEventListener("change",()=>{currentPage=1;loadData();});
 
 async function logout(){
 await supabaseClient.auth.signOut();
