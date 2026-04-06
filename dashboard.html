@@ -40,7 +40,15 @@ font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
 }
 
 .layout{display:flex;height:calc(100vh - 62px);}
-
+  
+.filter-bar select{
+  padding:6px;
+  border-radius:4px;
+  border:1px solid #ccc;
+  min-width:140px;
+  height:90px;
+}
+  
 .sidebar{
 width:220px;background:#404040;color:white;
 display:flex;flex-direction:column;padding-top:20px;
@@ -172,21 +180,29 @@ td{border:1px solid #ddd;padding:6px;}
 
 <div class="filter-bar">
 Terminal:
-<select id="terminalFilter" onchange="loadKPIs()">
-<option value="">All</option>
-<option>KMR</option><option>CKL</option><option>MCH</option>
-<option>SKP</option><option>DLP</option><option>TJB</option>
-<option>BHK</option><option>SSH</option><option>VHR</option>
-<option>GTI</option><option>MMK</option>
+<select id="terminalFilter" multiple onchange="loadKPIs()">
+<option value="KMR">KMR</option>
+<option value="CKL">CKL</option>
+<option value="MCH">MCH</option>
+<option value="SKP">SKP</option>
+<option value="DLP">DLP</option>
+<option value="TJB">TJB</option>
+<option value="BHK">BHK</option>
+<option value="SSH">SSH</option>
+<option value="VHR">VHR</option>
+<option value="GTI">GTI</option>
+<option value="MMK">MMK</option>
 </select>
 
 Year:
-<select id="yearFilter" onchange="loadKPIs()">
-<option value="">All</option>
-<option>2025</option><option>2026</option><option>2027</option>
-<option>2028</option><option>2029</option><option>2030</option>
+<select id="yearFilter" multiple onchange="loadKPIs()">
+<option value="2025">2025</option>
+<option value="2026">2026</option>
+<option value="2027">2027</option>
+<option value="2028">2028</option>
+<option value="2029">2029</option>
+<option value="2030">2030</option>
 </select>
-</div>
 
 <!-- OPERATIONAL SUMMARY -->
 <div class="section-title">Operational Summary</div>
@@ -275,8 +291,14 @@ function matchImpact(type,text){
 async function loadKPIs(){
 
  let query=supabaseClient.from("initiatives").select("*");
- if(terminalFilter.value) query=query.eq("terminal_name",terminalFilter.value);
- if(yearFilter.value) query=query.eq("year",yearFilter.value);
+const terminals = [...terminalFilter.selectedOptions].map(o => o.value);
+const years = [...yearFilter.selectedOptions].map(o => o.value);
+
+if(terminals.length)
+  query = query.in("terminal_name", terminals);
+
+if(years.length)
+  query = query.in("year", years);
 
  const {data}=await query;
  if(!data) return;
