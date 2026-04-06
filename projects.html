@@ -69,6 +69,37 @@ gap:20px;
 margin-bottom:20px;
 }
 
+  .dropdown-filter{
+position:relative;
+display:inline-block;
+}
+
+.filter-btn{
+padding:6px 12px;
+border:1px solid #ccc;
+background:white;
+border-radius:4px;
+cursor:pointer;
+}
+
+.dropdown-content{
+display:none;
+position:absolute;
+background:white;
+border:1px solid #ccc;
+padding:10px;
+max-height:220px;
+overflow:auto;
+box-shadow:0 2px 6px rgba(0,0,0,0.15);
+z-index:10;
+}
+
+.dropdown-content label{
+display:block;
+font-size:13px;
+margin-bottom:4px;
+}
+  
 .kpi-box{
 background:white;
 padding:12px 20px;
@@ -178,15 +209,25 @@ Overdue Projects: <span id="kpiOverdue">0</span>
 
 <input type="text" id="filterName" placeholder="Search Project Name">
 
-<select id="filterTerminal">
-<option value="">All Terminals</option>
-</select>
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('terminalDropdown')" class="filter-btn">Terminal ▼</button>
+<div id="terminalDropdown" class="dropdown-content"></div>
+</div>
 
-<select id="filterYear" multiple size="6"></select>
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('yearDropdown')" class="filter-btn">Year ▼</button>
+<div id="yearDropdown" class="dropdown-content"></div>
+</div>
 
-<select id="filterStatus" multiple size="6"></select>
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('statusDropdown')" class="filter-btn">Status ▼</button>
+<div id="statusDropdown" class="dropdown-content"></div>
+</div>
 
-<select id="filterType" multiple size="3"></select>
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('typeDropdown')" class="filter-btn">Type ▼</button>
+<div id="typeDropdown" class="dropdown-content"></div>
+</div>
 
 </div>
 
@@ -235,7 +276,38 @@ if(!data.session) window.location="login.html";
 await loadFilters();
 loadData();
 }
+function toggleDropdown(id){
+const el=document.getElementById(id);
+el.style.display = el.style.display==="block" ? "none" : "block";
+}
+
+function toggleAll(id){
+const boxes=document.querySelectorAll(`#${id} input[type=checkbox]`);
+const allChecked=boxes[0].checked;
+
+boxes.forEach((b,i)=>{
+if(i>0) b.checked=allChecked;
+});
+
+loadData();
+}
 init();
+
+function buildDropdown(id,values){
+
+const container=document.getElementById(id);
+
+container.innerHTML=`
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('${id}')"> All</label>
+`;
+
+values.forEach(v=>{
+container.innerHTML+=`
+<label><input type="checkbox" value="${v}"> ${v}</label>
+`;
+});
+
+}
 
 async function loadFilters(){
 
@@ -248,17 +320,18 @@ const years=[...new Set(data.map(d=>d.year).filter(Boolean))].sort();
 const statuses=[...new Set(data.map(d=>d.status).filter(Boolean))].sort();
 const types=[...new Set(data.map(d=>d.project_type).filter(Boolean))].sort();
 
-const terminalSelect=document.getElementById("filterTerminal");
-terminals.forEach(v=>terminalSelect.innerHTML+=`<option>${v}</option>`);
+buildDropdown("terminalDropdown",terminals);
+buildDropdown("yearDropdown",years);
+buildDropdown("statusDropdown",statuses);
+buildDropdown("typeDropdown",types);
 
-const yearSelect=document.getElementById("filterYear");
-years.forEach(v=>yearSelect.innerHTML+=`<option>${v}</option>`);
-
-const statusSelect=document.getElementById("filterStatus");
-statuses.forEach(v=>statusSelect.innerHTML+=`<option>${v}</option>`);
-
-const typeSelect=document.getElementById("filterType");
-types.forEach(v=>typeSelect.innerHTML+=`<option>${v}</option>`);
+document.querySelectorAll(".dropdown-content input[type=checkbox]")
+.forEach(cb=>{
+cb.addEventListener("change",()=>{
+currentPage=1;
+loadData();
+});
+});
 
 }
 
@@ -275,19 +348,28 @@ let query=supabaseClient
 if(filterName.value)
 query=query.ilike("project_name",`%${filterName.value}%`);
 
-if(filterTerminal.value)
-query=query.eq("terminal_name",filterTerminal.value);
+const terminals=[...document.querySelectorAll("#terminalDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
 
-const years=[...filterYear.selectedOptions].map(o=>parseInt(o.value));
-if(years.length>0)
+const years=[...document.querySelectorAll("#yearDropdown input:checked")]
+.map(c=>Number(c.value)).filter(v=>v!=="ALL");
+
+const statuses=[...document.querySelectorAll("#statusDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
+
+const types=[...document.querySelectorAll("#typeDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
+
+if(terminals.length)
+query=query.in("terminal_name",terminals);
+
+if(years.length)
 query=query.in("year",years);
 
-const statuses=[...filterStatus.selectedOptions].map(o=>o.value);
-if(statuses.length>0)
+if(statuses.length)
 query=query.in("status",statuses);
 
-const types=[...filterType.selectedOptions].map(o=>o.value);
-if(types.length>0)
+if(types.length)
 query=query.in("project_type",types);
 
 const {data,count}=await query;
@@ -355,13 +437,23 @@ kpiOverdue.innerText=overdue;
 function nextPage(){currentPage++;loadData();}
 function prevPage(){if(currentPage>1){currentPage--;loadData();}}
 
-["filterName","filterTerminal"]
-.forEach(id=>document.getElementById(id)
-.addEventListener("change",()=>{currentPage=1;loadData();}));
+filterName.addEventListener("input",()=>{
+currentPage=1;
+loadData();
+});
 
-["filterYear","filterStatus","filterType"]
-.forEach(id=>document.getElementById(id)
-.addEventListener("change",()=>{currentPage=1;loadData();}));
+
+document.addEventListener("click",function(e){
+
+document.querySelectorAll(".dropdown-content").forEach(drop=>{
+
+if(!drop.parentElement.contains(e.target)){
+drop.style.display="none";
+}
+
+});
+
+});
 
 async function logout(){
 await supabaseClient.auth.signOut();
