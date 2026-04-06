@@ -352,7 +352,9 @@ const terminals=[...document.querySelectorAll("#terminalDropdown input:checked")
 .map(c=>c.value).filter(v=>v!=="ALL");
 
 const years=[...document.querySelectorAll("#yearDropdown input:checked")]
-.map(c=>Number(c.value)).filter(v=>v!=="ALL");
+.map(c=>c.value)
+.filter(v=>v!=="ALL")
+.map(Number);
 
 const statuses=[...document.querySelectorAll("#statusDropdown input:checked")]
 .map(c=>c.value).filter(v=>v!=="ALL");
