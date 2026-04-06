@@ -309,7 +309,10 @@ container.innerHTML+=`
 
 }
 async function loadData(){
-
+const {data:allFindings}=await supabaseClient
+.from("assurance_findings")
+.select("*");
+  
 let query=supabaseClient.from("assurances").select("*",{count:"exact"});
 
 const depots=[...document.querySelectorAll("#depotDropdown input:checked")]
@@ -353,11 +356,8 @@ let html="";
 
 for(const row of data){
 
-const {data:findings}=await supabaseClient
-.from("assurance_findings")
-.select("*")
-.eq("assurance_id",row.id);
-
+const findings=allFindings.filter(f=>f.assurance_id===row.id);
+  
 const openCount=findings.filter(f=>f.status!=="Closed").length;
 const overdueCount=findings.filter(f=>f.status!=="Closed" && f.target_date && f.target_date<today).length;
 
