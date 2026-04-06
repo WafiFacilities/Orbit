@@ -214,14 +214,23 @@ function renderCompetencies(){
 
    let completion = "-";
    let target = "-";
+   let statusClass = "status-missing"; // default red
 
    if(record){
+
      completion = record.completion_date || "-";
      target = record.target_date || "-";
+
+     if(record.completion_date){
+       statusClass = "status-valid";   // GREEN
+     }
+     else if(record.target_date){
+       statusClass = "status-expiring"; // YELLOW
+     }
    }
 
    section.innerHTML += `
-     <div class="card">
+     <div class="card ${statusClass}">
        <strong>${c.name}</strong><br>
        Target Date: ${target}<br>
        Completion Date: ${completion}
@@ -229,6 +238,22 @@ function renderCompetencies(){
    `;
  });
 
+ // Update Status Button
+ section.innerHTML += `
+   <div style="margin-top:15px;">
+     <a href="https://wafifacilities.github.io/Orbit/people-employee-detail.html?id=${employeeRecord.id}"
+        style="
+        display:inline-block;
+        background:#76B531;
+        color:white;
+        padding:8px 16px;
+        text-decoration:none;
+        border-radius:4px;
+        font-weight:bold;">
+        Update Status
+     </a>
+   </div>
+ `;
 }
 
 async function loadInitiatives(email){
