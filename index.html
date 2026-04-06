@@ -58,6 +58,37 @@ display:flex;flex-direction:column;padding-top:20px;
 
 .main{flex:1;padding:20px;overflow-y:auto;}
 
+  .dropdown-filter{
+position:relative;
+display:inline-block;
+}
+
+.filter-btn{
+padding:6px 12px;
+border:1px solid #ccc;
+background:white;
+border-radius:4px;
+cursor:pointer;
+}
+
+.dropdown-content{
+display:none;
+position:absolute;
+background:white;
+border:1px solid #ccc;
+padding:10px;
+max-height:220px;
+overflow:auto;
+box-shadow:0 2px 6px rgba(0,0,0,0.15);
+z-index:10;
+}
+
+.dropdown-content label{
+display:block;
+font-size:13px;
+margin-bottom:4px;
+}
+  
 .filters{
 display:flex;flex-wrap:wrap;gap:10px;margin-bottom:15px;
 }
@@ -146,43 +177,88 @@ color:#76B531;text-decoration:none;font-weight:bold;
 <h2>List of Initiatives</h2>
 
 <div class="filters">
+
 <input type="text" id="filterName" placeholder="Search Initiative Name">
 
-<select id="filterTerminal">
-<option value="">All Terminals</option>
-<option>KMR</option><option>CKL</option><option>MCH</option>
-<option>SKP</option><option>DLP</option><option>TJB</option>
-<option>BHK</option><option>SSH</option><option>VHR</option>
-<option>GTI</option><option>MMK</option>
-</select>
 
-<select id="filterYear">
-<option value="">All Years</option>
-<option>2025</option>
-<option>2026</option>
-<option>2027</option>
-<option>2028</option>
-<option>2029</option>
-<option>2030</option>
-</select>
+<!-- TERMINAL -->
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('terminalDropdown')" class="filter-btn">Terminal ▼</button>
 
-<select id="filterStatus">
-<option value="">All Status</option>
-<option>Dropped</option>
-<option>Open - Initiated</option>
-<option>Open - Under MOC</option>
-<option>Open - Under Execution</option>
-<option>Closed</option>
-</select>
+<div id="terminalDropdown" class="dropdown-content">
 
-<select id="filterImpactType">
-<option value="">All Impact Types</option>
-<option>Cost Saving (PKR)</option>
-<option>Cost Avoidance (PKR)</option>
-<option>Efficiency Improvement (G2G/Time)</option>
-<option>HSSE</option>
-<option>Controls</option>
-</select>
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('terminalDropdown')"> All</label>
+
+<label><input type="checkbox" value="KMR"> KMR</label>
+<label><input type="checkbox" value="CKL"> CKL</label>
+<label><input type="checkbox" value="MCH"> MCH</label>
+<label><input type="checkbox" value="SKP"> SKP</label>
+<label><input type="checkbox" value="DLP"> DLP</label>
+<label><input type="checkbox" value="TJB"> TJB</label>
+<label><input type="checkbox" value="BHK"> BHK</label>
+<label><input type="checkbox" value="SSH"> SSH</label>
+<label><input type="checkbox" value="VHR"> VHR</label>
+<label><input type="checkbox" value="GTI"> GTI</label>
+<label><input type="checkbox" value="MMK"> MMK</label>
+
+</div>
+</div>
+
+
+<!-- YEAR -->
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('yearDropdown')" class="filter-btn">Year ▼</button>
+
+<div id="yearDropdown" class="dropdown-content">
+
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('yearDropdown')"> All</label>
+
+<label><input type="checkbox" value="2025"> 2025</label>
+<label><input type="checkbox" value="2026"> 2026</label>
+<label><input type="checkbox" value="2027"> 2027</label>
+<label><input type="checkbox" value="2028"> 2028</label>
+<label><input type="checkbox" value="2029"> 2029</label>
+<label><input type="checkbox" value="2030"> 2030</label>
+
+</div>
+</div>
+
+
+<!-- STATUS -->
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('statusDropdown')" class="filter-btn">Status ▼</button>
+
+<div id="statusDropdown" class="dropdown-content">
+
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('statusDropdown')"> All</label>
+
+<label><input type="checkbox" value="Dropped"> Dropped</label>
+<label><input type="checkbox" value="Open - Initiated"> Open - Initiated</label>
+<label><input type="checkbox" value="Open - Under MOC"> Open - Under MOC</label>
+<label><input type="checkbox" value="Open - Under Execution"> Open - Under Execution</label>
+<label><input type="checkbox" value="Closed"> Closed</label>
+
+</div>
+</div>
+
+
+<!-- IMPACT -->
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('impactDropdown')" class="filter-btn">Impact ▼</button>
+
+<div id="impactDropdown" class="dropdown-content">
+
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('impactDropdown')"> All</label>
+
+<label><input type="checkbox" value="Cost Saving (PKR)"> Cost Saving</label>
+<label><input type="checkbox" value="Cost Avoidance (PKR)"> Cost Avoidance</label>
+<label><input type="checkbox" value="Efficiency Improvement (G2G/Time)"> Efficiency</label>
+<label><input type="checkbox" value="HSSE"> HSSE</label>
+<label><input type="checkbox" value="Controls"> Controls</label>
+
+</div>
+</div>
+
 </div>
 
 <table>
@@ -225,6 +301,22 @@ const pageSize=25;
 let sortColumn="created_at";
 let sortOrder="desc";
 
+function toggleDropdown(id){
+const el=document.getElementById(id);
+el.style.display = el.style.display==="block" ? "none" : "block";
+}
+
+function toggleAll(id){
+const boxes=document.querySelectorAll(`#${id} input[type=checkbox]`);
+const allChecked=boxes[0].checked;
+
+boxes.forEach((b,i)=>{
+if(i>0) b.checked=allChecked;
+});
+
+loadData();
+}
+  
 async function init(){
 const {data}=await supabaseClient.auth.getSession();
 if(!data.session) window.location="login.html";
@@ -246,18 +338,29 @@ let query=supabaseClient
 if(filterName.value)
 query=query.ilike("initiative_name",`%${filterName.value}%`);
 
-if(filterTerminal.value)
-query=query.eq("terminal_name",filterTerminal.value);
+const terminals=[...document.querySelectorAll("#terminalDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
 
-if(filterYear.value)
-query=query.eq("year",parseInt(filterYear.value));
+const years=[...document.querySelectorAll("#yearDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
 
-if(filterStatus.value)
-query=query.eq("status",filterStatus.value);
+const statuses=[...document.querySelectorAll("#statusDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
 
-if(filterImpactType.value)
-query=query.eq("impact_type",filterImpactType.value);
+const impacts=[...document.querySelectorAll("#impactDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
 
+if(terminals.length)
+query=query.in("terminal_name",terminals);
+
+if(years.length)
+query=query.in("year",years);
+
+if(statuses.length)
+query=query.in("status",statuses);
+
+if(impacts.length)
+query=query.in("impact_type",impacts);
 const {data,count}=await query;
 
 const tbody=document.getElementById("table-body");
@@ -325,9 +428,13 @@ loadData();
 function nextPage(){currentPage++;loadData();}
 function prevPage(){if(currentPage>1){currentPage--;loadData();}}
 
-["filterName","filterTerminal","filterYear","filterStatus","filterImpactType"]
-.forEach(id=>document.getElementById(id)
-.addEventListener("change",()=>{currentPage=1;loadData();}));
+  document.querySelectorAll(".dropdown-content input[type=checkbox]")
+.forEach(cb=>{
+cb.addEventListener("change",()=>{
+currentPage=1;
+loadData();
+});
+});
 
 async function logout(){
 await supabaseClient.auth.signOut();
