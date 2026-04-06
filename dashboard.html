@@ -79,7 +79,37 @@ display:flex;flex-direction:column;padding-top:20px;
  grid-template-columns:repeat(4,1fr);
  gap:15px;margin-top:15px;
 }
+.filter{
+position:relative;
+display:inline-block;
+margin-right:10px;
+}
 
+.filter button{
+padding:6px 10px;
+border:1px solid #ccc;
+background:white;
+cursor:pointer;
+border-radius:4px;
+}
+
+.dropdown{
+display:none;
+position:absolute;
+background:white;
+border:1px solid #ccc;
+box-shadow:0 2px 6px rgba(0,0,0,0.2);
+padding:10px;
+max-height:200px;
+overflow-y:auto;
+z-index:10;
+}
+
+.dropdown label{
+display:block;
+font-size:13px;
+margin-bottom:4px;
+}
 .kpi{
  background:white;padding:20px;border-radius:6px;
  box-shadow:0 2px 6px rgba(0,0,0,0.1);
@@ -179,30 +209,39 @@ td{border:1px solid #ddd;padding:6px;}
 <h2>Executive Dashboard</h2>
 
 <div class="filter-bar">
-Terminal:
-<select id="terminalFilter" multiple onchange="loadKPIs()">
-<option value="KMR">KMR</option>
-<option value="CKL">CKL</option>
-<option value="MCH">MCH</option>
-<option value="SKP">SKP</option>
-<option value="DLP">DLP</option>
-<option value="TJB">TJB</option>
-<option value="BHK">BHK</option>
-<option value="SSH">SSH</option>
-<option value="VHR">VHR</option>
-<option value="GTI">GTI</option>
-<option value="MMK">MMK</option>
-</select>
 
-Year:
-<select id="yearFilter" multiple onchange="loadKPIs()">
-<option value="2025">2025</option>
-<option value="2026">2026</option>
-<option value="2027">2027</option>
-<option value="2028">2028</option>
-<option value="2029">2029</option>
-<option value="2030">2030</option>
-</select>
+<div class="filter">
+<button onclick="toggleDropdown('terminalDropdown')">Terminal ▾</button>
+<div id="terminalDropdown" class="dropdown">
+<label><input type="checkbox" value="ALL" onchange="selectAll('terminal')"> All</label>
+<label><input type="checkbox" class="terminal" value="KMR"> KMR</label>
+<label><input type="checkbox" class="terminal" value="CKL"> CKL</label>
+<label><input type="checkbox" class="terminal" value="MCH"> MCH</label>
+<label><input type="checkbox" class="terminal" value="SKP"> SKP</label>
+<label><input type="checkbox" class="terminal" value="DLP"> DLP</label>
+<label><input type="checkbox" class="terminal" value="TJB"> TJB</label>
+<label><input type="checkbox" class="terminal" value="BHK"> BHK</label>
+<label><input type="checkbox" class="terminal" value="SSH"> SSH</label>
+<label><input type="checkbox" class="terminal" value="VHR"> VHR</label>
+<label><input type="checkbox" class="terminal" value="GTI"> GTI</label>
+<label><input type="checkbox" class="terminal" value="MMK"> MMK</label>
+</div>
+</div>
+
+<div class="filter">
+<button onclick="toggleDropdown('yearDropdown')">Year ▾</button>
+<div id="yearDropdown" class="dropdown">
+<label><input type="checkbox" value="ALL" onchange="selectAll('year')"> All</label>
+<label><input type="checkbox" class="year" value="2025"> 2025</label>
+<label><input type="checkbox" class="year" value="2026"> 2026</label>
+<label><input type="checkbox" class="year" value="2027"> 2027</label>
+<label><input type="checkbox" class="year" value="2028"> 2028</label>
+<label><input type="checkbox" class="year" value="2029"> 2029</label>
+<label><input type="checkbox" class="year" value="2030"> 2030</label>
+</div>
+</div>
+
+</div>
 
 <!-- OPERATIONAL SUMMARY -->
 <div class="section-title">Operational Summary</div>
@@ -291,14 +330,17 @@ function matchImpact(type,text){
 async function loadKPIs(){
 
  let query=supabaseClient.from("initiatives").select("*");
-const terminals = [...terminalFilter.selectedOptions].map(o => o.value);
-const years = [...yearFilter.selectedOptions].map(o => o.value);
+const terminals=[...document.querySelectorAll(".terminal:checked")]
+.map(cb=>cb.value);
+
+const years=[...document.querySelectorAll(".year:checked")]
+.map(cb=>cb.value);
 
 if(terminals.length)
-  query = query.in("terminal_name", terminals);
+query=query.in("terminal_name",terminals);
 
 if(years.length)
-  query = query.in("year", years);
+query=query.in("year",years);
 
  const {data}=await query;
  if(!data) return;
@@ -357,6 +399,24 @@ closedKPI.innerText = data.filter(i =>
  buildTable(data,"capacity","table_cap");
 }
 
+  function toggleDropdown(id){
+const el=document.getElementById(id);
+el.style.display = el.style.display==="block" ? "none":"block";
+}
+
+  function selectAll(type){
+
+const checkboxes=document.querySelectorAll("."+type);
+const all=document.querySelector(`input[value="ALL"]`);
+
+checkboxes.forEach(cb=>{
+cb.checked=all.checked;
+});
+
+loadKPIs();
+}
+
+  
 function buildChart(data,key,id){
 
  const filtered=data.filter(i=>matchImpact(key,i.impact_type));
