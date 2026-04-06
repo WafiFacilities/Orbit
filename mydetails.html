@@ -208,25 +208,27 @@ function renderCompetencies(){
  competencyTypes.forEach(c=>{
 
    const record = employeeCompetencies.find(ec =>
-     ec.employee_id===employeeRecord.id &&
-     ec.competency_type_id===c.id
+     ec.employee_id === employeeRecord.id &&
+     ec.competency_type_id === c.id
    );
 
+   let completion = "-";
+   let target = "-";
+
    if(record){
-
-     const status = calculateStatus(record.completion_date,c.validity_years);
-
-     section.innerHTML += `
-       <div class="card ${status.class}">
-         <strong>${c.name}</strong><br>
-         ${status.text}
-       </div>
-     `;
+     completion = record.completion_date || "-";
+     target = record.target_date || "-";
    }
+
+   section.innerHTML += `
+     <div class="card">
+       <strong>${c.name}</strong><br>
+       Target Date: ${target}<br>
+       Completion Date: ${completion}
+     </div>
+   `;
  });
 
- if(section.innerHTML==="")
-   section.innerHTML="<div class='empty'>No competencies assigned.</div>";
 }
 
 async function loadInitiatives(email){
