@@ -495,7 +495,13 @@ function buildTable(data,key,id){
 
  document.getElementById(id).innerHTML=html;
 }
-
+document.addEventListener("click",function(e){
+document.querySelectorAll(".dropdown-content").forEach(d=>{
+if(!d.parentElement.contains(e.target)){
+d.style.display="none";
+}
+});
+});
 async function logout(){
  await supabaseClient.auth.signOut();
  window.location="login.html";
