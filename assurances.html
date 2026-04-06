@@ -24,6 +24,37 @@ font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
 
 .layout{display:flex;height:calc(100vh - 62px);}
 
+.dropdown-filter{
+position:relative;
+display:inline-block;
+}
+
+.filter-btn{
+padding:6px 12px;
+border:1px solid #ccc;
+background:white;
+border-radius:4px;
+cursor:pointer;
+}
+
+.dropdown-content{
+display:none;
+position:absolute;
+background:white;
+border:1px solid #ccc;
+padding:10px;
+max-height:220px;
+overflow:auto;
+box-shadow:0 2px 6px rgba(0,0,0,0.15);
+z-index:10;
+}
+
+.dropdown-content label{
+display:block;
+font-size:13px;
+margin-bottom:4px;
+}
+  
 .sidebar{
 width:220px;background:#404040;color:white;
 display:flex;flex-direction:column;padding-top:20px;
@@ -165,30 +196,57 @@ background:#404040;color:white;cursor:pointer;
 <!-- FILTERS -->
 <div class="filters">
 
-<select id="filterDepot">
-<option value="">All Depots</option>
-<option>KMR</option><option>CKL</option><option>MCH</option>
-<option>SKP</option><option>DLP</option><option>TJB</option>
-<option>BHK</option><option>SSH</option><option>VHR</option>
-<option>GTI</option><option>MMK</option>
-</select>
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('depotDropdown')" class="filter-btn">Terminal ▼</button>
+<div id="depotDropdown" class="dropdown-content">
 
-<select id="filterStatus">
-<option value="">All Status</option>
-<option>Open</option>
-<option>Closed</option>
-</select>
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('depotDropdown')"> All</label>
 
-<select id="filterType">
-<option value="">All Types</option>
-<option>LOD1</option>
-<option>LOD2</option>
-<option>LOD3</option>
-</select>
+<label><input type="checkbox" value="KMR"> KMR</label>
+<label><input type="checkbox" value="CKL"> CKL</label>
+<label><input type="checkbox" value="MCH"> MCH</label>
+<label><input type="checkbox" value="SKP"> SKP</label>
+<label><input type="checkbox" value="DLP"> DLP</label>
+<label><input type="checkbox" value="TJB"> TJB</label>
+<label><input type="checkbox" value="BHK"> BHK</label>
+<label><input type="checkbox" value="SSH"> SSH</label>
+<label><input type="checkbox" value="VHR"> VHR</label>
+<label><input type="checkbox" value="GTI"> GTI</label>
+<label><input type="checkbox" value="MMK"> MMK</label>
 
-<select id="filterYear">
-<option value="">All Years</option>
-</select>
+</div>
+</div>
+
+
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('statusDropdown')" class="filter-btn">Status ▼</button>
+<div id="statusDropdown" class="dropdown-content">
+
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('statusDropdown')"> All</label>
+<label><input type="checkbox" value="Open"> Open</label>
+<label><input type="checkbox" value="Closed"> Closed</label>
+
+</div>
+</div>
+
+
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('typeDropdown')" class="filter-btn">Type ▼</button>
+<div id="typeDropdown" class="dropdown-content">
+
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('typeDropdown')"> All</label>
+<label><input type="checkbox" value="LOD1"> LOD1</label>
+<label><input type="checkbox" value="LOD2"> LOD2</label>
+<label><input type="checkbox" value="LOD3"> LOD3</label>
+
+</div>
+</div>
+
+
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('yearDropdown')" class="filter-btn">Year ▼</button>
+<div id="yearDropdown" class="dropdown-content"></div>
+</div>
 
 </div>
 
@@ -226,6 +284,7 @@ let currentPage=1;
 const pageSize=15;
 
 async function populateYears(){
+
 const {data}=await supabaseClient
 .from("assurances")
 .select("planned_start_date");
@@ -236,27 +295,50 @@ data
 .map(x=>new Date(x.planned_start_date).getFullYear())
 )].sort();
 
-years.forEach(y=>{
-filterYear.innerHTML+=`<option>${y}</option>`;
-});
-}
+const container=document.getElementById("yearDropdown");
 
+container.innerHTML=`<label><input type="checkbox" value="ALL" checked onchange="toggleAll('yearDropdown')"> All</label>`;
+
+years.forEach(y=>{
+container.innerHTML+=`
+<label><input type="checkbox" value="${y}"> ${y}</label>
+`;
+});
+
+
+
+}
 async function loadData(){
 
 let query=supabaseClient.from("assurances").select("*",{count:"exact"});
 
-if(filterDepot.value)
-query=query.eq("depot",filterDepot.value);
+const depots=[...document.querySelectorAll("#depotDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
 
-if(filterStatus.value)
-query=query.eq("status",filterStatus.value);
+const statuses=[...document.querySelectorAll("#statusDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
 
-if(filterType.value)
-query=query.eq("assurance_type",filterType.value);
+const types=[...document.querySelectorAll("#typeDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
 
-if(filterYear.value)
-query=query.gte("planned_start_date",`${filterYear.value}-01-01`)
-            .lte("planned_start_date",`${filterYear.value}-12-31`);
+const years=[...document.querySelectorAll("#yearDropdown input:checked")]
+.map(c=>c.value)
+.filter(v=>v!=="ALL")
+.map(Number);
+
+if(depots.length)
+query=query.in("depot",depots);
+
+if(statuses.length)
+query=query.in("status",statuses);
+
+if(types.length)
+query=query.in("assurance_type",types);
+
+if(years.length){
+query=query.gte("planned_start_date",`${Math.min(...years)}-01-01`)
+           .lte("planned_start_date",`${Math.max(...years)}-12-31`);
+}
 
 const {data,count}=await query;
 
@@ -314,16 +396,50 @@ pageInfo.innerText=`Total: ${count}`;
 function nextPage(){currentPage++;loadData();}
 function prevPage(){if(currentPage>1){currentPage--;loadData();}}
 
-["filterDepot","filterStatus","filterType","filterYear"]
-.forEach(id=>document.getElementById(id)
-.addEventListener("change",()=>{currentPage=1;loadData();}));
+
 
 async function logout(){
 await supabaseClient.auth.signOut();
 window.location="login.html";
 }
 
+function toggleDropdown(id){
+
+document.querySelectorAll(".dropdown-content").forEach(d=>{
+if(d.id!==id) d.style.display="none";
+});
+
+const el=document.getElementById(id);
+el.style.display = el.style.display==="block" ? "none" : "block";
+}
+
+function toggleAll(id){
+const boxes=document.querySelectorAll(`#${id} input[type=checkbox]`);
+const allChecked=boxes[0].checked;
+
+boxes.forEach((b,i)=>{
+if(i>0) b.checked=allChecked;
+});
+
+loadData();
+}
+
+document.addEventListener("click",function(e){
+document.querySelectorAll(".dropdown-content").forEach(drop=>{
+if(!drop.parentElement.contains(e.target)){
+drop.style.display="none";
+}
+});
+});
+  
 populateYears();
+  document.querySelectorAll(".dropdown-content input[type=checkbox]")
+.forEach(cb=>{
+cb.addEventListener("change",()=>{
+currentPage=1;
+loadData();
+});
+});
 loadData();
 
 </script>
