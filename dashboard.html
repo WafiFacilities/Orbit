@@ -92,6 +92,38 @@ display:flex;flex-direction:column;padding-top:20px;
  color:#76B531;
 }
 
+  .dropdown-filter{
+display:inline-block;
+position:relative;
+margin-right:15px;
+}
+
+.filter-btn{
+padding:6px 12px;
+border:1px solid #ccc;
+background:white;
+border-radius:4px;
+cursor:pointer;
+}
+
+.dropdown-content{
+display:none;
+position:absolute;
+background:white;
+border:1px solid #ccc;
+padding:10px;
+max-height:220px;
+overflow:auto;
+box-shadow:0 2px 6px rgba(0,0,0,0.15);
+z-index:10;
+}
+
+.dropdown-content label{
+display:block;
+font-size:13px;
+margin-bottom:4px;
+}
+  
 .kpi p{
  margin-top:5px;
  color:#666;
@@ -179,30 +211,48 @@ td{border:1px solid #ddd;padding:6px;}
 <h2>Executive Dashboard</h2>
 
 <div class="filter-bar">
-Terminal:
-<select id="terminalFilter" multiple onchange="loadKPIs()">
-<option value="KMR">KMR</option>
-<option value="CKL">CKL</option>
-<option value="MCH">MCH</option>
-<option value="SKP">SKP</option>
-<option value="DLP">DLP</option>
-<option value="TJB">TJB</option>
-<option value="BHK">BHK</option>
-<option value="SSH">SSH</option>
-<option value="VHR">VHR</option>
-<option value="GTI">GTI</option>
-<option value="MMK">MMK</option>
-</select>
 
-Year:
-<select id="yearFilter" multiple onchange="loadKPIs()">
-<option value="2025">2025</option>
-<option value="2026">2026</option>
-<option value="2027">2027</option>
-<option value="2028">2028</option>
-<option value="2029">2029</option>
-<option value="2030">2030</option>
-</select>
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('terminalDropdown')" class="filter-btn">Terminal ▼</button>
+
+<div id="terminalDropdown" class="dropdown-content">
+
+<label><input type="checkbox" value="ALL" checked onchange="toggleAllTerminal()"> All</label>
+
+<label><input type="checkbox" value="KMR" onchange="loadKPIs()"> KMR</label>
+<label><input type="checkbox" value="CKL" onchange="loadKPIs()"> CKL</label>
+<label><input type="checkbox" value="MCH" onchange="loadKPIs()"> MCH</label>
+<label><input type="checkbox" value="SKP" onchange="loadKPIs()"> SKP</label>
+<label><input type="checkbox" value="DLP" onchange="loadKPIs()"> DLP</label>
+<label><input type="checkbox" value="TJB" onchange="loadKPIs()"> TJB</label>
+<label><input type="checkbox" value="BHK" onchange="loadKPIs()"> BHK</label>
+<label><input type="checkbox" value="SSH" onchange="loadKPIs()"> SSH</label>
+<label><input type="checkbox" value="VHR" onchange="loadKPIs()"> VHR</label>
+<label><input type="checkbox" value="GTI" onchange="loadKPIs()"> GTI</label>
+<label><input type="checkbox" value="MMK" onchange="loadKPIs()"> MMK</label>
+
+</div>
+</div>
+
+
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('yearDropdown')" class="filter-btn">Year ▼</button>
+
+<div id="yearDropdown" class="dropdown-content">
+
+<label><input type="checkbox" value="ALL" checked onchange="toggleAllYear()"> All</label>
+
+<label><input type="checkbox" value="2025" onchange="loadKPIs()"> 2025</label>
+<label><input type="checkbox" value="2026" onchange="loadKPIs()"> 2026</label>
+<label><input type="checkbox" value="2027" onchange="loadKPIs()"> 2027</label>
+<label><input type="checkbox" value="2028" onchange="loadKPIs()"> 2028</label>
+<label><input type="checkbox" value="2029" onchange="loadKPIs()"> 2029</label>
+<label><input type="checkbox" value="2030" onchange="loadKPIs()"> 2030</label>
+
+</div>
+</div>
+
+</div>
 
 <!-- OPERATIONAL SUMMARY -->
 <div class="section-title">Operational Summary</div>
@@ -291,8 +341,13 @@ function matchImpact(type,text){
 async function loadKPIs(){
 
  let query=supabaseClient.from("initiatives").select("*");
-const terminals = [...terminalFilter.selectedOptions].map(o => o.value);
-const years = [...yearFilter.selectedOptions].map(o => o.value);
+const terminals = [...document.querySelectorAll("#terminalDropdown input[type=checkbox]:checked")]
+.map(cb=>cb.value)
+.filter(v=>v!=="ALL");
+
+const years = [...document.querySelectorAll("#yearDropdown input[type=checkbox]:checked")]
+.map(cb=>cb.value)
+.filter(v=>v!=="ALL");
 
 if(terminals.length)
   query = query.in("terminal_name", terminals);
@@ -390,6 +445,35 @@ function buildChart(data,key,id){
  });
 }
 
+  function toggleDropdown(id){
+const el=document.getElementById(id);
+el.style.display = el.style.display==="block" ? "none" : "block";
+}
+
+  function toggleAllTerminal(){
+
+const boxes=document.querySelectorAll("#terminalDropdown input[type=checkbox]");
+const allChecked=boxes[0].checked;
+
+boxes.forEach((b,i)=>{
+if(i>0) b.checked=allChecked;
+});
+
+loadKPIs();
+}
+
+function toggleAllYear(){
+
+const boxes=document.querySelectorAll("#yearDropdown input[type=checkbox]");
+const allChecked=boxes[0].checked;
+
+boxes.forEach((b,i)=>{
+if(i>0) b.checked=allChecked;
+});
+
+loadKPIs();
+}
+  
 function buildTable(data,key,id){
 
  const rows=data
