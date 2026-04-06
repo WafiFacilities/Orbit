@@ -256,10 +256,10 @@ async function loadAssuranceKPIs(email){
 const today=new Date().toISOString().split("T")[0];
 
 // Get assurances where user is lead
-const {data:assurances}=await supabaseClient
+const {data:assurances} = await supabaseClient
 .from("assurances")
 .select("*")
-.ilike("assurance_owner_email",email) || [];
+.ilike("assurance_owner_email", `%${email}%`) || [];
 
 // Get findings
 const {data:findings}=await supabaseClient
