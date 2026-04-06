@@ -80,6 +80,37 @@ padding:10px 20px;
 border-radius:6px;
 }
 
+.dropdown-filter{
+position:relative;
+display:inline-block;
+}
+
+.filter-btn{
+padding:6px 12px;
+border:1px solid #ccc;
+background:white;
+border-radius:4px;
+cursor:pointer;
+}
+
+.dropdown-content{
+display:none;
+position:absolute;
+background:white;
+border:1px solid #ccc;
+padding:10px;
+max-height:220px;
+overflow:auto;
+box-shadow:0 2px 6px rgba(0,0,0,0.15);
+z-index:10;
+}
+
+.dropdown-content label{
+display:block;
+font-size:13px;
+margin-bottom:4px;
+}
+  
 .filters{
 display:flex;
 gap:20px;
@@ -182,27 +213,39 @@ font-weight:bold;
 
 <div class="filters">
 
-<select id="filterDepot" onchange="loadActions()">
-<option value="">All Depots</option>
-</select>
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('depotDropdown')" class="filter-btn">Terminal ▼</button>
+<div id="depotDropdown" class="dropdown-content"></div>
+</div>
 
-<select id="filterType" onchange="loadActions()">
-<option value="">All Assurance Types</option>
-</select>
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('typeDropdown')" class="filter-btn">Type ▼</button>
+<div id="typeDropdown" class="dropdown-content"></div>
+</div>
 
-<select id="filterStatus" onchange="loadActions()">
-<option value="">All Status</option>
-<option>Open</option>
-<option>Closed</option>
-</select>
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('statusDropdown')" class="filter-btn">Status ▼</button>
+<div id="statusDropdown" class="dropdown-content">
 
-<select id="filterNature" onchange="loadActions()">
-<option value="">All Nature</option>
-<option>Procedural</option>
-<option>Behavioral</option>
-<option>Competence</option>
-<option>Others</option>
-</select>
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('statusDropdown')"> All</label>
+<label><input type="checkbox" value="Open"> Open</label>
+<label><input type="checkbox" value="Closed"> Closed</label>
+
+</div>
+</div>
+
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('natureDropdown')" class="filter-btn">Nature ▼</button>
+<div id="natureDropdown" class="dropdown-content">
+
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('natureDropdown')"> All</label>
+<label><input type="checkbox" value="Procedural"> Procedural</label>
+<label><input type="checkbox" value="Behavioral"> Behavioral</label>
+<label><input type="checkbox" value="Competence"> Competence</label>
+<label><input type="checkbox" value="Others"> Others</label>
+
+</div>
+</div>
 
 </div>
 
@@ -248,22 +291,41 @@ const {data:assurances} = await supabaseClient
 const depots=[...new Set(assurances.map(a=>a.depot).filter(Boolean))];
 const types=[...new Set(assurances.map(a=>a.assurance_type).filter(Boolean))];
 
+const depotContainer=document.getElementById("depotDropdown");
+depotContainer.innerHTML=`<label><input type="checkbox" value="ALL" checked onchange="toggleAll('depotDropdown')"> All</label>`;
+
 depots.forEach(d=>{
-filterDepot.innerHTML+=`<option>${d}</option>`;
+depotContainer.innerHTML+=`<label><input type="checkbox" value="${d}"> ${d}</label>`;
 });
 
+const typeContainer=document.getElementById("typeDropdown");
+typeContainer.innerHTML=`<label><input type="checkbox" value="ALL" checked onchange="toggleAll('typeDropdown')"> All</label>`;
+
 types.forEach(t=>{
-filterType.innerHTML+=`<option>${t}</option>`;
+typeContainer.innerHTML+=`<label><input type="checkbox" value="${t}"> ${t}</label>`;
+});
+
+document.querySelectorAll(".dropdown-content input[type=checkbox]")
+.forEach(cb=>{
+cb.addEventListener("change",()=>{
+loadActions();
+});
 });
 
 }
-
 async function loadActions(){
 
-const depot=filterDepot.value;
-const status=filterStatus.value;
-const nature=filterNature.value;
-const type=filterType.value;
+const depots=[...document.querySelectorAll("#depotDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
+
+const statuses=[...document.querySelectorAll("#statusDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
+
+const natures=[...document.querySelectorAll("#natureDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
+
+const types=[...document.querySelectorAll("#typeDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
 
 let query = supabaseClient
 .from("assurance_findings")
@@ -272,8 +334,8 @@ let query = supabaseClient
 assurances(id,assurance_name,depot,assurance_type)
 `);
 
-if(status) query=query.eq("status",status);
-if(nature) query=query.eq("type_of_finding",nature);
+if(statuses.length) query=query.in("status",statuses);
+if(natures.length) query=query.in("type_of_finding",natures);
 
 const {data:actions}=await query;
 
@@ -284,9 +346,8 @@ const today=new Date().toISOString().split("T")[0];
 
 actions.forEach(a=>{
 
-if(depot && a.assurances?.depot!==depot) return;
-if(type && a.assurances?.assurance_type!==type) return;
-
+if(depots.length && !depots.includes(a.assurances?.depot)) return;
+if(types.length && !types.includes(a.assurances?.assurance_type)) return;
 total++;
 
 let indicator="open";
@@ -346,7 +407,34 @@ kpiClosed.innerText=closed;
 kpiOverdue.innerText=overdue;
 
 }
+function toggleDropdown(id){
 
+document.querySelectorAll(".dropdown-content").forEach(d=>{
+if(d.id!==id) d.style.display="none";
+});
+
+const el=document.getElementById(id);
+el.style.display = el.style.display==="block" ? "none" : "block";
+}
+
+function toggleAll(id){
+const boxes=document.querySelectorAll(`#${id} input[type=checkbox]`);
+const allChecked=boxes[0].checked;
+
+boxes.forEach((b,i)=>{
+if(i>0) b.checked=allChecked;
+});
+
+loadActions();
+}
+
+document.addEventListener("click",function(e){
+document.querySelectorAll(".dropdown-content").forEach(drop=>{
+if(!drop.parentElement.contains(e.target)){
+drop.style.display="none";
+}
+});
+});
 async function logout(){
 await supabaseClient.auth.signOut();
 window.location="login.html";
