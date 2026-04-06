@@ -436,6 +436,19 @@ loadData();
 });
 });
 
+filterName.addEventListener("input",()=>{
+currentPage=1;
+loadData();
+});  
+
+document.addEventListener("click",function(e){
+document.querySelectorAll(".dropdown-content").forEach(d=>{
+if(!d.parentElement.contains(e.target)){
+d.style.display="none";
+}
+});
+});
+  
 async function logout(){
 await supabaseClient.auth.signOut();
 window.location="login.html";
