@@ -14,7 +14,7 @@ body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 .header{
   display:flex;
   align-items:center;
-  justify-content:space-between;
+  justify-content:space-between;   /* pushes items to edges */
   padding:10px 20px;
   background:white;
   border-bottom:2px solid #e0e0e0;
@@ -23,33 +23,42 @@ body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
 .header-left{
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:12px;   /* spacing between orbit logo and title */
 }
 
-.header-left img{height:40px;}
+.header-left img{
+  height:40px;
+}
 
-.wafi-logo{height:40px;}
+.wafi-logo{
+  height:40px;
+}
 
 .header img{height:40px;margin-right:15px;}
-
 .header-title{
 font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
 }
 
 .layout{display:flex;height:calc(100vh - 62px);}
-
+  
+.filter-bar select{
+  padding:6px;
+  border-radius:4px;
+  border:1px solid #ccc;
+  min-width:140px;
+  height:90px;
+}
+  
 .sidebar{
 width:220px;background:#404040;color:white;
 display:flex;flex-direction:column;padding-top:20px;
 }
-
 .sidebar h4{
   padding:10px 20px;
   margin:10px 0 5px 0;
   background:#2f2f2f;
   border-left:4px solid #16a34a;
 }
-
 .sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
 .sidebar a:hover{background:#505050;}
 .sidebar .logout{margin-top:auto;border-top:1px solid #555;}
@@ -124,40 +133,8 @@ table{width:100%;border-collapse:collapse;font-size:13px;}
 th{background:#76B531;color:white;padding:6px;}
 td{border:1px solid #ddd;padding:6px;}
 
-.filter-bar{margin-bottom:20px}
-
-/* NEW FILTER STYLE */
-.filter{
-display:inline-block;
-position:relative;
-margin-right:20px;
-}
-
-.filter button{
-padding:6px 10px;
-border:1px solid #ccc;
-background:white;
-cursor:pointer;
-border-radius:4px;
-}
-
-.dropdown{
-display:none;
-position:absolute;
-background:white;
-border:1px solid #ccc;
-box-shadow:0 2px 6px rgba(0,0,0,0.2);
-padding:10px;
-max-height:200px;
-overflow-y:auto;
-z-index:100;
-}
-
-.dropdown label{
-display:block;
-font-size:13px;
-margin-bottom:4px;
-}
+.filter-bar{margin-bottom:20px;}
+.filter-bar select{padding:6px;border-radius:4px;border:1px solid #ccc;}
 </style>
 </head>
 
@@ -184,6 +161,7 @@ margin-bottom:4px;
   <a href="index.html">All Initiatives - List</a>
   <a href="add-initiative.html">Add New Initiative</a>
   
+
    <a href="projects.html"><h4>PROJECTS</h4></a>
 
    <a href="assurances.html"><h4>ASSURANCE</h4></a>
@@ -196,75 +174,261 @@ margin-bottom:4px;
   <a href="#" onclick="logout()" class="logout">Logout</a>
 
 </div>
-
 <div class="main">
 
 <h2>Executive Dashboard</h2>
 
 <div class="filter-bar">
+Terminal:
+<select id="terminalFilter" multiple onchange="loadKPIs()">
+<option value="KMR">KMR</option>
+<option value="CKL">CKL</option>
+<option value="MCH">MCH</option>
+<option value="SKP">SKP</option>
+<option value="DLP">DLP</option>
+<option value="TJB">TJB</option>
+<option value="BHK">BHK</option>
+<option value="SSH">SSH</option>
+<option value="VHR">VHR</option>
+<option value="GTI">GTI</option>
+<option value="MMK">MMK</option>
+</select>
 
-<div class="filter">
-<button onclick="toggleDropdown('terminalDropdown')">Terminal ▾</button>
+Year:
+<select id="yearFilter" multiple onchange="loadKPIs()">
+<option value="2025">2025</option>
+<option value="2026">2026</option>
+<option value="2027">2027</option>
+<option value="2028">2028</option>
+<option value="2029">2029</option>
+<option value="2030">2030</option>
+</select>
 
-<div id="terminalDropdown" class="dropdown">
+<!-- OPERATIONAL SUMMARY -->
+<div class="section-title">Operational Summary</div>
 
-<label><input type="checkbox" id="terminalAll"> All</label>
+<div class="kpi-container">
+<div class="kpi"><h3 id="totalKPI">0</h3><p>Total</p></div>
+<div class="kpi"><h3 id="underReviewKPI">0</h3><p>Under Review</p></div>
+<div class="kpi"><h3 id="openKPI">0</h3><p>Open</p></div>
+<div class="kpi"><h3 id="closedKPI">0</h3><p>Closed</p></div>
+</div>
 
-<label><input type="checkbox" class="terminal" value="KMR"> KMR</label>
-<label><input type="checkbox" class="terminal" value="CKL"> CKL</label>
-<label><input type="checkbox" class="terminal" value="MCH"> MCH</label>
-<label><input type="checkbox" class="terminal" value="SKP"> SKP</label>
-<label><input type="checkbox" class="terminal" value="DLP"> DLP</label>
-<label><input type="checkbox" class="terminal" value="TJB"> TJB</label>
-<label><input type="checkbox" class="terminal" value="BHK"> BHK</label>
-<label><input type="checkbox" class="terminal" value="SSH"> SSH</label>
-<label><input type="checkbox" class="terminal" value="VHR"> VHR</label>
-<label><input type="checkbox" class="terminal" value="GTI"> GTI</label>
-<label><input type="checkbox" class="terminal" value="MMK"> MMK</label>
+<!-- IMPACT KPI -->
+<div class="section-title">Impact (Realized vs Pipeline)</div>
 
+<div class="kpi-container">
+<div class="kpi">
+<div class="impact-title">Cost Saving (PKR)</div>
+<div class="impact-line">Realized <span id="cs_realized" class="value">0</span></div>
+<div class="impact-line">Pipeline <span id="cs_pipeline" class="value">0</span></div>
+</div>
+
+<div class="kpi">
+<div class="impact-title">Cost Avoidance (PKR)</div>
+<div class="impact-line">Realized <span id="ca_realized" class="value">0</span></div>
+<div class="impact-line">Pipeline <span id="ca_pipeline" class="value">0</span></div>
+</div>
+
+<div class="kpi">
+<div class="impact-title">G2G Improvement (Minutes)</div>
+<div class="impact-line">Realized <span id="g2g_realized" class="value">0</span></div>
+<div class="impact-line">Pipeline <span id="g2g_pipeline" class="value">0</span></div>
+</div>
+
+<div class="kpi">
+<div class="impact-title">Capacity Enhancement (KT)</div>
+<div class="impact-line">Realized <span id="cap_realized" class="value">0</span></div>
+<div class="impact-line">Pipeline <span id="cap_pipeline" class="value">0</span></div>
 </div>
 </div>
 
-<div class="filter">
-<button onclick="toggleDropdown('yearDropdown')">Year ▾</button>
+<!-- CHARTS -->
+<div class="section-title">Impact by Terminal</div>
 
-<div id="yearDropdown" class="dropdown">
+<div class="section-grid">
+<div class="card"><div class="card-title">Cost Saving</div><canvas id="chart_cs"></canvas></div>
+<div class="card"><div class="card-title">Cost Avoidance</div><canvas id="chart_ca"></canvas></div>
+<div class="card"><div class="card-title">G2G Improvement</div><canvas id="chart_g2g"></canvas></div>
+<div class="card"><div class="card-title">Capacity Enhancement</div><canvas id="chart_cap"></canvas></div>
+</div>
 
-<label><input type="checkbox" id="yearAll"> All</label>
+<!-- TOP INITIATIVES -->
+<div class="section-title">Top Initiatives</div>
 
-<label><input type="checkbox" class="year" value="2025"> 2025</label>
-<label><input type="checkbox" class="year" value="2026"> 2026</label>
-<label><input type="checkbox" class="year" value="2027"> 2027</label>
-<label><input type="checkbox" class="year" value="2028"> 2028</label>
-<label><input type="checkbox" class="year" value="2029"> 2029</label>
-<label><input type="checkbox" class="year" value="2030"> 2030</label>
+<div class="section-grid">
+<div class="card"><div class="card-title">Cost Saving</div><table id="table_cs"></table></div>
+<div class="card"><div class="card-title">Cost Avoidance</div><table id="table_ca"></table></div>
+<div class="card"><div class="card-title">G2G Improvement</div><table id="table_g2g"></table></div>
+<div class="card"><div class="card-title">Capacity Enhancement</div><table id="table_cap"></table></div>
+</div>
 
 </div>
 </div>
-
-</div>
-
-<!-- THE REST OF YOUR DASHBOARD IS IDENTICAL -->
 
 <script>
 
-function toggleDropdown(id){
-const el=document.getElementById(id);
-el.style.display = el.style.display==="block" ? "none":"block";
+const supabaseClient = window.supabase.createClient(
+"https://kqhbvmqxrwwspopwckah.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
+);
+
+let charts={};
+
+function cleanStatus(s){
+ return (s||"").toLowerCase().trim();
 }
 
-document.getElementById("terminalAll").addEventListener("change",function(){
-document.querySelectorAll(".terminal").forEach(cb=>cb.checked=this.checked);
-loadKPIs();
-});
+function isClosed(s){ return cleanStatus(s).startsWith("closed"); }
+function isOpen(s){ return cleanStatus(s).startsWith("open"); }
+function isDropped(s){ return cleanStatus(s).startsWith("dropped"); }
+function isUnderReview(s){ return cleanStatus(s)==="under review"; }
 
-document.getElementById("yearAll").addEventListener("change",function(){
-document.querySelectorAll(".year").forEach(cb=>cb.checked=this.checked);
-loadKPIs();
-});
+function matchImpact(type,text){
+ return (text||"").toLowerCase().includes(type);
+}
 
-document.querySelectorAll(".terminal,.year").forEach(cb=>{
-cb.addEventListener("change",loadKPIs);
-});
+async function loadKPIs(){
+
+ let query=supabaseClient.from("initiatives").select("*");
+const terminals = [...terminalFilter.selectedOptions].map(o => o.value);
+const years = [...yearFilter.selectedOptions].map(o => o.value);
+
+if(terminals.length)
+  query = query.in("terminal_name", terminals);
+
+if(years.length)
+  query = query.in("year", years);
+
+ const {data}=await query;
+ if(!data) return;
+
+// NORMALIZE STATUS FUNCTION (CRITICAL FIX)
+function normStatus(s){
+  return String(s || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g," ");
+}
+
+totalKPI.innerText = data.length;
+
+underReviewKPI.innerText = data.filter(i =>
+  normStatus(i.status).startsWith("under review")
+).length;
+
+openKPI.innerText = data.filter(i =>
+  normStatus(i.status).startsWith("open")
+).length;
+
+closedKPI.innerText = data.filter(i =>
+  normStatus(i.status).startsWith("closed")
+).length;
+
+
+
+ const realized=data.filter(i=>isClosed(i.status));
+ const pipeline=data.filter(i=>!isClosed(i.status) && !isDropped(i.status));
+
+ const sum=(list,key)=>list
+   .filter(i=>matchImpact(key,i.impact_type))
+   .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0);
+
+ cs_realized.innerText=sum(realized,"saving").toLocaleString();
+ cs_pipeline.innerText=sum(pipeline,"saving").toLocaleString();
+
+ ca_realized.innerText=sum(realized,"avoid").toLocaleString();
+ ca_pipeline.innerText=sum(pipeline,"avoid").toLocaleString();
+
+ g2g_realized.innerText=sum(realized,"g2g").toLocaleString();
+ g2g_pipeline.innerText=sum(pipeline,"g2g").toLocaleString();
+
+ cap_realized.innerText=sum(realized,"capacity").toLocaleString();
+ cap_pipeline.innerText=sum(pipeline,"capacity").toLocaleString();
+
+ buildChart(data,"saving","chart_cs");
+ buildChart(data,"avoid","chart_ca");
+ buildChart(data,"g2g","chart_g2g");
+ buildChart(data,"capacity","chart_cap");
+
+ buildTable(data,"saving","table_cs");
+ buildTable(data,"avoid","table_ca");
+ buildTable(data,"g2g","table_g2g");
+ buildTable(data,"capacity","table_cap");
+}
+
+function buildChart(data,key,id){
+
+ const filtered=data.filter(i=>matchImpact(key,i.impact_type));
+ const terminals=[...new Set(filtered.map(i=>i.terminal_name))];
+
+ const realized=[];
+ const pipeline=[];
+
+ terminals.forEach(t=>{
+   const list=filtered.filter(i=>i.terminal_name===t);
+
+   realized.push(list.filter(i=>isClosed(i.status))
+     .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0));
+
+   pipeline.push(list.filter(i=>!isClosed(i.status) && !isDropped(i.status))
+     .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0));
+ });
+
+ if(charts[id]) charts[id].destroy();
+
+ charts[id]=new Chart(document.getElementById(id),{
+   type:"bar",
+   data:{
+     labels:terminals,
+     datasets:[
+       {label:"Realized",data:realized,backgroundColor:"#2ecc71"},
+       {label:"Pipeline",data:pipeline,backgroundColor:"#f1c40f"}
+     ]
+   },
+   options:{responsive:true,maintainAspectRatio:false}
+ });
+}
+
+function buildTable(data,key,id){
+
+ const rows=data
+   .filter(i=>matchImpact(key,i.impact_type) && !isDropped(i.status))
+   .sort((a,b)=>(b.impact_amount||0)-(a.impact_amount||0))
+   .slice(0,10);
+
+ let html="<tr><th>Terminal</th><th>Initiative</th><th>Value</th></tr>";
+
+ rows.forEach(r=>{
+   html+=`<tr>
+   <td>${r.terminal_name}</td>
+   <td>${r.initiative_name}</td>
+   <td>${Number(r.impact_amount||0).toLocaleString()}</td>
+   </tr>`;
+ });
+
+ document.getElementById(id).innerHTML=html;
+}
+
+async function logout(){
+ await supabaseClient.auth.signOut();
+ window.location="login.html";
+}
+
+loadKPIs();
 
 </script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
