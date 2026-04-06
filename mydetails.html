@@ -253,36 +253,36 @@ async function load(){
 }
 async function loadAssuranceKPIs(email){
 
-const today=new Date().toISOString().split("T")[0];
+const today = new Date().toISOString().split("T")[0];
 
-// Get assurances where user is lead
+// Assurances where user is owner
 const {data:assurances} = await supabaseClient
 .from("assurances")
-.select("*")
-.ilike("assurance_owner_email", `%${email}%`) || [];
+.select("id,status")
+.ilike("assurance_owner_email", email);
 
-// Get findings
-const {data:findings}=await supabaseClient
-.select("assurance_id,status,target_date")
-.select("*") || [];
+// All findings
+const {data:findings} = await supabaseClient
+.from("assurance_findings")
+.select("assurance_id,status,target_date");
 
-let openAssurances=0;
-let overdueAssurances=0;
-let openActions=0;
-let overdueActions=0;
+let openAssurances = 0;
+let overdueAssurances = 0;
+let openActions = 0;
+let overdueActions = 0;
 
-assurances.forEach(a=>{
+assurances.forEach(a => {
 
-if(a.status==="Open") openAssurances++;
+if(a.status === "Open") openAssurances++;
 
-const actions=findings.filter(f=>f.assurance_id===a.id);
+const actions = findings.filter(f => f.assurance_id === a.id);
 
-actions.forEach(act=>{
+actions.forEach(act => {
 
-if(act.status!=="Closed"){
+if(act.status !== "Closed"){
 openActions++;
 
-if(act.target_date && act.target_date<today){
+if(act.target_date && act.target_date < today){
 overdueActions++;
 }
 
@@ -290,21 +290,22 @@ overdueActions++;
 
 });
 
-// Optional logic if you want overdue assurance when any action overdue
-const hasOverdue=actions.some(f=>
-f.status!=="Closed" &&
+const hasOverdue = actions.some(f =>
+f.status !== "Closed" &&
 f.target_date &&
-f.target_date<today
+f.target_date < today
 );
 
-if(hasOverdue) overdueAssurances++;
+if(a.status === "Open" && hasOverdue){
+overdueAssurances++;
+}
 
 });
 
-document.getElementById("kpiOpenAssurances").innerText=openAssurances;
-document.getElementById("kpiOverdueAssurances").innerText=overdueAssurances;
-document.getElementById("kpiOpenActions").innerText=openActions;
-document.getElementById("kpiOverdueActions").innerText=overdueActions;
+kpiOpenAssurances.innerText = openAssurances;
+kpiOverdueAssurances.innerText = overdueAssurances;
+kpiOpenActions.innerText = openActions;
+kpiOverdueActions.innerText = overdueActions;
 
 }
   
