@@ -239,6 +239,18 @@ Cannot close assurance while open findings exist.
 const supabaseClient = supabase.createClient( "https://kqhbvmqxrwwspopwckah.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8" );
 const id = new URLSearchParams(window.location.search).get("id");
 
+async function isSuperUser(){
+ const session = await supabaseClient.auth.getSession();
+ const email = session.data.session.user.email;
+
+ const {data} = await supabaseClient
+   .from('superusers')
+   .select('*')
+   .eq('email', email);
+
+ return data.length > 0;
+}
+  
 function generateRAMOptions(){
 const letters=["A","B","C","D","E"];
 const select=document.getElementById("priority_rating");
@@ -261,6 +273,11 @@ const {data:assurance}=await supabaseClient
 .select("*")
 .eq("id",id)
 .single();
+
+  const session = await supabaseClient.auth.getSession();
+const userEmail = session.data.session.user.email;
+
+const superUser = await isSuperUser();
 
 assuranceInfo.innerHTML=`
 <h2>${assurance.assurance_name}</h2>
@@ -364,9 +381,20 @@ ${f.finding_title}</a></td>
 findingsTable.innerHTML=html;
 
   // lock editing if assurance is closed
-if(assurance.status === "Closed"){
+const isOwner =
+ userEmail.toLowerCase() ===
+ (assurance.assurance_owner_email || "").toLowerCase();
+
+const canEdit = superUser || isOwner;
+
+if(!canEdit || assurance.status === "Closed"){
+
 document.getElementById("date_of_assurance").disabled = true;
 document.getElementById("participants").disabled = true;
+
+const saveBtn = document.querySelector("button[onclick='saveAssuranceDetails()']");
+if(saveBtn) saveBtn.style.display = "none";
+
 }
   
 }
