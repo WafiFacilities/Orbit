@@ -295,6 +295,14 @@ assuranceInfo.innerHTML=`
 <div>${assurance.planned_finish_date || ""}</div>
 </div>
 
+<div class="data-row">
+<label>Owner Email:</label>
+<div>${assurance.assurance_owner_email || ""}</div>
+</div>
+
+<div class="data-row">
+<label>Status:</label>
+<div>
 <div class="form-row">
 <label>Date of Assurance</label>
 <input type="date" id="date_of_assurance" value="${assurance.date_of_assurance || ""}">
@@ -307,14 +315,6 @@ assuranceInfo.innerHTML=`
 
 <button onclick="saveAssuranceDetails()">Save</button>
 
-<div class="data-row">
-<label>Owner Email:</label>
-<div>${assurance.assurance_owner_email || ""}</div>
-</div>
-
-<div class="data-row">
-<label>Status:</label>
-<div>
 <span class="indicator ${assurance.status==="Closed"?"closed":"open"}">
 ${assurance.status}
 </span>
