@@ -375,6 +375,19 @@ const today=new Date().toISOString().split("T")[0];
 let html="";
 
 for(const row of data){
+  let statusText = row.status;
+let statusClass = row.status==="Closed" ? "closed" : "open";
+
+const today = new Date().toISOString().split("T")[0];
+
+if(row.status !== "Closed" && row.planned_finish_date){
+  if(today > row.planned_finish_date){
+    statusText = "Open - Overdue";
+    statusClass = "overdue";
+  }else{
+    statusText = "Open";
+  }
+}
 
 const findings=allFindings.filter(f=>f.assurance_id===row.id);
   
@@ -397,8 +410,8 @@ ${row.assurance_name}
 <td>${row.assurance_owner_email||""}</td>
 <td>${row.planned_finish_date||""}</td>
 <td>
-<span class="indicator ${row.status==="Closed"?"closed":"open"}">
-${row.status}
+<span class="indicator ${statusClass}">
+${statusText}
 </span>
 </td>
 <td>${openCount}</td>
