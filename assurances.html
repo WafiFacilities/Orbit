@@ -204,7 +204,7 @@ background:#404040;color:white;cursor:pointer;
 
   <div class="kpi-card">
 <p>Overdue Assurances</p>
-<h3 id="kpiOpen">0</h3>
+<h3 id="kpiOverdueAssurances">0</h3>
 </div>
 
 <div class="kpi-card">
@@ -339,7 +339,7 @@ const {data:allFindings}=await supabaseClient
 .select("*");
   
 let query=supabaseClient.from("assurances").select("*",{count:"exact"});
-
+let overdueAssurances = 0;
 const depots=[...document.querySelectorAll("#depotDropdown input:checked")]
 .map(c=>c.value).filter(v=>v!=="ALL");
 
@@ -382,7 +382,11 @@ let html="";
 for(const row of data){
   let statusText = row.status;
 let statusClass = row.status==="Closed" ? "closed" : "open";
-
+if(row.status !== "Closed" && row.planned_finish_date){
+  if(row.planned_finish_date < today){
+    overdueAssurances++;
+  }
+}
 const today = new Date().toISOString().split("T")[0];
 
 if(row.status !== "Closed" && row.planned_finish_date){
@@ -401,6 +405,7 @@ const overdueCount=findings.filter(f=>f.status!=="Closed" && f.target_date && f.
 
 totalOpenFindings+=openCount;
 totalOverdue+=overdueCount;
+ 
 
 html+=`
 <tr>
@@ -426,6 +431,7 @@ ${statusText}
 
 kpiFindings.innerText=totalOpenFindings;
 kpiOverdue.innerText=totalOverdue;
+   kpiOverdueAssurances.innerText = overdueAssurances;
 
 tableBody.innerHTML=html;
 pageInfo.innerText=`Total: ${count}`;
