@@ -24,6 +24,16 @@ font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
 
 .layout{display:flex;height:calc(100vh - 62px);}
 
+.month-good{
+background:#d4edda;
+font-weight:bold;
+}
+
+.month-bad{
+background:#f8d7da;
+font-weight:bold;
+}
+  
 .dropdown-filter{
 position:relative;
 display:inline-block;
@@ -316,7 +326,21 @@ return d.getFullYear()==year && d.getMonth()==m;
 plannedTotal+=planned;
 completedTotal+=completed;
 
-row+=`<td>${planned}</td><td>${completed}</td>`;
+const today = new Date();
+const currentMonth = today.getMonth();
+const currentYear = today.getFullYear();
+
+let cellClass = "";
+
+if(year < currentYear || (year == currentYear && m < currentMonth)){
+if(completed >= planned){
+cellClass = "month-good";
+}else{
+cellClass = "month-bad";
+}
+}
+
+row+=`<td>${planned}</td><td class="${cellClass}">${completed}</td>`;
 }
 
 row+=`<td><b>${plannedTotal}</b></td><td><b>${completedTotal}</b></td>`;
