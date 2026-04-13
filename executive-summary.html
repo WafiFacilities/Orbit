@@ -248,7 +248,18 @@ assurances.filter(a=>a.depot===d && a.assurance_type==="LOD1" && a.closure_date 
 );
 
 html+=row("# of LOD1 Overdue",d=>
-assurances.filter(a=>a.depot===d && a.assurance_type==="LOD1" && a.status!=="Closed" && a.planned_finish_date && a.planned_finish_date<today).length
+assurances.filter(a=>{
+
+if(a.depot!==d) return false;
+if(a.assurance_type!=="LOD1") return false;
+if(a.status==="Closed") return false;
+if(!a.planned_finish_date) return false;
+
+const y = new Date(a.planned_finish_date).getFullYear();
+
+return y===year && a.planned_finish_date<today;
+
+}).length
 );
 
 html+=row("Total Actions LOD1",d=>
