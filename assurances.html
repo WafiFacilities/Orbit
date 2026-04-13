@@ -37,6 +37,15 @@ border-radius:4px;
 cursor:pointer;
 }
 
+.assurance-col{
+max-width:260px;
+width:260px;
+white-space:normal;
+word-wrap:break-word;
+overflow-wrap:break-word;
+text-align:left;
+}
+  
 .dropdown-content{
 display:none;
 position:absolute;
@@ -125,6 +134,14 @@ a.assurance-link{
 color:#76B531;text-decoration:none;font-weight:bold;
 }
 
+  table{
+width:100%;
+border-collapse:collapse;
+background:white;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+table-layout:fixed;
+}
+  
 .pagination{
 margin-top:10px;display:flex;gap:5px;justify-content:flex-end;
 }
@@ -254,7 +271,7 @@ background:#404040;color:white;cursor:pointer;
 <thead>
 <tr>
 <th>Depot</th>
-<th>Assurance</th>
+<th class="assurance-col">Assurance</th>
 <th>Type</th>
 <th>Scope Area</th>
 <th>Lead</th>
@@ -367,7 +384,7 @@ totalOverdue+=overdueCount;
 html+=`
 <tr>
 <td>${row.depot||""}</td>
-<td>
+<td class="assurance-col">
 <a class="assurance-link" href="assurance-detail.html?id=${row.id}">
 ${row.assurance_name}
 </a>
