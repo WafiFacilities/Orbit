@@ -243,7 +243,11 @@ background:#404040;color:white;cursor:pointer;
 </div>
 </div>
 
-
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('leadDropdown')" class="filter-btn">Lead ▼</button>
+<div id="leadDropdown" class="dropdown-content"></div>
+</div>
+  
 <div class="dropdown-filter">
 <button onclick="toggleDropdown('statusDropdown')" class="filter-btn">Status ▼</button>
 <div id="statusDropdown" class="dropdown-content">
@@ -309,7 +313,29 @@ const supabaseClient = supabase.createClient( "https://kqhbvmqxrwwspopwckah.supa
 
 let currentPage=1;
 const pageSize=15;
+async function populateLeads(){
 
+const {data}=await supabaseClient
+.from("assurances")
+.select("assurance_owner_email");
+
+let leads=[...new Set(
+data
+.filter(x=>x.assurance_owner_email)
+.map(x=>x.assurance_owner_email)
+)].sort();
+
+const container=document.getElementById("leadDropdown");
+
+container.innerHTML=`<label><input type="checkbox" value="ALL" checked onchange="toggleAll('leadDropdown')"> All</label>`;
+
+leads.forEach(l=>{
+container.innerHTML+=`
+<label><input type="checkbox" value="${l}"> ${l}</label>
+`;
+});
+
+}
 async function populateYears(){
 
 const {data}=await supabaseClient
@@ -350,6 +376,12 @@ const statuses=[...document.querySelectorAll("#statusDropdown input:checked")]
 
 const types=[...document.querySelectorAll("#typeDropdown input:checked")]
 .map(c=>c.value).filter(v=>v!=="ALL");
+
+  const leads=[...document.querySelectorAll("#leadDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
+
+if(leads.length)
+query=query.in("assurance_owner_email",leads);
 
 const years=[...document.querySelectorAll("#yearDropdown input:checked")]
 .map(c=>c.value)
@@ -480,6 +512,7 @@ drop.style.display="none";
 });
   
 populateYears();
+populateLeads();
   document.querySelectorAll(".dropdown-content input[type=checkbox]")
 .forEach(cb=>{
 cb.addEventListener("change",()=>{
