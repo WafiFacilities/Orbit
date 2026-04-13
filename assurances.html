@@ -274,9 +274,9 @@ background:#404040;color:white;cursor:pointer;
 <thead>
 <tr>
 <th>Depot</th>
+<th>Scope Area</th>
 <th class="assurance-col">Assurance</th>
 <th>Type</th>
-<th>Scope Area</th>
 <th>Lead</th>
 <th>Start</th>
 <th>Status</th>
@@ -387,13 +387,13 @@ totalOverdue+=overdueCount;
 html+=`
 <tr>
 <td>${row.depot||""}</td>
+<td>${row.scope_area||""}</td>
 <td class="assurance-col">
 <a class="assurance-link" href="assurance-detail.html?id=${row.id}">
 ${row.assurance_name}
 </a>
 </td>
 <td>${row.assurance_type||""}</td>
-<td>${row.scope_area||""}</td>
 <td>${row.assurance_owner_email||""}</td>
 <td>${row.planned_start_date||""}</td>
 <td>
