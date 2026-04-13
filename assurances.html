@@ -278,7 +278,7 @@ background:#404040;color:white;cursor:pointer;
 <th class="assurance-col">Assurance</th>
 <th>Type</th>
 <th>Lead</th>
-<th>Start</th>
+<th>Due Date</th>
 <th>Status</th>
 <th>Open Actions</th>
 <th>Overdue Actions</th>
@@ -395,7 +395,7 @@ ${row.assurance_name}
 </td>
 <td>${row.assurance_type||""}</td>
 <td>${row.assurance_owner_email||""}</td>
-<td>${row.planned_start_date||""}</td>
+<td>${row.planned_finish_date||""}</td>
 <td>
 <span class="indicator ${row.status==="Closed"?"closed":"open"}">
 ${row.status}
