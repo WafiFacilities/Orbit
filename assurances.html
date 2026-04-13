@@ -387,7 +387,7 @@ if(row.status !== "Closed" && row.planned_finish_date){
     overdueAssurances++;
   }
 }
-const today = new Date().toISOString().split("T")[0];
+
 
 if(row.status !== "Closed" && row.planned_finish_date){
   if(today > row.planned_finish_date){
