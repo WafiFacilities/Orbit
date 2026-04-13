@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Facilities Terminal Summary</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+@font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
+
+body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
+
+.header{
+display:flex;align-items:center;justify-content:space-between;
+padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;
+}
+
+.header-left{display:flex;align-items:center;gap:12px;}
+.header-left img{height:40px;}
+.wafi-logo{height:40px;}
+
+.header-title{
+font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
+}
+
+.layout{display:flex;height:calc(100vh - 62px);}
+
+.sidebar{
+width:220px;background:#404040;color:white;
+display:flex;flex-direction:column;padding-top:20px;
+}
+
+.sidebar h4{
+padding:10px 20px;
+margin:10px 0 5px 0;
+background:#2f2f2f;
+border-left:4px solid #16a34a;
+}
+
+.sidebar a{
+color:white;padding:10px 30px;text-decoration:none;display:block;
+}
+
+.sidebar a:hover{background:#505050;}
+.sidebar .logout{margin-top:auto;border-top:1px solid #555;}
+
+.main{flex:1;padding:20px;overflow-y:auto;}
+
+.filters{
+margin-bottom:15px;
+}
+
+select{
+padding:6px;
+border-radius:4px;
+border:1px solid #ccc;
+font-family:'72 Condensed';
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+text-align:center;
+}
+
+th{
+background:#76B531;
+color:white;
+}
+
+.section{
+background:#404040;
+color:white;
+font-weight:bold;
+}
+
+.metric{
+text-align:left;
+font-weight:bold;
+background:#f0f0f0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<div class="header-left">
+<img src="orbit-logo.png">
+<h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+</div>
+<img src="wafi-logo.png" class="wafi-logo">
+</div>
+
+<div class="layout">
+
+<div class="sidebar">
+
+<a href="dashboard.html"><h4>INITIATIVE</h4></a>
+<a href="dashboard.html">Dashboard</a>
+<a href="index.html">All Initiatives - List</a>
+<a href="add-initiative.html">Add New Initiative</a>
+
+<a href="projects.html"><h4>PROJECTS</h4></a>
+
+<a href="assurances.html"><h4>ASSURANCE</h4></a>
+
+<a href="people-employees.html"><h4>PEOPLE</h4></a>
+
+<a href="financial-dashboard.html"><h4>FINANCIAL</h4></a>
+
+<a href="mydetails.html" class="logout">My Details</a>
+<a href="#" onclick="logout()" class="logout">Logout</a>
+
+</div>
+
+<div class="main">
+
+<h2>Facilities Terminal Summary</h2>
+
+<div class="filters">
+<select id="yearFilter">
+<option>2024</option>
+<option selected>2025</option>
+<option>2026</option>
+<option>2027</option>
+<option>2028</option>
+<option>2029</option>
+<option>2030</option>
+</select>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>KMR</th>
+<th>SKP</th>
+<th>DLP</th>
+<th>CKL</th>
+<th>TJB</th>
+<th>BHK</th>
+<th>SSH</th>
+<th>VHR</th>
+<th>MMK</th>
+<th>GTI</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+</table>
+
+</div>
+</div>
+
+<script>
+
+const supabaseClient = supabase.createClient(
+"https://kqhbvmqxrwwspopwckah.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
+);
+
+const depots=["KMR","SKP","DLP","CKL","TJB","BHK","SSH","VHR","MMK","GTI"];
+
+async function loadDashboard(){
+
+const year=parseInt(document.getElementById("yearFilter").value);
+
+const {data:initiatives}=await supabaseClient
+.from("initiatives").select("*");
+
+const {data:assurances}=await supabaseClient
+.from("assurances").select("*");
+
+const {data:actions}=await supabaseClient
+.from("assurance_findings").select("*");
+
+const today=new Date().toISOString().split("T")[0];
+
+function row(title,fn){
+
+let html=`<tr><td class="metric">${title}</td>`;
+
+depots.forEach(d=>{
+html+=`<td>${fn(d)||0}</td>`;
+});
+
+html+="</tr>";
+
+return html;
+}
+
+let html="";
+
+html+=`<tr class="section"><td colspan="11">Strategic Initiatives</td></tr>`;
+
+html+=row("# of Initiatives",d=>
+initiatives.filter(i=>i.terminal_name===d).length
+);
+
+html+=row("# of Closed Initiatives",d=>
+initiatives.filter(i=>i.terminal_name===d && (i.status||"").toLowerCase().startsWith("closed")).length
+);
+
+html+=row("G2G Improvement (Min)",d=>
+initiatives.filter(i=>i.terminal_name===d && (i.impact_type||"").toLowerCase().includes("g2g"))
+.reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0)
+);
+
+html+=row("Capacity Enhancement (MT)",d=>
+initiatives.filter(i=>i.terminal_name===d && (i.impact_type||"").toLowerCase().includes("capacity"))
+.reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0)
+);
+
+html+=row("Cost Avoidance (PKR)",d=>
+initiatives.filter(i=>i.terminal_name===d && (i.impact_type||"").toLowerCase().includes("avoid"))
+.reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0)
+);
+
+html+=row("Cost Saving (PKR)",d=>
+initiatives.filter(i=>i.terminal_name===d && (i.impact_type||"").toLowerCase().includes("saving"))
+.reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0)
+);
+
+html+=`<tr class="section"><td colspan="11">Assurance Statistics</td></tr>`;
+
+html+=row("# of LOD1 Planned",d=>
+assurances.filter(a=>a.depot===d && a.assurance_type==="LOD1" && a.planned_start_date && new Date(a.planned_start_date).getFullYear()===year).length
+);
+
+html+=row("# of LOD1 Closed",d=>
+assurances.filter(a=>a.depot===d && a.assurance_type==="LOD1" && a.closure_date && new Date(a.closure_date).getFullYear()===year).length
+);
+
+html+=row("# of LOD1 Overdue",d=>
+assurances.filter(a=>a.depot===d && a.assurance_type==="LOD1" && a.status!=="Closed" && a.planned_finish_date && a.planned_finish_date<today).length
+);
+
+html+=row("Total Actions LOD1",d=>
+actions.filter(f=>{
+const a=assurances.find(x=>x.id===f.assurance_id);
+return a && a.depot===d && a.assurance_type==="LOD1";
+}).length
+);
+
+html+=row("Closed Actions LOD1",d=>
+actions.filter(f=>{
+const a=assurances.find(x=>x.id===f.assurance_id);
+return a && a.depot===d && a.assurance_type==="LOD1" && f.status==="Closed";
+}).length
+);
+
+html+=row("Overdue Actions LOD1",d=>
+actions.filter(f=>{
+const a=assurances.find(x=>x.id===f.assurance_id);
+return a && a.depot===d && a.assurance_type==="LOD1" && f.status!=="Closed" && f.target_date && f.target_date<today;
+}).length
+);
+
+html+=`<tr class="section"><td colspan="11">LOD2 / LOD3</td></tr>`;
+
+html+=row("# of LOD2/LOD3",d=>
+assurances.filter(a=>a.depot===d && (a.assurance_type==="LOD2"||a.assurance_type==="LOD3")).length
+);
+
+html+=row("Total Actions LOD2/3",d=>
+actions.filter(f=>{
+const a=assurances.find(x=>x.id===f.assurance_id);
+return a && a.depot===d && (a.assurance_type==="LOD2"||a.assurance_type==="LOD3");
+}).length
+);
+
+html+=row("Closed Actions LOD2/3",d=>
+actions.filter(f=>{
+const a=assurances.find(x=>x.id===f.assurance_id);
+return a && a.depot===d && (a.assurance_type==="LOD2"||a.assurance_type==="LOD3") && f.status==="Closed";
+}).length
+);
+
+html+=row("Overdue Actions LOD2/3",d=>
+actions.filter(f=>{
+const a=assurances.find(x=>x.id===f.assurance_id);
+return a && a.depot===d && (a.assurance_type==="LOD2"||a.assurance_type==="LOD3") && f.status!=="Closed" && f.target_date && f.target_date<today;
+}).length
+);
+
+document.getElementById("tableBody").innerHTML=html;
+
+}
+
+document.getElementById("yearFilter").addEventListener("change",loadDashboard);
+
+async function logout(){
+await supabaseClient.auth.signOut();
+window.location="login.html";
+}
+
+loadDashboard();
+
+</script>
+
+</body>
+</html>
