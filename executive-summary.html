@@ -177,7 +177,10 @@ const {data:initiatives}=await supabaseClient
 .from("initiatives").select("*");
 
 const {data:assurances}=await supabaseClient
-.from("assurances").select("*");
+.from("assurances")
+.select("*")
+.gte("planned_start_date", `${year}-01-01`)
+.lte("planned_start_date", `${year}-12-31`);
 
 const {data:actions}=await supabaseClient
 .from("assurance_findings").select("*");
