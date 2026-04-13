@@ -232,7 +232,15 @@ initiatives.filter(i=>i.terminal_name===d && (i.impact_type||"").toLowerCase().i
 html+=`<tr class="section"><td colspan="11">Assurance Statistics</td></tr>`;
 
 html+=row("# of LOD1 Planned",d=>
-assurances.filter(a=>a.depot===d && a.assurance_type==="LOD1" && a.planned_start_date && new Date(a.planned_start_date).getFullYear()===year).length
+assurances.filter(a=>{
+if(a.depot!==d) return false;
+if(a.assurance_type!=="LOD1") return false;
+if(!a.planned_start_date) return false;
+
+const y = a.planned_start_date.substring(0,4);
+
+return parseInt(y) === year;
+}).length
 );
 
 html+=row("# of LOD1 Closed",d=>
