@@ -295,6 +295,18 @@ assuranceInfo.innerHTML=`
 <div>${assurance.planned_finish_date || ""}</div>
 </div>
 
+<div class="form-row">
+<label>Date of Assurance</label>
+<input type="date" id="date_of_assurance" value="${assurance.date_of_assurance || ""}">
+</div>
+
+<div class="form-row">
+<label>Participants</label>
+<textarea id="participants" rows="3">${assurance.participants || ""}</textarea>
+</div>
+
+<button onclick="saveAssuranceDetails()">Save</button>
+
 <div class="data-row">
 <label>Owner Email:</label>
 <div>${assurance.assurance_owner_email || ""}</div>
@@ -340,6 +352,13 @@ ${f.finding_title}</a></td>
 });
 
 findingsTable.innerHTML=html;
+
+  // lock editing if assurance is closed
+if(assurance.status === "Closed"){
+document.getElementById("date_of_assurance").disabled = true;
+document.getElementById("participants").disabled = true;
+}
+  
 }
 
 function toggleAddFinding(){
@@ -382,16 +401,42 @@ document.getElementById("closeWarning").style.display="block";
 return;
 }
 
-await supabaseClient.from("assurances")
-.update({status:"Closed"})
-.eq("id",id);
+const today = new Date().toISOString().split("T")[0];
+
+await supabaseClient
+.from("assurances")
+.update({
+status: "Closed",
+closure_date: today
+})
+.eq("id", id);
 
 load();
+
+}
+
+
 }
 
 async function logout(){
 await supabaseClient.auth.signOut();
 window.location="login.html";
+}
+
+  async function saveAssuranceDetails(){
+
+await supabaseClient
+.from("assurances")
+.update({
+date_of_assurance: document.getElementById("date_of_assurance").value,
+participants: document.getElementById("participants").value
+})
+.eq("id", id);
+
+alert("Assurance details updated");
+
+load();
+
 }
 
 load();
