@@ -229,7 +229,7 @@ html+=row("Cost Avoidance (PKR M)",d=>
 initiatives.filter(i=>i.terminal_name===d && (i.impact_type||"").toLowerCase().includes("avoid"))
 .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0)
 /1000000
-).toFixed(1) + "M"
+).toFixed(1) 
 );
 
 html+=row("Cost Saving (PKR M)",d=>
@@ -237,7 +237,7 @@ html+=row("Cost Saving (PKR M)",d=>
 initiatives.filter(i=>i.terminal_name===d && (i.impact_type||"").toLowerCase().includes("saving"))
 .reduce((s,i)=>s+(parseFloat(i.impact_amount)||0),0)
 /1000000
-).toFixed(1) + "M"
+).toFixed(1) 
 );
 
 html+=`<tr class="section"><td colspan="11">Assurance Statistics</td></tr>`;
