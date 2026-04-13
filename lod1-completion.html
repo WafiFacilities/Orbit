@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Assurances Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+@font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
+
+body{font-family:'72 Condensed',Arial;margin:0;background:#f4f6f9;}
+
+.header{
+display:flex;align-items:center;justify-content:space-between;
+padding:10px 20px;background:white;border-bottom:2px solid #e0e0e0;
+}
+.header-left{display:flex;align-items:center;gap:12px;}
+.header-left img{height:40px;}
+.wafi-logo{height:40px;}
+.header-title{
+font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
+}
+
+.layout{display:flex;height:calc(100vh - 62px);}
+
+.dropdown-filter{
+position:relative;
+display:inline-block;
+}
+
+.filter-btn{
+padding:6px 12px;
+border:1px solid #ccc;
+background:white;
+border-radius:4px;
+cursor:pointer;
+}
+
+.assurance-col{
+max-width:260px;
+width:260px;
+white-space:normal;
+word-wrap:break-word;
+overflow-wrap:break-word;
+text-align:left;
+}
+  
+.dropdown-content{
+display:none;
+position:absolute;
+background:white;
+border:1px solid #ccc;
+padding:10px;
+max-height:220px;
+overflow:auto;
+box-shadow:0 2px 6px rgba(0,0,0,0.15);
+z-index:10;
+}
+
+.dropdown-content label{
+display:block;
+font-size:13px;
+margin-bottom:4px;
+}
+  
+.sidebar{
+width:220px;background:#404040;color:white;
+display:flex;flex-direction:column;padding-top:20px;
+}
+.sidebar h4{
+  padding:10px 20px;
+  margin:10px 0 5px 0;
+  background:#2f2f2f;
+  border-left:4px solid #16a34a;
+}
+.sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
+.sidebar a:hover{background:#505050;}
+.sidebar .logout{margin-top:auto;border-top:1px solid #555;}
+
+
+.main{flex:1;padding:20px;overflow-y:auto;}
+
+.kpis{
+display:flex;
+gap:15px;
+margin-bottom:20px;
+flex-wrap:wrap;
+}
+
+.kpi-card{
+flex:1;
+min-width:180px;
+background:white;
+padding:15px;
+border-radius:6px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+text-align:center;
+}
+
+.kpi-card h3{
+margin:0;
+font-size:28px;
+color:#76B531;
+}
+
+.filters{
+display:flex;flex-wrap:wrap;gap:10px;margin-bottom:15px;
+}
+.filters select{
+padding:6px;border-radius:4px;border:1px solid #ccc;
+font-family:'72 Condensed';
+}
+
+table{
+width:100%;border-collapse:collapse;background:white;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+th,td{border:1px solid #ddd;padding:10px;text-align:center;}
+  td.assurance-col, th.assurance-col{
+text-align:left;
+}
+th{background:#76B531;color:white;}
+
+tr:nth-child(even){background:#f9f9f9;}
+tr:hover{background:#eef3f8;}
+
+.indicator{
+padding:4px 8px;border-radius:4px;color:white;font-weight:bold;
+}
+.open{background:#e67e22;}
+.closed{background:#777;}
+.overdue{background:#e74c3c;}
+
+a.assurance-link{
+color:#76B531;text-decoration:none;font-weight:bold;
+}
+
+  table{
+width:100%;
+border-collapse:collapse;
+background:white;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+table-layout:fixed;
+}
+  
+.pagination{
+margin-top:10px;display:flex;gap:5px;justify-content:flex-end;
+}
+.pagination button{
+padding:6px 12px;border:none;border-radius:4px;
+background:#404040;color:white;cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<div class="header-left">
+<img src="orbit-logo.png">
+<h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+</div>
+<img src="wafi-logo.png" class="wafi-logo">
+</div>
+
+<div class="layout">
+
+<div class="sidebar">
+
+  <a href="dashboard.html"><h4>INITIATIVE</h4></a>
+
+   <a href="projects.html"><h4>PROJECTS</h4></a>
+
+   <a href="assurances.html"><h4>ASSURANCE</h4></a>
+   <a href="assurances.html">Assurance List</a>
+  <a href="assuranceactions.html">Actions List</a>
+  <a href="add-assurance.html">Add New Assurance</a>
+
+   <a href="people-employees.html"><h4>PEOPLE</h4></a>
+
+   <a href="financial-dashboard.html"><h4>FINANCIAL</h4></a>
+  
+  <a href="mydetails.html" class="logout">My Details</a>
+  <a href="#" onclick="logout()" class="logout">Logout</a>
+
+</div>
+<div class="main">
+
+<h2>Assurance Register</h2>
+
+<!-- KPI SECTION -->
+<div class="kpis">
+<div class="kpi-card">
+<p>Total Assurances</p>
+<h3 id="kpiTotal">0</h3>
+</div>
+
+<div class="kpi-card">
+<p>Open Assurances</p>
+<h3 id="kpiOpen">0</h3>
+</div>
+
+  <div class="kpi-card">
+<p>Overdue Assurances</p>
+<h3 id="kpiOverdueAssurances">0</h3>
+</div>
+
+<div class="kpi-card">
+<p>Total Open Actions</p>
+<h3 id="kpiFindings">0</h3>
+</div>
+
+<div class="kpi-card">
+<p>Overdue Actions</p>
+<h3 id="kpiOverdue">0</h3>
+</div>
+</div>
+
+<!-- FILTERS -->
+<div class="filters">
+
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('depotDropdown')" class="filter-btn">Terminal ▼</button>
+<div id="depotDropdown" class="dropdown-content">
+
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('depotDropdown')"> All</label>
+
+<label><input type="checkbox" value="KMR"> KMR</label>
+<label><input type="checkbox" value="CKL"> CKL</label>
+<label><input type="checkbox" value="MCH"> MCH</label>
+<label><input type="checkbox" value="SKP"> SKP</label>
+<label><input type="checkbox" value="DLP"> DLP</label>
+<label><input type="checkbox" value="TJB"> TJB</label>
+<label><input type="checkbox" value="BHK"> BHK</label>
+<label><input type="checkbox" value="SSH"> SSH</label>
+<label><input type="checkbox" value="VHR"> VHR</label>
+<label><input type="checkbox" value="GTI"> GTI</label>
+<label><input type="checkbox" value="MMK"> MMK</label>
+
+</div>
+</div>
+
+
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('statusDropdown')" class="filter-btn">Status ▼</button>
+<div id="statusDropdown" class="dropdown-content">
+
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('statusDropdown')"> All</label>
+<label><input type="checkbox" value="Open"> Open</label>
+<label><input type="checkbox" value="Closed"> Closed</label>
+
+</div>
+</div>
+
+
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('typeDropdown')" class="filter-btn">Type ▼</button>
+<div id="typeDropdown" class="dropdown-content">
+
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('typeDropdown')"> All</label>
+<label><input type="checkbox" value="LOD1"> LOD1</label>
+<label><input type="checkbox" value="LOD2"> LOD2</label>
+<label><input type="checkbox" value="LOD3"> LOD3</label>
+
+</div>
+</div>
+
+
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('yearDropdown')" class="filter-btn">Year ▼</button>
+<div id="yearDropdown" class="dropdown-content"></div>
+</div>
+
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Depot</th>
+<th>Scope Area</th>
+<th class="assurance-col">Assurance</th>
+<th>Type</th>
+  <th>Frequency</th>
+<th>Lead</th>
+<th>Due Date</th>
+<th>Status</th>
+<th>Open Actions</th>
+<th>Overdue Actions</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+
+<div class="pagination">
+<button onclick="prevPage()">Prev</button>
+<span id="pageInfo">Page 1</span>
+<button onclick="nextPage()">Next</button>
+</div>
+
+</div>
+</div>
+
+<script>
+
+const supabaseClient = supabase.createClient( "https://kqhbvmqxrwwspopwckah.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8" );
+
+let currentPage=1;
+const pageSize=15;
+
+async function populateYears(){
+
+const {data}=await supabaseClient
+.from("assurances")
+.select("planned_start_date");
+
+let years=[...new Set(
+data
+.filter(x=>x.planned_start_date)
+.map(x=>new Date(x.planned_start_date).getFullYear())
+)].sort();
+
+const container=document.getElementById("yearDropdown");
+
+container.innerHTML=`<label><input type="checkbox" value="ALL" checked onchange="toggleAll('yearDropdown')"> All</label>`;
+
+years.forEach(y=>{
+container.innerHTML+=`
+<label><input type="checkbox" value="${y}"> ${y}</label>
+`;
+});
+
+
+
+}
+async function loadData(){
+const {data:allFindings}=await supabaseClient
+.from("assurance_findings")
+.select("*");
+  
+let query=supabaseClient.from("assurances").select("*",{count:"exact"});
+let overdueAssurances = 0;
+const depots=[...document.querySelectorAll("#depotDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
+
+const statuses=[...document.querySelectorAll("#statusDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
+
+const types=[...document.querySelectorAll("#typeDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
+
+const years=[...document.querySelectorAll("#yearDropdown input:checked")]
+.map(c=>c.value)
+.filter(v=>v!=="ALL")
+.map(Number);
+
+if(depots.length)
+query=query.in("depot",depots);
+
+if(statuses.length)
+query=query.in("status",statuses);
+
+if(types.length)
+query=query.in("assurance_type",types);
+
+if(years.length){
+query=query.gte("planned_start_date",`${Math.min(...years)}-01-01`)
+           .lte("planned_start_date",`${Math.max(...years)}-12-31`);
+}
+
+const {data,count}=await query;
+
+kpiTotal.innerText=count;
+kpiOpen.innerText=data.filter(x=>x.status==="Open").length;
+
+let totalOpenFindings=0;
+let totalOverdue=0;
+const today=new Date().toISOString().split("T")[0];
+
+let html="";
+
+for(const row of data){
+  let statusText = row.status;
+let statusClass = row.status==="Closed" ? "closed" : "open";
+if(row.status !== "Closed" && row.planned_finish_date){
+  if(row.planned_finish_date < today){
+    overdueAssurances++;
+  }
+}
+
+
+if(row.status !== "Closed" && row.planned_finish_date){
+  if(today > row.planned_finish_date){
+    statusText = "Open - Overdue";
+    statusClass = "overdue";
+  }else{
+    statusText = "Open";
+  }
+}
+
+const findings=allFindings.filter(f=>f.assurance_id===row.id);
+  
+const openCount=findings.filter(f=>f.status!=="Closed").length;
+const overdueCount=findings.filter(f=>f.status!=="Closed" && f.target_date && f.target_date<today).length;
+
+totalOpenFindings+=openCount;
+totalOverdue+=overdueCount;
+ 
+
+html+=`
+<tr>
+<td>${row.depot||""}</td>
+<td>${row.scope_area||""}</td>
+<td class="assurance-col">
+<a class="assurance-link" href="assurance-detail.html?id=${row.id}">
+${row.assurance_name}
+</a>
+</td>
+<td>${row.assurance_type||""}</td>
+<td>${row.frequency||""}</td>
+<td>${row.assurance_owner_email||""}</td>
+<td>${row.planned_finish_date||""}</td>
+<td>
+<span class="indicator ${statusClass}">
+${statusText}
+</span>
+</td>
+<td>${openCount}</td>
+<td>${overdueCount}</td>
+</tr>`;
+}
+
+kpiFindings.innerText=totalOpenFindings;
+kpiOverdue.innerText=totalOverdue;
+   kpiOverdueAssurances.innerText = overdueAssurances;
+
+tableBody.innerHTML=html;
+pageInfo.innerText=`Total: ${count}`;
+}
+
+function nextPage(){currentPage++;loadData();}
+function prevPage(){if(currentPage>1){currentPage--;loadData();}}
+
+
+
+async function logout(){
+await supabaseClient.auth.signOut();
+window.location="login.html";
+}
+
+function toggleDropdown(id){
+
+document.querySelectorAll(".dropdown-content").forEach(d=>{
+if(d.id!==id) d.style.display="none";
+});
+
+const el=document.getElementById(id);
+el.style.display = el.style.display==="block" ? "none" : "block";
+}
+
+function toggleAll(id){
+const boxes=document.querySelectorAll(`#${id} input[type=checkbox]`);
+const allChecked=boxes[0].checked;
+
+boxes.forEach((b,i)=>{
+if(i>0) b.checked=allChecked;
+});
+
+loadData();
+}
+
+document.addEventListener("click",function(e){
+document.querySelectorAll(".dropdown-content").forEach(drop=>{
+if(!drop.parentElement.contains(e.target)){
+drop.style.display="none";
+}
+});
+});
+  
+populateYears();
+  document.querySelectorAll(".dropdown-content input[type=checkbox]")
+.forEach(cb=>{
+cb.addEventListener("change",()=>{
+currentPage=1;
+loadData();
+});
+});
+loadData();
+
+</script>
+
+</body>
+</html>
