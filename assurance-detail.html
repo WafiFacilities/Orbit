@@ -432,6 +432,22 @@ load();
 
 async function closeAssurance(){
 
+const dateField = document.getElementById("date_of_assurance");
+const participantsField = document.getElementById("participants");
+
+// validation
+if(!dateField.value){
+alert("Please enter Date of Assurance before closing.");
+dateField.focus();
+return;
+}
+
+if(!participantsField.value.trim()){
+alert("Please enter Participants before closing.");
+participantsField.focus();
+return;
+}
+
 const {data:openFindings}=await supabaseClient
 .from("assurance_findings")
 .select("*")
@@ -456,8 +472,6 @@ closure_date: today
 load();
 
 }
-
-
 
 
 async function logout(){
