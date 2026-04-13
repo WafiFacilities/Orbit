@@ -187,6 +187,36 @@ const {data:assurances}=await supabaseClient
 const {data:actions}=await supabaseClient
 .from("assurance_findings").select("*");
 
+const {data:volumeCY}=await supabaseClient
+.from("volume_data")
+.select("*")
+.eq("year",year);
+
+const {data:volumeLY}=await supabaseClient
+.from("volume_data")
+.select("*")
+.eq("year",year-1);
+
+const {data:directCY}=await supabaseClient
+.from("direct_cost_data")
+.select("*")
+.eq("year",year);
+
+const {data:directLY}=await supabaseClient
+.from("direct_cost_data")
+.select("*")
+.eq("year",year-1);
+
+const {data:indirectCY}=await supabaseClient
+.from("indirect_cost_data")
+.select("*")
+.eq("year",year);
+
+const {data:indirectLY}=await supabaseClient
+.from("indirect_cost_data")
+.select("*")
+.eq("year",year-1);
+
 const today=new Date().toISOString().split("T")[0];
 
 function row(title,fn){
@@ -198,7 +228,16 @@ html+=`<td>${fn(d)||0}</td>`;
 });
 
 html+="</tr>";
+function sum(data,depot){
+return data
+.filter(x=>x.depot===depot)
+.reduce((s,x)=>s+(x.value||0),0);
+}
 
+function unitCost(cost,volume){
+if(!volume) return 0;
+return (cost/volume).toFixed(2);
+}
 return html;
 }
 
@@ -320,6 +359,51 @@ const a=assurances.find(x=>x.id===f.assurance_id);
 return a && a.depot===d && (a.assurance_type==="LOD2"||a.assurance_type==="LOD3") && f.status!=="Closed" && f.target_date && f.target_date<today;
 }).length
 );
+
+  html+=`<tr class="section"><td colspan="11">Financial Performance</td></tr>`;
+
+html+=row("YTD Unit Cost This Year",d=>{
+
+const cost=sum(directCY,d)+sum(indirectCY,d);
+const vol=sum(volumeCY,d);
+
+return unitCost(cost,vol);
+
+});
+
+html+=row("YTD Unit Cost Last Year",d=>{
+
+const cost=sum(directLY,d)+sum(indirectLY,d);
+const vol=sum(volumeLY,d);
+
+return unitCost(cost,vol);
+
+});
+
+html+=row("YTD Volume This Year",d=>
+sum(volumeCY,d)
+);
+
+html+=row("YTD Volume Last Year",d=>
+sum(volumeLY,d)
+);
+
+html+=row("YTD Performance",d=>{
+
+const costCY=sum(directCY,d)+sum(indirectCY,d);
+const volCY=sum(volumeCY,d);
+
+const costLY=sum(directLY,d)+sum(indirectLY,d);
+const volLY=sum(volumeLY,d);
+
+const ucCY=costCY/volCY;
+const ucLY=costLY/volLY;
+
+if(!ucCY||!ucLY) return "-";
+
+return (ucLY/ucCY).toFixed(2);
+
+});
 
 document.getElementById("tableBody").innerHTML=html;
 
