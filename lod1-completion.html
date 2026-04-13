@@ -190,114 +190,58 @@ background:#404040;color:white;cursor:pointer;
 
 <h2>Assurance Register</h2>
 
-<!-- KPI SECTION -->
-<div class="kpis">
-<div class="kpi-card">
-<p>Total Assurances</p>
-<h3 id="kpiTotal">0</h3>
-</div>
 
-<div class="kpi-card">
-<p>Open Assurances</p>
-<h3 id="kpiOpen">0</h3>
-</div>
-
-  <div class="kpi-card">
-<p>Overdue Assurances</p>
-<h3 id="kpiOverdueAssurances">0</h3>
-</div>
-
-<div class="kpi-card">
-<p>Total Open Actions</p>
-<h3 id="kpiFindings">0</h3>
-</div>
-
-<div class="kpi-card">
-<p>Overdue Actions</p>
-<h3 id="kpiOverdue">0</h3>
-</div>
-</div>
 
 <!-- FILTERS -->
 <div class="filters">
-
-<div class="dropdown-filter">
-<button onclick="toggleDropdown('depotDropdown')" class="filter-btn">Terminal ▼</button>
-<div id="depotDropdown" class="dropdown-content">
-
-<label><input type="checkbox" value="ALL" checked onchange="toggleAll('depotDropdown')"> All</label>
-
-<label><input type="checkbox" value="KMR"> KMR</label>
-<label><input type="checkbox" value="CKL"> CKL</label>
-<label><input type="checkbox" value="MCH"> MCH</label>
-<label><input type="checkbox" value="SKP"> SKP</label>
-<label><input type="checkbox" value="DLP"> DLP</label>
-<label><input type="checkbox" value="TJB"> TJB</label>
-<label><input type="checkbox" value="BHK"> BHK</label>
-<label><input type="checkbox" value="SSH"> SSH</label>
-<label><input type="checkbox" value="VHR"> VHR</label>
-<label><input type="checkbox" value="GTI"> GTI</label>
-<label><input type="checkbox" value="MMK"> MMK</label>
-
-</div>
+<select id="yearFilter"></select>
 </div>
 
 
-<div class="dropdown-filter">
-<button onclick="toggleDropdown('statusDropdown')" class="filter-btn">Status ▼</button>
-<div id="statusDropdown" class="dropdown-content">
-
-<label><input type="checkbox" value="ALL" checked onchange="toggleAll('statusDropdown')"> All</label>
-<label><input type="checkbox" value="Open"> Open</label>
-<label><input type="checkbox" value="Closed"> Closed</label>
-
-</div>
-</div>
-
-
-<div class="dropdown-filter">
-<button onclick="toggleDropdown('typeDropdown')" class="filter-btn">Type ▼</button>
-<div id="typeDropdown" class="dropdown-content">
-
-<label><input type="checkbox" value="ALL" checked onchange="toggleAll('typeDropdown')"> All</label>
-<label><input type="checkbox" value="LOD1"> LOD1</label>
-<label><input type="checkbox" value="LOD2"> LOD2</label>
-<label><input type="checkbox" value="LOD3"> LOD3</label>
-
-</div>
-</div>
-
-
-<div class="dropdown-filter">
-<button onclick="toggleDropdown('yearDropdown')" class="filter-btn">Year ▼</button>
-<div id="yearDropdown" class="dropdown-content"></div>
-</div>
-
-</div>
-
+  
 <table>
 <thead>
 <tr>
-<th>Depot</th>
-<th>Scope Area</th>
-<th class="assurance-col">Assurance</th>
-<th>Type</th>
-  <th>Frequency</th>
-<th>Lead</th>
-<th>Due Date</th>
-<th>Status</th>
-<th>Open Actions</th>
-<th>Overdue Actions</th>
+<th rowspan="2">Depot</th>
+
+<th colspan="2">Jan</th>
+<th colspan="2">Feb</th>
+<th colspan="2">Mar</th>
+<th colspan="2">Apr</th>
+<th colspan="2">May</th>
+<th colspan="2">Jun</th>
+<th colspan="2">Jul</th>
+<th colspan="2">Aug</th>
+<th colspan="2">Sep</th>
+<th colspan="2">Oct</th>
+<th colspan="2">Nov</th>
+<th colspan="2">Dec</th>
+
+<th colspan="2">Total</th>
+</tr>
+
+<tr>
+<th>P</th><th>C</th>
+<th>P</th><th>C</th>
+<th>P</th><th>C</th>
+<th>P</th><th>C</th>
+<th>P</th><th>C</th>
+<th>P</th><th>C</th>
+<th>P</th><th>C</th>
+<th>P</th><th>C</th>
+<th>P</th><th>C</th>
+<th>P</th><th>C</th>
+<th>P</th><th>C</th>
+<th>P</th><th>C</th>
+
+<th>P</th><th>C</th>
 </tr>
 </thead>
+
 <tbody id="tableBody"></tbody>
 </table>
 
-<div class="pagination">
-<button onclick="prevPage()">Prev</button>
-<span id="pageInfo">Page 1</span>
-<button onclick="nextPage()">Next</button>
-</div>
+
 
 </div>
 </div>
@@ -316,131 +260,77 @@ const {data}=await supabaseClient
 .select("planned_start_date");
 
 let years=[...new Set(
+let years=[...new Set(
 data
 .filter(x=>x.planned_start_date)
 .map(x=>new Date(x.planned_start_date).getFullYear())
 )].sort();
 
-const container=document.getElementById("yearDropdown");
-
-container.innerHTML=`<label><input type="checkbox" value="ALL" checked onchange="toggleAll('yearDropdown')"> All</label>`;
+const sel=document.getElementById("yearFilter");
 
 years.forEach(y=>{
-container.innerHTML+=`
-<label><input type="checkbox" value="${y}"> ${y}</label>
-`;
+sel.innerHTML+=`<option value="${y}">${y}</option>`;
 });
 
-
+sel.value=years[years.length-1];
 
 }
-async function loadData(){
-const {data:allFindings}=await supabaseClient
-.from("assurance_findings")
-.select("*");
   
-let query=supabaseClient.from("assurances").select("*",{count:"exact"});
-let overdueAssurances = 0;
-const depots=[...document.querySelectorAll("#depotDropdown input:checked")]
-.map(c=>c.value).filter(v=>v!=="ALL");
+async function loadData(){
 
-const statuses=[...document.querySelectorAll("#statusDropdown input:checked")]
-.map(c=>c.value).filter(v=>v!=="ALL");
+const year=parseInt(document.getElementById("yearFilter").value);
 
-const types=[...document.querySelectorAll("#typeDropdown input:checked")]
-.map(c=>c.value).filter(v=>v!=="ALL");
+const {data}=await supabaseClient
+.from("assurances")
+.select("*")
+.eq("assurance_type","LOD1");
 
-const years=[...document.querySelectorAll("#yearDropdown input:checked")]
-.map(c=>c.value)
-.filter(v=>v!=="ALL")
-.map(Number);
-
-if(depots.length)
-query=query.in("depot",depots);
-
-if(statuses.length)
-query=query.in("status",statuses);
-
-if(types.length)
-query=query.in("assurance_type",types);
-
-if(years.length){
-query=query.gte("planned_start_date",`${Math.min(...years)}-01-01`)
-           .lte("planned_start_date",`${Math.max(...years)}-12-31`);
-}
-
-const {data,count}=await query;
-
-kpiTotal.innerText=count;
-kpiOpen.innerText=data.filter(x=>x.status==="Open").length;
-
-let totalOpenFindings=0;
-let totalOverdue=0;
-const today=new Date().toISOString().split("T")[0];
+const depots=[...new Set(data.map(x=>x.depot))];
 
 let html="";
 
-for(const row of data){
-  let statusText = row.status;
-let statusClass = row.status==="Closed" ? "closed" : "open";
-if(row.status !== "Closed" && row.planned_finish_date){
-  if(row.planned_finish_date < today){
-    overdueAssurances++;
-  }
+for(const depot of depots){
+
+let plannedTotal=0;
+let completedTotal=0;
+
+let row=`<tr><td>${depot}</td>`;
+
+for(let m=0;m<12;m++){
+
+const planned=data.filter(x=>{
+if(x.depot!==depot) return false;
+if(!x.planned_start_date) return false;
+
+const d=new Date(x.planned_start_date);
+return d.getFullYear()==year && d.getMonth()==m;
+}).length;
+
+const completed=data.filter(x=>{
+if(x.depot!==depot) return false;
+if(!x.date_of_assurance) return false;
+
+const d=new Date(x.date_of_assurance);
+return d.getFullYear()==year && d.getMonth()==m;
+}).length;
+
+plannedTotal+=planned;
+completedTotal+=completed;
+
+row+=`<td>${planned}</td><td>${completed}</td>`;
 }
 
+row+=`<td><b>${plannedTotal}</b></td><td><b>${completedTotal}</b></td>`;
+row+="</tr>";
 
-if(row.status !== "Closed" && row.planned_finish_date){
-  if(today > row.planned_finish_date){
-    statusText = "Open - Overdue";
-    statusClass = "overdue";
-  }else{
-    statusText = "Open";
-  }
+html+=row;
 }
-
-const findings=allFindings.filter(f=>f.assurance_id===row.id);
-  
-const openCount=findings.filter(f=>f.status!=="Closed").length;
-const overdueCount=findings.filter(f=>f.status!=="Closed" && f.target_date && f.target_date<today).length;
-
-totalOpenFindings+=openCount;
-totalOverdue+=overdueCount;
- 
-
-html+=`
-<tr>
-<td>${row.depot||""}</td>
-<td>${row.scope_area||""}</td>
-<td class="assurance-col">
-<a class="assurance-link" href="assurance-detail.html?id=${row.id}">
-${row.assurance_name}
-</a>
-</td>
-<td>${row.assurance_type||""}</td>
-<td>${row.frequency||""}</td>
-<td>${row.assurance_owner_email||""}</td>
-<td>${row.planned_finish_date||""}</td>
-<td>
-<span class="indicator ${statusClass}">
-${statusText}
-</span>
-</td>
-<td>${openCount}</td>
-<td>${overdueCount}</td>
-</tr>`;
-}
-
-kpiFindings.innerText=totalOpenFindings;
-kpiOverdue.innerText=totalOverdue;
-   kpiOverdueAssurances.innerText = overdueAssurances;
 
 tableBody.innerHTML=html;
-pageInfo.innerText=`Total: ${count}`;
+
 }
 
-function nextPage(){currentPage++;loadData();}
-function prevPage(){if(currentPage>1){currentPage--;loadData();}}
+
 
 
 
@@ -479,13 +369,10 @@ drop.style.display="none";
 });
   
 populateYears();
-  document.querySelectorAll(".dropdown-content input[type=checkbox]")
-.forEach(cb=>{
-cb.addEventListener("change",()=>{
-currentPage=1;
-loadData();
-});
-});
+
+document.getElementById("yearFilter")
+.addEventListener("change",loadData);
+
 loadData();
 
 </script>
