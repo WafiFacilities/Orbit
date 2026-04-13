@@ -228,8 +228,8 @@ function unitCost(cost,volume){
 if(!volume) return 0;
 return (cost/volume).toFixed(2);
 }
-return html;
-}
+
+
 function row(title,fn){
 
 let html=`<tr><td class="metric">${title}</td>`;
@@ -240,8 +240,10 @@ html+=`<td>${fn(d)||0}</td>`;
 
 html+="</tr>";
 
+return html;
+}
 
-let html="";
+ let html=""; 
 
 html+=`<tr class="section"><td colspan="11">Strategic Initiatives</td></tr>`;
 
