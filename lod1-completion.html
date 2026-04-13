@@ -259,11 +259,10 @@ const {data}=await supabaseClient
 .from("assurances")
 .select("planned_start_date");
 
-let years=[...new Set(
-let years=[...new Set(
+let years = [...new Set(
 data
-.filter(x=>x.planned_start_date)
-.map(x=>new Date(x.planned_start_date).getFullYear())
+.filter(x => x.planned_start_date)
+.map(x => new Date(x.planned_start_date).getFullYear())
 )].sort();
 
 const sel=document.getElementById("yearFilter");
