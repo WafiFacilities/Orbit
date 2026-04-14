@@ -89,7 +89,7 @@ background:#f6f8fb;
 }
 
 .section td{
-background:#404040;
+background:#695353;
 color:white;
 font-weight:600;
 text-transform:uppercase;
@@ -130,7 +130,7 @@ border:2px solid #404040;
 }
 
  th, td{
-padding:10px 12px;
+padding:10px 20px;
 text-align:center;
 font-size:14px;
 border:1px solid #cfcfcf;
@@ -193,7 +193,7 @@ Facilities Performance Dashboard
 
 <table class="dashboard-table">
 <thead>
-<tr class="section"><td colspan="11">M&D Facilities - Operational Excellence KPIs</td></tr>
+<tr class="section"><td colspan="11">Strategic Initiatives - KPIs</td></tr>
 </thead>
 
 <tbody id="tableBody"></tbody>
@@ -288,7 +288,7 @@ return html;
 
  let html=""; 
 
-html+=`<tr class="section"><td colspan="11">Strategic Initiatives</td></tr>`;
+
  html+=`
 <tr>
 <th>Metric</th>
@@ -339,7 +339,7 @@ initiatives.filter(i=>i.terminal_name===d && (i.impact_type||"").toLowerCase().i
 ).toFixed(1) 
 );
 
-html+=`<tr class="section"><td colspan="11">Assurance Statistics</td></tr>`;
+html+=`<tr class="section"><td colspan="11">Assurance LOD1 - KPIs</td></tr>`;
  html+=`
 <tr>
 <th>Metric</th>
@@ -408,7 +408,7 @@ return a && a.depot===d && a.assurance_type==="LOD1" && f.status!=="Closed" && f
 }).length
 );
 
-html+=`<tr class="section"><td colspan="11">LOD2 / LOD3</td></tr>`;
+html+=`<tr class="section"><td colspan="11">Assurance LOD2&3 - KPIs</td></tr>`;
  html+=`
 <tr>
 <th>Metric</th>
@@ -452,7 +452,7 @@ return a && a.depot===d && (a.assurance_type==="LOD2"||a.assurance_type==="LOD3"
 
 html+=`<tr class="section">
 <td colspan="11">
-Financial Performance &nbsp;&nbsp;
+Financial Performance - KPIs &nbsp;&nbsp;
 <select id="monthFilter" style="padding:3px;font-family:'72 Condensed';">
 <option value="1">Jan</option>
 <option value="2">Feb</option>
