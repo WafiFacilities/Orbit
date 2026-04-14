@@ -486,7 +486,7 @@ Financial Performance - KPIs &nbsp;&nbsp;
 </tr>
 `;
 
-html+=row("YTD Unit Cost This Year",d=>{
+html+=row("YTD Unit Cost This Year PKR/L",d=>{
 
 const cost=sum(directCY,d)+sum(indirectCY,d);
 const vol=sum(volumeCY,d);
@@ -495,7 +495,7 @@ return unitCost(cost,vol);
 
 });
 
-html+=row("YTD Unit Cost Last Year",d=>{
+html+=row("YTD Unit Cost Last Year PKR/L",d=>{
 
 const cost=sum(directLY,d)+sum(indirectLY,d);
 const vol=sum(volumeLY,d);
@@ -504,12 +504,12 @@ return unitCost(cost,vol);
 
 });
 
-html+=row("YTD Volume This Year",d=>
-sum(volumeCY,d)
+html+=row("YTD Volume This Year (ML)",d=>
+(sum(volumeCY,d)/1000000).toFixed(2)
 );
 
-html+=row("YTD Volume Last Year",d=>
-sum(volumeLY,d)
+html+=row("YTD Volume Last Year (ML)",d=>
+(sum(volumeLY,d)/1000000).toFixed(2)
 );
 
 html+=row("YTD Performance",d=>{
