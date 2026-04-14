@@ -193,19 +193,7 @@ Facilities Performance Dashboard
 
 <table class="dashboard-table">
 <thead>
-<tr>
-<th>Metric</th>
-<th>KMR</th>
-<th>SKP</th>
-<th>DLP</th>
-<th>CKL</th>
-<th>TJB</th>
-<th>MCH</th>
-<th>BKR</th>
-<th>VHR</th>
-<th>MHK</th>
-<th>GTI</th>
-</tr>
+<tr class="section"><td colspan="11">M&D Facilities - Operational Excellence KPIs</td></tr>
 </thead>
 
 <tbody id="tableBody"></tbody>
@@ -352,6 +340,21 @@ initiatives.filter(i=>i.terminal_name===d && (i.impact_type||"").toLowerCase().i
 );
 
 html+=`<tr class="section"><td colspan="11">Assurance Statistics</td></tr>`;
+ html+=`
+<tr>
+<th>Metric</th>
+<th>KMR</th>
+<th>SKP</th>
+<th>DLP</th>
+<th>CKL</th>
+<th>TJB</th>
+<th>MCH</th>
+<th>BKR</th>
+<th>VHR</th>
+<th>MHK</th>
+<th>GTI</th>
+</tr>
+`;
 
 html+=row("# of LOD1 Planned",d=>
 assurances.filter(a=>{
@@ -406,6 +409,21 @@ return a && a.depot===d && a.assurance_type==="LOD1" && f.status!=="Closed" && f
 );
 
 html+=`<tr class="section"><td colspan="11">LOD2 / LOD3</td></tr>`;
+ html+=`
+<tr>
+<th>Metric</th>
+<th>KMR</th>
+<th>SKP</th>
+<th>DLP</th>
+<th>CKL</th>
+<th>TJB</th>
+<th>MCH</th>
+<th>BKR</th>
+<th>VHR</th>
+<th>MHK</th>
+<th>GTI</th>
+</tr>
+`;
 
 html+=row("# of LOD2/LOD3",d=>
 assurances.filter(a=>a.depot===d && (a.assurance_type==="LOD2"||a.assurance_type==="LOD3")).length
@@ -451,6 +469,22 @@ Financial Performance &nbsp;&nbsp;
 </select>
 </td>
 </tr>`;
+
+ html+=`
+<tr>
+<th>Metric</th>
+<th>KMR</th>
+<th>SKP</th>
+<th>DLP</th>
+<th>CKL</th>
+<th>TJB</th>
+<th>MCH</th>
+<th>BKR</th>
+<th>VHR</th>
+<th>MHK</th>
+<th>GTI</th>
+</tr>
+`;
 
 html+=row("YTD Unit Cost This Year",d=>{
 
