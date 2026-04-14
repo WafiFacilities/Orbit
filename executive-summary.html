@@ -108,39 +108,14 @@ z-index:3;
 background:#f6f8fb;
 }
 
- .table-container{
-max-height:600px;
-overflow:auto;
-position:relative;
-}
-
- thead th{
-position:sticky;
-top:0;
-background:#404040;
-color:white;
-z-index:5;
-}
 
 
-.section td{
-background:#404040 !important;
-color:white;
-font-weight:bold;
-font-size:15px;
-letter-spacing:0.5px;
-text-transform:uppercase;
-position:sticky;
-left:0;
-z-index:3;
-}
 
- thead th:first-child{
-position:sticky;
-left:0;
-z-index:4;
-background:#404040;
-}
+
+
+
+
+
 
  
 .kpi-good{
@@ -159,23 +134,25 @@ font-weight:600;
 background:#f5f5f5;
 font-weight:600;
 }
-.metric{
-position:sticky;
-left:0;
-z-index:4;
-background:#f6f8fb;
-text-align:left;
-font-weight:600;
-width:260px;
-min-width:260px;
-max-width:260px;
+.dashboard-table{
+width:100%;
+border-collapse:collapse;
+background:white;
+border:2px solid #404040;
 }
- thead th:first-child{
-position:sticky;
-left:0;
-z-index:6;
+
+ th, td{
+padding:10px 12px;
+text-align:center;
+font-size:14px;
+border:1px solid #cfcfcf;
+}
+ th{
 background:#404040;
+color:white;
+font-weight:600;
 }
+ 
 </style>
 </head>
 
@@ -225,7 +202,7 @@ Facilities Performance Dashboard
 </select>
 </div>
 
-<div class="table-container">
+
 <table>
 <thead>
 <tr>
@@ -245,7 +222,7 @@ Facilities Performance Dashboard
 
 <tbody id="tableBody"></tbody>
 </table>
-</div>
+
 </div>
 </div>
 
