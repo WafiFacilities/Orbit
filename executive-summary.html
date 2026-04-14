@@ -411,16 +411,29 @@ sum(volumeLY,d)
 
 html+=row("YTD Performance",d=>{
 
-const A = sum(directCY,d)+sum(indirectCY,d);   // CY cost
-const B = sum(volumeCY,d);                     // CY volume
+// Current year YTD
+const A = sum(directCY,d)+sum(indirectCY,d);
+const B = sum(volumeCY,d);
 
-const F = sum(volumeLY,d);                     // LY YTD volume
+// Last year YTD volume
+const F = sum(volumeLY,d);
 
-const G = sum(directLY,d)+sum(indirectLY,d);   // LY full cost
-const H = sum(volumeLY,d);                     // LY full volume
+// Last year FULL FY
+const G = directLY
+.filter(x=>x.depot===d)
+.reduce((s,x)=>s+(x.value||0),0)
++
+indirectLY
+.filter(x=>x.depot===d)
+.reduce((s,x)=>s+(x.value||0),0);
 
-const J = F ? (A/F) : null;   // Volume normalized UC
-const K = H ? (G/H) : null;   // Last FY UC
+const H = volumeLY
+.filter(x=>x.depot===d)
+.reduce((s,x)=>s+(x.value||0),0);
+
+// KPIs
+const J = F ? (A/F) : null;
+const K = H ? (G/H) : null;
 
 if(!J || !K) return "-";
 
