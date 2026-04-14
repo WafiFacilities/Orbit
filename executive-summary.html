@@ -25,6 +25,10 @@ font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
 
 .layout{display:flex;height:calc(100vh - 62px);}
 
+ td{
+font-variant-numeric:tabular-nums;
+}
+ 
 .sidebar{
 width:220px;background:#404040;color:white;
 display:flex;flex-direction:column;padding-top:20px;
@@ -87,15 +91,34 @@ color:white;
 }
 
 .section{
-background:#404040;
+background:#2f3b52;
 color:white;
 font-weight:bold;
+font-size:15px;
+letter-spacing:0.5px;
+text-transform:uppercase;
+}
+.kpi-good{
+background:#e8f6ec;
+color:#1e7e34;
+font-weight:600;
 }
 
+.kpi-bad{
+background:#fdecea;
+color:#c0392b;
+font-weight:600;
+}
+
+.kpi-neutral{
+background:#f5f5f5;
+font-weight:600;
+}
 .metric{
 text-align:left;
-font-weight:bold;
-background:#f0f0f0;
+font-weight:600;
+background:#f6f8fb;
+color:#404040;
 }
 </style>
 </head>
@@ -130,8 +153,9 @@ background:#f0f0f0;
 </div>
 
 <div class="main">
-
-<h2>Executive Snapshot - KPIs</h2>
+<h2 style="margin-bottom:20px;font-weight:600;">
+Facilities Performance Dashboard
+</h2>
 
 <div class="filters">
 <select id="yearFilter">
@@ -445,7 +469,13 @@ const K = H ? (G/H) : null;
 
 if(!J || !K) return "-";
 
-return (K/J).toFixed(2);
+const perf = (K/J);
+
+let cls="kpi-neutral";
+if(perf>1) cls="kpi-good";
+if(perf<1) cls="kpi-bad";
+
+return `<span class="${cls}">${perf.toFixed(2)}</span>`;
 
 });
 
