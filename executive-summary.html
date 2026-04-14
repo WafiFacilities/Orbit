@@ -215,7 +215,10 @@ async function loadDashboard(){
 
 const year=parseInt(document.getElementById("yearFilter").value);
  const lastYear = year - 1;
- const month=parseInt(document.getElementById("monthFilter")?.value || 12);
+const currentMonth = new Date().getMonth() + 1;
+const defaultMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+
+const month = parseInt(document.getElementById("monthFilter")?.value || defaultMonth);
 
 const {data:initiatives}=await supabaseClient
 .from("initiatives")
@@ -555,7 +558,12 @@ document.getElementById("tableBody").innerHTML=html;
 
 const monthSel=document.getElementById("monthFilter");
 if(monthSel){
-monthSel.value = month;   // restore selected month
+
+if(!monthSel.dataset.initialized){
+monthSel.value = month;
+monthSel.dataset.initialized = true;
+}
+
 monthSel.addEventListener("change",loadDashboard);
 }
 
