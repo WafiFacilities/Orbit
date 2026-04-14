@@ -214,6 +214,7 @@ const depots=["KMR","SKP","DLP","CKL","TJB","MCH","BKR","VHR","MHK","GTI"];
 async function loadDashboard(){
 
 const year=parseInt(document.getElementById("yearFilter").value);
+ const lastYear = year - 1;
  const month=parseInt(document.getElementById("monthFilter")?.value || 12);
 
 const {data:initiatives}=await supabaseClient
@@ -486,7 +487,7 @@ Financial Performance - KPIs &nbsp;&nbsp;
 </tr>
 `;
 
-html+=row("YTD Unit Cost This Year PKR/L",d=>{
+html+=row(`YTD Unit Cost ${year} PKR/L`,d=>{
 
 const cost=sum(directCY,d)+sum(indirectCY,d);
 const vol=sum(volumeCY,d);
@@ -495,7 +496,7 @@ return unitCost(cost,vol);
 
 });
 
-html+=row("YTD Unit Cost Last Year PKR/L",d=>{
+html+=row(`YTD Unit Cost ${lastYear} PKR/L`,d=>{
 
 const cost=sum(directLY,d)+sum(indirectLY,d);
 const vol=sum(volumeLY,d);
@@ -504,11 +505,11 @@ return unitCost(cost,vol);
 
 });
 
-html+=row("YTD Volume This Year (ML)",d=>
+html+=row(`YTD Volume ${year} (ML)`,d=>
 (sum(volumeCY,d)/1000000).toFixed(2)
 );
 
-html+=row("YTD Volume Last Year (ML)",d=>
+html+=row(`YTD Volume ${lastYear} (ML)`,d=>
 (sum(volumeLY,d)/1000000).toFixed(2)
 );
 
