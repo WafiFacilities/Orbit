@@ -172,6 +172,7 @@ const depots=["KMR","SKP","DLP","CKL","TJB","MCH","BKR","VHR","MMK","GTI"];
 async function loadDashboard(){
 
 const year=parseInt(document.getElementById("yearFilter").value);
+ const month=parseInt(document.getElementById("monthFilter")?.value || 12);
 
 const {data:initiatives}=await supabaseClient
 .from("initiatives")
@@ -220,7 +221,7 @@ const {data:indirectLY}=await supabaseClient
 const today=new Date().toISOString().split("T")[0];
 function sum(data,depot){
 return data
-.filter(x=>x.depot===depot)
+.filter(x=>x.depot===depot && x.month<=month)
 .reduce((s,x)=>s+(x.value||0),0);
 }
 
@@ -362,7 +363,25 @@ return a && a.depot===d && (a.assurance_type==="LOD2"||a.assurance_type==="LOD3"
 }).length
 );
 
-  html+=`<tr class="section"><td colspan="11">Financial Performance</td></tr>`;
+html+=`<tr class="section">
+<td colspan="11">
+Financial Performance &nbsp;&nbsp;
+<select id="monthFilter" style="padding:3px;font-family:'72 Condensed';">
+<option value="1">Jan</option>
+<option value="2">Feb</option>
+<option value="3">Mar</option>
+<option value="4">Apr</option>
+<option value="5">May</option>
+<option value="6">Jun</option>
+<option value="7">Jul</option>
+<option value="8">Aug</option>
+<option value="9">Sep</option>
+<option value="10">Oct</option>
+<option value="11">Nov</option>
+<option value="12" selected>Dec</option>
+</select>
+</td>
+</tr>`;
 
 html+=row("YTD Unit Cost This Year",d=>{
 
@@ -408,6 +427,10 @@ return (ucLY/ucCY).toFixed(2);
 });
 
 document.getElementById("tableBody").innerHTML=html;
+ const monthSel=document.getElementById("monthFilter");
+if(monthSel){
+monthSel.addEventListener("change",loadDashboard);
+}
 
 }
 
