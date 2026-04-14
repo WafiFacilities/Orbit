@@ -411,18 +411,20 @@ sum(volumeLY,d)
 
 html+=row("YTD Performance",d=>{
 
-const costCY=sum(directCY,d)+sum(indirectCY,d);
-const volCY=sum(volumeCY,d);
+const A = sum(directCY,d)+sum(indirectCY,d);   // CY cost
+const B = sum(volumeCY,d);                     // CY volume
 
-const costLY=sum(directLY,d)+sum(indirectLY,d);
-const volLY=sum(volumeLY,d);
+const F = sum(volumeLY,d);                     // LY YTD volume
 
-const ucCY=costCY/volCY;
-const ucLY=costLY/volLY;
+const G = sum(directLY,d)+sum(indirectLY,d);   // LY full cost
+const H = sum(volumeLY,d);                     // LY full volume
 
-if(!ucCY||!ucLY) return "-";
+const J = F ? (A/F) : null;   // Volume normalized UC
+const K = H ? (G/H) : null;   // Last FY UC
 
-return (ucLY/ucCY).toFixed(2);
+if(!J || !K) return "-";
+
+return (K/J).toFixed(2);
 
 });
 
