@@ -301,6 +301,21 @@ return html;
  let html=""; 
 
 html+=`<tr class="section"><td colspan="11">Strategic Initiatives</td></tr>`;
+ html+=`
+<tr>
+<th>Metric</th>
+<th>KMR</th>
+<th>SKP</th>
+<th>DLP</th>
+<th>CKL</th>
+<th>TJB</th>
+<th>MCH</th>
+<th>BKR</th>
+<th>VHR</th>
+<th>MHK</th>
+<th>GTI</th>
+</tr>
+`;
 
 html+=row("# of Initiatives",d=>
 initiatives.filter(i=>i.terminal_name===d).length
