@@ -408,14 +408,12 @@ assurances.filter(a=>{
 
 if(a.depot!==d) return false;
 if(a.assurance_type!=="LOD1") return false;
-if(a.status==="Closed") return false;
 if(!a.planned_finish_date) return false;
-
-const y = new Date(a.planned_finish_date).getFullYear();
+if(a.date_of_assurance) return false;   // assurance already done
 
 const dt = new Date(a.planned_finish_date);
 
-return dt.getFullYear()==year && dt.getMonth()+1 <= lod1Month && a.planned_finish_date<today;
+return dt.getFullYear()==year && dt.getMonth()+1 <= lod1Month;
 
 }).length
 );
