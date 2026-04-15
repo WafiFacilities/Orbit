@@ -465,13 +465,15 @@ target_date:target_date.value
 }]);
 
 toggleAddFinding();
+   load();
+  }
 async function init(){
  await loadUsers();
- load();
+
 }
 
 init();
-}
+
 
 async function closeAssurance(){
 
@@ -512,7 +514,7 @@ closure_date: today
 })
 .eq("id", id);
 
-load();
+
 
 }
 
