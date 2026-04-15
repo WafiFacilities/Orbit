@@ -423,7 +423,7 @@ for(const row of data){
  let statusText = "";
 let statusClass = "";
 
-  if(indicators.length && !indicators.includes(statusText)) continue;
+
 
 if(row.status === "Closed" && row.date_of_assurance){
     statusText = "Closed";
@@ -445,6 +445,8 @@ else{
     statusText = "Planned";
     statusClass = "planned";
 }
+
+    if(indicators.length && !indicators.includes(statusText)) continue;
 
 const findings=allFindings.filter(f=>f.assurance_id===row.id);
 
@@ -494,7 +496,7 @@ tableBody.innerHTML=html;
 pageInfo.innerText=`Total: ${count}`;
 
 // default sort by due date
-sortTable(7);
+sortDueDateDefault();
 }
 
 function nextPage(){currentPage++;loadData();}
@@ -550,6 +552,34 @@ return asc ? A.localeCompare(B) : B.localeCompare(A);
 
 rows.forEach(r=>tbody.appendChild(r));
 }
+
+function sortDueDateDefault(){
+
+const table=document.querySelector("table");
+const tbody=table.tBodies[0];
+const rows=[...tbody.rows];
+
+rows.sort((a,b)=>{
+
+let A=a.cells[7].innerText.trim();
+let B=b.cells[7].innerText.trim();
+
+const dateA = Date.parse(A);
+const dateB = Date.parse(B);
+
+if(!isNaN(dateA) && !isNaN(dateB)){
+return dateA - dateB;
+}
+
+return A.localeCompare(B);
+
+});
+
+rows.forEach(r=>tbody.appendChild(r));
+
+}
+
+  
 function toggleAll(id){
 const boxes=document.querySelectorAll(`#${id} input[type=checkbox]`);
 const allChecked=boxes[0].checked;
