@@ -494,19 +494,25 @@ return a && a.depot===d && (a.assurance_type==="LOD2"||a.assurance_type==="LOD3"
 }).length
 );
 
-html+=row("Closed Actions LOD2/3",d=>
+html+=row("Open Actions LOD2/3",d=>
 actions.filter(f=>{
 const a=assurances.find(x=>x.id===f.assurance_id);
-return a && a.depot===d && (a.assurance_type==="LOD2"||a.assurance_type==="LOD3") && f.status==="Closed";
+return a && a.depot===d && (a.assurance_type==="LOD2"||a.assurance_type==="LOD3") && f.status!=="Closed";
 }).length
 );
 
-html+=row("Overdue Actions LOD2/3",d=>
-actions.filter(f=>{
+html+=row("Overdue Actions LOD2/3",d=>{
+
+const overdue = actions.filter(f=>{
 const a=assurances.find(x=>x.id===f.assurance_id);
 return a && a.depot===d && (a.assurance_type==="LOD2"||a.assurance_type==="LOD3") && f.status!=="Closed" && f.target_date && f.target_date<today;
-}).length
-);
+}).length;
+
+let cls = overdue > 0 ? "kpi-bad" : "kpi-good";
+
+return `<span class="${cls}">${overdue}</span>`;
+
+});
 
 html+=`<tr class="section">
 <td colspan="11">
