@@ -81,6 +81,17 @@ tbody tr:hover{
 background:#f2f7ff;
 }
 
+.total-col{
+background:#2f3b52;
+color:white;
+font-weight:700;
+}
+
+.dashboard-table td:last-child{
+background:#f4f7fb;
+font-weight:700;
+}
+ 
 .metric{
 width:260px;
 text-align:left;
@@ -199,7 +210,7 @@ Facilities Performance Dashboard
 
 <table class="dashboard-table">
 <thead>
-<tr class="section"><td colspan="11">Strategic Initiatives - KPIs</td></tr>
+<tr class="section"><td colspan="12">Strategic Initiatives - KPIs</td></tr>
 </thead>
 
 <tbody id="tableBody"></tbody>
@@ -284,13 +295,26 @@ return (cost/volume).toFixed(2);
 }
 
 
-function row(title,fn){
+function row(title,fn,mode="total"){
 
 let html=`<tr><td class="metric">${title}</td>`;
 
+let total=0;
+
 depots.forEach(d=>{
-html+=`<td class="value">${fn(d)||0}</td>`;
+const val = fn(d) || 0;
+total += parseFloat(val) || 0;
+html+=`<td class="value">${val}</td>`;
 });
+
+if(mode==="total"){
+html+=`<td class="value"><b>${total}</b></td>`;
+}
+
+if(mode==="sh"){
+const shVal = fn("Total Facilities") || 0;
+html+=`<td class="value"><b>${shVal}</b></td>`;
+}
 
 html+="</tr>";
 
@@ -313,6 +337,7 @@ return html;
 <th>VHR</th>
 <th>MHK</th>
 <th>GTI</th>
+<th class="total-col">Total</th>
 </tr>
 `;
 
@@ -351,7 +376,7 @@ initiatives.filter(i=>i.terminal_name===d && (i.impact_type||"").toLowerCase().i
 );
 
 html+=`<tr class="section">
-<td colspan="11">
+<td colspan="12">
 Assurance LOD1 - KPIs &nbsp;&nbsp;
 <select id="lod1MonthFilter" style="padding:3px;font-family:'72 Condensed';">
 <option value="1">Jan</option>
@@ -382,6 +407,7 @@ Assurance LOD1 - KPIs &nbsp;&nbsp;
 <th>VHR</th>
 <th>MHK</th>
 <th>GTI</th>
+<th class="total-col">Total</th>
 </tr>
 `;
 
@@ -472,7 +498,7 @@ return `<span class="${cls}">${overdue}</span>`;
 
 });
 
-html+=`<tr class="section"><td colspan="11">Assurance LOD2&3 - KPIs</td></tr>`;
+html+=`<tr class="section"><td colspan="12">Assurance LOD2&3 - KPIs</td></tr>`;
  html+=`
 <tr>
 <th>Metric</th>
@@ -486,6 +512,7 @@ html+=`<tr class="section"><td colspan="11">Assurance LOD2&3 - KPIs</td></tr>`;
 <th>VHR</th>
 <th>MHK</th>
 <th>GTI</th>
+<th class="total-col">Total</th>
 </tr>
 `;
 
@@ -521,7 +548,7 @@ return `<span class="${cls}">${overdue}</span>`;
 });
 
 html+=`<tr class="section">
-<td colspan="11">
+<td colspan="12">
 Financial Performance - KPIs &nbsp;&nbsp;
 <select id="monthFilter" style="padding:3px;font-family:'72 Condensed';">
 <option value="1">Jan</option>
@@ -553,6 +580,7 @@ Financial Performance - KPIs &nbsp;&nbsp;
 <th>VHR</th>
 <th>MHK</th>
 <th>GTI</th>
+<th class="total-col">S&H</th>
 </tr>
 `;
 
@@ -563,7 +591,7 @@ const vol=sum(volumeCY,d);
 
 return unitCost(cost,vol);
 
-});
+},"sh");
 
 html+=row(`YTD Unit Cost ${lastYear} PKR/L`,d=>{
 
@@ -572,15 +600,15 @@ const vol=sum(volumeLY,d);
 
 return unitCost(cost,vol);
 
-});
+},"sh");
 
 html+=row(`YTD Volume ${year} (ML)`,d=>
 (sum(volumeCY,d)/1000000).toFixed(2)
-);
+},"sh");
 
 html+=row(`YTD Volume ${lastYear} (ML)`,d=>
 (sum(volumeLY,d)/1000000).toFixed(2)
-);
+},"sh");
 
 html+=row("YTD Performance",d=>{
 
@@ -618,7 +646,7 @@ if(perf<1) cls="kpi-bad";
 
 return `<span class="${cls}">${perf.toFixed(2)}</span>`;
 
-});
+},"sh");
 
 document.getElementById("tableBody").innerHTML=html;
 const lod1MonthSel=document.getElementById("lod1MonthFilter");
