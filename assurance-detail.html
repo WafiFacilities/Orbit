@@ -310,7 +310,7 @@ assuranceInfo.innerHTML=`
 
 <div class="data-row">
 <label>Description:</label>
-<div>${assurance.description || ""}</div>
+<div>${assurance.brief.description || ""}</div>
 </div>
 
 <div class="data-row">
@@ -326,6 +326,11 @@ assuranceInfo.innerHTML=`
 <div class="data-row">
 <label>Owner Email:</label>
 <div>${assurance.assurance_owner_email || ""}</div>
+</div>
+
+<div class="data-row">
+<label>Created By Email:</label>
+<div>${assurance.created_by_email || ""}</div>
 </div>
 
 <div class="data-row">
