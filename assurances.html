@@ -288,11 +288,12 @@ background:#404040;color:white;cursor:pointer;
 <th onclick="sortTable(3)">Type</th>
 <th onclick="sortTable(4)">Frequency</th>
 <th onclick="sortTable(5)">Lead</th>
-<th onclick="sortTable(6)">Assurance Coducted On</th>
+<th onclick="sortTable(6)">Assurance Conducted On</th>
 <th onclick="sortTable(7)">Due Date</th>
 <th onclick="sortTable(8)">Status</th>
-<th onclick="sortTable(9)">Open Actions</th>
-<th onclick="sortTable(10)">Overdue Actions</th>
+<th onclick="sortTable(9)">Total Actions</th>
+<th onclick="sortTable(10)">Open Actions</th>
+<th onclick="sortTable(11)">Overdue Actions</th>
 </tr>
 </thead>
 <tbody id="tableBody"></tbody>
@@ -364,7 +365,7 @@ container.innerHTML+=`
 async function loadData(){
 const {data:allFindings}=await supabaseClient
 .from("assurance_findings")
-.select("*");
+select("assurance_id,status,target_date")
   
 let query=supabaseClient.from("assurances").select("*",{count:"exact"});
 let overdueAssurances = 0;
@@ -433,10 +434,15 @@ if(row.status !== "Closed" && row.planned_finish_date){
 }
 
 const findings=allFindings.filter(f=>f.assurance_id===row.id);
-  
-const openCount=findings.filter(f=>f.status!=="Closed").length;
-const overdueCount=findings.filter(f=>f.status!=="Closed" && f.target_date && f.target_date<today).length;
 
+const totalActions = findings.length;
+
+const openCount = findings.filter(f=>f.status!=="Closed").length;
+
+const overdueCount = findings.filter(
+f=>f.status!=="Closed" && f.target_date && f.target_date<today
+).length;
+  
 totalOpenFindings+=openCount;
 totalOverdue+=overdueCount;
  
@@ -460,6 +466,8 @@ ${row.assurance_name}
 ${statusText}
 </span>
 </td>
+
+<td>${totalActions}</td>
 <td>${openCount}</td>
 <td>${overdueCount}</td>
 </tr>`;
@@ -503,11 +511,21 @@ table.setAttribute("data-sort", asc ? "asc" : "desc");
 
 rows.sort((a,b)=>{
 
-let A=a.cells[colIndex].innerText.toLowerCase();
-let B=b.cells[colIndex].innerText.toLowerCase();
+let A=a.cells[colIndex].innerText.trim();
+let B=b.cells[colIndex].innerText.trim();
 
-if(!isNaN(A) && !isNaN(B)){
-return asc ? A-B : B-A;
+const dateA = Date.parse(A);
+const dateB = Date.parse(B);
+
+if(!isNaN(dateA) && !isNaN(dateB)){
+return asc ? dateA-dateB : dateB-dateA;
+}
+
+const numA = parseFloat(A);
+const numB = parseFloat(B);
+
+if(!isNaN(numA) && !isNaN(numB)){
+return asc ? numA-numB : numB-numA;
 }
 
 return asc ? A.localeCompare(B) : B.localeCompare(A);
@@ -515,7 +533,6 @@ return asc ? A.localeCompare(B) : B.localeCompare(A);
 });
 
 rows.forEach(r=>tbody.appendChild(r));
-
 }
 function toggleAll(id){
 const boxes=document.querySelectorAll(`#${id} input[type=checkbox]`);
