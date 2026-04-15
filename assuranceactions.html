@@ -239,19 +239,6 @@ font-weight:bold;
 </div>
 
 
-<div class="dropdown-filter">
-<button onclick="toggleDropdown('natureDropdown')" class="filter-btn">Nature ▼</button>
-<div id="natureDropdown" class="dropdown-content">
-
-<label><input type="checkbox" value="ALL" checked onchange="toggleAll('natureDropdown')"> All</label>
-<label><input type="checkbox" value="Procedural"> Procedural</label>
-<label><input type="checkbox" value="Behavioral"> Behavioral</label>
-<label><input type="checkbox" value="Competence"> Competence</label>
-<label><input type="checkbox" value="Others"> Others</label>
-
-</div>
-</div>
-
 </div>
 
 <table>
@@ -328,8 +315,7 @@ const depots=[...document.querySelectorAll("#depotDropdown input:checked")]
   const indicators=[...document.querySelectorAll("#indicatorDropdown input:checked")]
 .map(c=>c.value).filter(v=>v!=="ALL");
 
-const natures=[...document.querySelectorAll("#natureDropdown input:checked")]
-.map(c=>c.value).filter(v=>v!=="ALL");
+
 
 const types=[...document.querySelectorAll("#typeDropdown input:checked")]
 .map(c=>c.value).filter(v=>v!=="ALL");
@@ -341,8 +327,6 @@ let query = supabaseClient
 assurances(id,assurance_name,depot,assurance_type)
 `);
 
-
-if(natures.length) query=query.in("type_of_finding",natures);
 
 const {data:actions}=await query;
 
