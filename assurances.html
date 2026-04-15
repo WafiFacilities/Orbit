@@ -334,7 +334,11 @@ container.innerHTML=`<label><input type="checkbox" value="ALL" checked onchange=
 
 leads.forEach(l=>{
 container.innerHTML+=`
-<label><input type="checkbox" value="${l}"> ${l}</label>
+const prefix = l.split("@")[0];
+
+container.innerHTML+=`
+<label><input type="checkbox" value="${l}"> ${prefix}</label>
+`;
 `;
 });
 
@@ -469,7 +473,7 @@ ${row.assurance_name}
 </td>
 <td>${row.assurance_type||""}</td>
 <td>${row.frequency||""}</td>
-<td>${row.assurance_owner_email||""}</td>
+<td>${row.assurance_owner_email ? row.assurance_owner_email.split("@")[0] : ""}</td>
 <td>${row.date_of_assurance || ""}</td>
 <td>${row.planned_finish_date||""}</td>
 <td>
