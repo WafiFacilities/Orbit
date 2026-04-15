@@ -219,6 +219,7 @@ const currentMonth = new Date().getMonth() + 1;
 const defaultMonth = currentMonth === 1 ? 12 : currentMonth - 1;
 
 const month = parseInt(document.getElementById("monthFilter")?.value || defaultMonth);
+ const lod1Month = parseInt(document.getElementById("lod1MonthFilter")?.value || month);
 
 const {data:initiatives}=await supabaseClient
 .from("initiatives")
@@ -343,7 +344,25 @@ initiatives.filter(i=>i.terminal_name===d && (i.impact_type||"").toLowerCase().i
 ).toFixed(1) 
 );
 
-html+=`<tr class="section"><td colspan="11">Assurance LOD1 - KPIs</td></tr>`;
+html+=`<tr class="section">
+<td colspan="11">
+Assurance LOD1 - KPIs &nbsp;&nbsp;
+<select id="lod1MonthFilter" style="padding:3px;font-family:'72 Condensed';">
+<option value="1">Jan</option>
+<option value="2">Feb</option>
+<option value="3">Mar</option>
+<option value="4">Apr</option>
+<option value="5">May</option>
+<option value="6">Jun</option>
+<option value="7">Jul</option>
+<option value="8">Aug</option>
+<option value="9">Sep</option>
+<option value="10">Oct</option>
+<option value="11">Nov</option>
+<option value="12">Dec</option>
+</select>
+</td>
+</tr>`;
  html+=`
 <tr>
 <th>Metric</th>
@@ -366,14 +385,22 @@ if(a.depot!==d) return false;
 if(a.assurance_type!=="LOD1") return false;
 if(!a.planned_start_date) return false;
 
-const y = a.planned_start_date.substring(0,4);
+const dt = new Date(a.planned_start_date);
 
-return parseInt(y) === year;
+return dt.getFullYear()==year && dt.getMonth()+1 <= lod1Month;
 }).length
 );
 
 html+=row("# of LOD1 Closed",d=>
-assurances.filter(a=>a.depot===d && a.assurance_type==="LOD1" && a.closure_date && new Date(a.closure_date).getFullYear()===year).length
+assurances.filter(a=>{
+if(a.depot!==d) return false;
+if(a.assurance_type!=="LOD1") return false;
+if(!a.date_of_assurance) return false;
+
+const dt = new Date(a.date_of_assurance);
+
+return dt.getFullYear()==year && dt.getMonth()+1 <= lod1Month;
+}).length
 );
 
 html+=row("# of LOD1 Overdue",d=>
@@ -386,7 +413,9 @@ if(!a.planned_finish_date) return false;
 
 const y = new Date(a.planned_finish_date).getFullYear();
 
-return y===year && a.planned_finish_date<today;
+const dt = new Date(a.planned_finish_date);
+
+return dt.getFullYear()==year && dt.getMonth()+1 <= lod1Month && a.planned_finish_date<today;
 
 }).length
 );
@@ -398,10 +427,10 @@ return a && a.depot===d && a.assurance_type==="LOD1";
 }).length
 );
 
-html+=row("Closed Actions LOD1",d=>
+html+=row("Open Actions LOD1",d=>
 actions.filter(f=>{
 const a=assurances.find(x=>x.id===f.assurance_id);
-return a && a.depot===d && a.assurance_type==="LOD1" && f.status==="Closed";
+return a && a.depot===d && a.assurance_type==="LOD1" && f.status!=="Closed";
 }).length
 );
 
@@ -555,7 +584,15 @@ return `<span class="${cls}">${perf.toFixed(2)}</span>`;
 });
 
 document.getElementById("tableBody").innerHTML=html;
+const lod1MonthSel=document.getElementById("lod1MonthFilter");
 
+if(lod1MonthSel){
+if(!lod1MonthSel.dataset.initialized){
+lod1MonthSel.value = lod1Month;
+lod1MonthSel.dataset.initialized = true;
+}
+lod1MonthSel.addEventListener("change",loadDashboard);
+}
 const monthSel=document.getElementById("monthFilter");
 if(monthSel){
 
