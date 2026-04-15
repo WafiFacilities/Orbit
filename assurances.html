@@ -282,16 +282,17 @@ background:#404040;color:white;cursor:pointer;
 <table>
 <thead>
 <tr>
-<th>Depot</th>
-<th>Scope Area</th>
-<th class="assurance-col">Assurance</th>
-<th>Type</th>
-  <th>Frequency</th>
-<th>Lead</th>
-<th>Due Date</th>
-<th>Status</th>
-<th>Open Actions</th>
-<th>Overdue Actions</th>
+<th onclick="sortTable(0)">Depot</th>
+<th onclick="sortTable(1)">Scope Area</th>
+<th onclick="sortTable(2)" class="assurance-col">Assurance</th>
+<th onclick="sortTable(3)">Type</th>
+<th onclick="sortTable(4)">Frequency</th>
+<th onclick="sortTable(5)">Lead</th>
+<th onclick="sortTable(6)">Assurance Coducted On</th>
+<th onclick="sortTable(7)">Due Date</th>
+<th onclick="sortTable(8)">Status</th>
+<th onclick="sortTable(9)">Open Actions</th>
+<th onclick="sortTable(10)">Overdue Actions</th>
 </tr>
 </thead>
 <tbody id="tableBody"></tbody>
@@ -452,6 +453,7 @@ ${row.assurance_name}
 <td>${row.assurance_type||""}</td>
 <td>${row.frequency||""}</td>
 <td>${row.assurance_owner_email||""}</td>
+<td>${row.date_of_assurance || ""}</td>
 <td>${row.planned_finish_date||""}</td>
 <td>
 <span class="indicator ${statusClass}">
@@ -490,7 +492,31 @@ if(d.id!==id) d.style.display="none";
 const el=document.getElementById(id);
 el.style.display = el.style.display==="block" ? "none" : "block";
 }
+function sortTable(colIndex){
 
+const table=document.querySelector("table");
+const tbody=table.tBodies[0];
+const rows=[...tbody.rows];
+
+const asc = table.getAttribute("data-sort") !== "asc";
+table.setAttribute("data-sort", asc ? "asc" : "desc");
+
+rows.sort((a,b)=>{
+
+let A=a.cells[colIndex].innerText.toLowerCase();
+let B=b.cells[colIndex].innerText.toLowerCase();
+
+if(!isNaN(A) && !isNaN(B)){
+return asc ? A-B : B-A;
+}
+
+return asc ? A.localeCompare(B) : B.localeCompare(A);
+
+});
+
+rows.forEach(r=>tbody.appendChild(r));
+
+}
 function toggleAll(id){
 const boxes=document.querySelectorAll(`#${id} input[type=checkbox]`);
 const allChecked=boxes[0].checked;
