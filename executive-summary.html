@@ -602,12 +602,12 @@ return unitCost(cost,vol);
 
 },"sh");
 
-html+=row(`YTD Volume ${year} (ML)`,d=>
-(sum(volumeCY,d)/1000000).toFixed(2)
+html+=row(`YTD Volume ${year} (ML)`, d=>{
+return (sum(volumeCY,d)/1000000).toFixed(2);
 },"sh");
 
-html+=row(`YTD Volume ${lastYear} (ML)`,d=>
-(sum(volumeLY,d)/1000000).toFixed(2)
+html+=row(`YTD Volume ${lastYear} (ML)`, d=>{
+return (sum(volumeLY,d)/1000000).toFixed(2);
 },"sh");
 
 html+=row("YTD Performance",d=>{
