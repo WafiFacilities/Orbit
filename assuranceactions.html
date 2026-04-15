@@ -227,6 +227,19 @@ font-weight:bold;
 <button onclick="toggleDropdown('statusDropdown')" class="filter-btn">Status ▼</button>
 <div id="statusDropdown" class="dropdown-content">
 
+  <div class="dropdown-filter">
+<button onclick="toggleDropdown('indicatorDropdown')" class="filter-btn">Indicator ▼</button>
+
+<div id="indicatorDropdown" class="dropdown-content">
+
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('indicatorDropdown')"> All</label>
+<label><input type="checkbox" value="open"> Open</label>
+<label><input type="checkbox" value="overdue"> Overdue</label>
+<label><input type="checkbox" value="closed"> Closed</label>
+
+</div>
+</div>
+
 <label><input type="checkbox" value="ALL" checked onchange="toggleAll('statusDropdown')"> All</label>
 <label><input type="checkbox" value="Open"> Open</label>
 <label><input type="checkbox" value="Closed"> Closed</label>
@@ -253,17 +266,17 @@ font-weight:bold;
 
 <thead>
 <tr>
-<th>Finding</th>
-<th>Assurance Type</th>
-<th>Assurance</th>
-<th>RAM</th>
-<th>Nature</th>
-<th>Action Required</th>
-<th>Action Owner</th>
-<th>Target Date</th>
-<th>Revisions</th>
-<th>Status</th>
-<th>Indicator</th>
+<th onclick="sortTable(0)">Finding</th>
+<th onclick="sortTable(1)">Assurance Type</th>
+<th onclick="sortTable(2)">Assurance</th>
+<th onclick="sortTable(3)">RAM</th>
+<th onclick="sortTable(4)">Nature</th>
+<th onclick="sortTable(5)">Action Required</th>
+<th onclick="sortTable(6)">Action Owner</th>
+<th onclick="sortTable(7)">Target Date</th>
+<th onclick="sortTable(8)">Revisions</th>
+<th onclick="sortTable(9)">Status</th>
+<th onclick="sortTable(10)">Indicator</th>
 </tr>
 </thead>
 
@@ -321,6 +334,9 @@ const depots=[...document.querySelectorAll("#depotDropdown input:checked")]
 const statuses=[...document.querySelectorAll("#statusDropdown input:checked")]
 .map(c=>c.value).filter(v=>v!=="ALL");
 
+  const indicators=[...document.querySelectorAll("#indicatorDropdown input:checked")]
+.map(c=>c.value).filter(v=>v!=="ALL");
+
 const natures=[...document.querySelectorAll("#natureDropdown input:checked")]
 .map(c=>c.value).filter(v=>v!=="ALL");
 
@@ -361,8 +377,11 @@ indicator="overdue";
 overdue++;
 }
 else{
+indicator="open";
 open++;
 }
+
+if(indicators.length && !indicators.includes(indicator)) return;
 
 html+=`
 <tr>
@@ -435,6 +454,33 @@ drop.style.display="none";
 }
 });
 });
+
+function sortTable(colIndex){
+
+const table=document.querySelector("table");
+const tbody=table.tBodies[0];
+const rows=[...tbody.rows];
+
+const asc = table.getAttribute("data-sort") !== "asc";
+table.setAttribute("data-sort", asc ? "asc" : "desc");
+
+rows.sort((a,b)=>{
+
+let A=a.cells[colIndex].innerText.toLowerCase();
+let B=b.cells[colIndex].innerText.toLowerCase();
+
+if(!isNaN(A) && !isNaN(B)){
+return asc ? A-B : B-A;
+}
+
+return asc ? A.localeCompare(B) : B.localeCompare(A);
+
+});
+
+rows.forEach(r=>tbody.appendChild(r));
+
+}
+  
 async function logout(){
 await supabaseClient.auth.signOut();
 window.location="login.html";
