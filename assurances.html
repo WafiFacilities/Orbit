@@ -365,7 +365,7 @@ container.innerHTML+=`
 async function loadData(){
 const {data:allFindings}=await supabaseClient
 .from("assurance_findings")
-select("assurance_id,status,target_date")
+.select("assurance_id,status,target_date")
   
 let query=supabaseClient.from("assurances").select("*",{count:"exact"});
 let overdueAssurances = 0;
