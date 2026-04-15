@@ -129,12 +129,18 @@ background:white;
 border:2px solid #404040;
 }
 
- th, td{
+th, td{
 padding:10px 10px;
 text-align:center;
-font-size:20px;
+font-size:17px;
 border:1px solid #cfcfcf;
 }
+
+ .value{
+font-size:25px;
+font-weight:600;
+}
+ 
  th{
 background:#404040;
 color:white;
@@ -283,7 +289,7 @@ function row(title,fn){
 let html=`<tr><td class="metric">${title}</td>`;
 
 depots.forEach(d=>{
-html+=`<td>${fn(d)||0}</td>`;
+html+=`<td class="value">${fn(d)||0}</td>`;
 });
 
 html+="</tr>";
