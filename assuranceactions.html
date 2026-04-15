@@ -223,9 +223,7 @@ font-weight:bold;
 <div id="typeDropdown" class="dropdown-content"></div>
 </div>
 
-<div class="dropdown-filter">
-<button onclick="toggleDropdown('statusDropdown')" class="filter-btn">Status ▼</button>
-<div id="statusDropdown" class="dropdown-content">
+
 
   <div class="dropdown-filter">
 <button onclick="toggleDropdown('indicatorDropdown')" class="filter-btn">Indicator ▼</button>
@@ -240,12 +238,6 @@ font-weight:bold;
 </div>
 </div>
 
-<label><input type="checkbox" value="ALL" checked onchange="toggleAll('statusDropdown')"> All</label>
-<label><input type="checkbox" value="Open"> Open</label>
-<label><input type="checkbox" value="Closed"> Closed</label>
-
-</div>
-</div>
 
 <div class="dropdown-filter">
 <button onclick="toggleDropdown('natureDropdown')" class="filter-btn">Nature ▼</button>
@@ -275,7 +267,7 @@ font-weight:bold;
 <th onclick="sortTable(6)">Action Owner</th>
 <th onclick="sortTable(7)">Target Date</th>
 <th onclick="sortTable(8)">Revisions</th>
-<th onclick="sortTable(9)">Status</th>
+<th onclick="sortTable(9)">Terminal</th>
 <th onclick="sortTable(10)">Indicator</th>
 </tr>
 </thead>
@@ -331,8 +323,7 @@ async function loadActions(){
 const depots=[...document.querySelectorAll("#depotDropdown input:checked")]
 .map(c=>c.value).filter(v=>v!=="ALL");
 
-const statuses=[...document.querySelectorAll("#statusDropdown input:checked")]
-.map(c=>c.value).filter(v=>v!=="ALL");
+
 
   const indicators=[...document.querySelectorAll("#indicatorDropdown input:checked")]
 .map(c=>c.value).filter(v=>v!=="ALL");
@@ -350,7 +341,7 @@ let query = supabaseClient
 assurances(id,assurance_name,depot,assurance_type)
 `);
 
-if(statuses.length) query=query.in("status",statuses);
+
 if(natures.length) query=query.in("type_of_finding",natures);
 
 const {data:actions}=await query;
@@ -406,7 +397,7 @@ ${a.assurances?.assurance_name || ""}
 <td>${a.action_owner_email || ""}</td>
 <td>${a.target_date || ""}</td>
 <td>${a.target_date_revision_count || 0}</td>
-<td>${a.status || "Open"}</td>
+<td>${a.assurances?.depot || ""}</td>
 
 <td>
 <span class="indicator ${indicator}">
