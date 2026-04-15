@@ -277,14 +277,15 @@ async function isSuperUser(){
  return data.length > 0;
 }
 
+init();
+
 async function init(){
  const {data} = await supabaseClient.auth.getSession();
  if(!data.session) window.location.replace("login.html");
 
- loadDetail();
+ await loadUsers();     // load users first
+ loadDetail();          // then load initiative
 }
-init();
-  loadUsers();
 
 // ----- IMPROVED COMMENTARY FORMATTER -----
 function formatCommentary(text){
@@ -321,9 +322,14 @@ async function loadUsers(){
  .select("email, full_name, terminal")
  .order("full_name");
 
- if(error) return;
+ if(error){
+   console.error(error);
+   return;
+ }
 
  const dropdown = $("#edit_owner");
+
+ dropdown.empty().append('<option value=""></option>');
 
  data.forEach(u=>{
    const text = `${u.full_name} | ${u.terminal || ""} | ${u.email}`;
@@ -332,7 +338,8 @@ async function loadUsers(){
 
  dropdown.select2({
    placeholder:"Search user...",
-   allowClear:true
+   allowClear:true,
+   width:"100%"
  });
 
 }
