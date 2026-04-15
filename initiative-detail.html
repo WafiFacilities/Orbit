@@ -318,9 +318,10 @@ function formatCommentary(text){
 async function loadUsers(){
 
  const {data, error} = await supabaseClient
- .from("portal_users")
- .select("email, full_name, terminal")
- .order("full_name");
+
+.from("portal_users")
+.select("email, full_name")
+.order("full_name");
 
  if(error){
    console.error(error);
