@@ -329,12 +329,11 @@ return d.getFullYear()==year && d.getMonth()==m;
 
 const completed=data.filter(x=>{
 if(x.depot!==depot) return false;
-if(!x.closure_date) return false;
+if(!x.date_of_assurance) return false;
 
-const d=new Date(x.closure_date);
+const d=new Date(x.date_of_assurance);
 return d.getFullYear()==year && d.getMonth()==m;
 }).length;
-
 plannedTotal+=planned;
 completedTotal+=completed;
 
