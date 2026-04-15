@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>Initiative Detail</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <style>
 @font-face { font-family: '72 Condensed'; src: local('72 Condensed'); }
@@ -235,8 +238,10 @@ This initiative is CLOSED. Only superusers can modify it.
 <label>Impact Amount</label>
 <input type="number" id="edit_impact_amount">
 
-<label>Project Owner Email</label>
-<input type="email" id="edit_owner">
+<label>Project Owner</label>
+<select id="edit_owner" style="width:100%">
+<option value="">Select Project Owner</option>
+</select>
 
 <label>Add Commentary</label>
 <textarea id="edit_commentary"></textarea>
@@ -279,6 +284,7 @@ async function init(){
  loadDetail();
 }
 init();
+  loadUsers();
 
 // ----- IMPROVED COMMENTARY FORMATTER -----
 function formatCommentary(text){
@@ -308,7 +314,28 @@ function formatCommentary(text){
 
   return html;
 }
+async function loadUsers(){
 
+ const {data, error} = await supabaseClient
+ .from("portal_users")
+ .select("email, full_name, terminal")
+ .order("full_name");
+
+ if(error) return;
+
+ const dropdown = $("#edit_owner");
+
+ data.forEach(u=>{
+   const text = `${u.full_name} | ${u.terminal || ""} | ${u.email}`;
+   dropdown.append(new Option(text, u.email));
+ });
+
+ dropdown.select2({
+   placeholder:"Search user...",
+   allowClear:true
+ });
+
+}
 async function loadDetail(){
 
  const {data} = await supabaseClient
@@ -369,7 +396,7 @@ async function loadDetail(){
    edit_target.value = data.target_date || '';
    edit_impact_type.value = data.impact_type || '';
    edit_impact_amount.value = data.impact_amount || '';
-   edit_owner.value = data.project_owner_email || '';
+ $("#edit_owner").val(data.project_owner_email).trigger("change");
  }
 }
 
