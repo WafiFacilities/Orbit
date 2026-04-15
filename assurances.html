@@ -248,11 +248,13 @@ background:#404040;color:white;cursor:pointer;
 </div>
   
 <div class="dropdown-filter">
-<button onclick="toggleDropdown('statusDropdown')" class="filter-btn">Status ▼</button>
-<div id="statusDropdown" class="dropdown-content">
+<button onclick="toggleDropdown('indicatorDropdown')" class="filter-btn">Status ▼</button>
+<div id="indicatorDropdown" class="dropdown-content">
 
-<label><input type="checkbox" value="ALL" checked onchange="toggleAll('statusDropdown')"> All</label>
+<label><input type="checkbox" value="ALL" checked onchange="toggleAll('indicatorDropdown')"> All</label>
+<label><input type="checkbox" value="Planned"> Planned</label>
 <label><input type="checkbox" value="Open"> Open</label>
+<label><input type="checkbox" value="Overdue"> Overdue</label>
 <label><input type="checkbox" value="Closed"> Closed</label>
 
 </div>
@@ -372,8 +374,10 @@ let overdueAssurances = 0;
 const depots=[...document.querySelectorAll("#depotDropdown input:checked")]
 .map(c=>c.value).filter(v=>v!=="ALL");
 
-const statuses=[...document.querySelectorAll("#statusDropdown input:checked")]
+  const indicators=[...document.querySelectorAll("#indicatorDropdown input:checked")]
 .map(c=>c.value).filter(v=>v!=="ALL");
+  
+
 
 const types=[...document.querySelectorAll("#typeDropdown input:checked")]
 .map(c=>c.value).filter(v=>v!=="ALL");
@@ -392,8 +396,7 @@ const years=[...document.querySelectorAll("#yearDropdown input:checked")]
 if(depots.length)
 query=query.in("depot",depots);
 
-if(statuses.length)
-query=query.in("status",statuses);
+
 
 if(types.length)
 query=query.in("assurance_type",types);
@@ -417,6 +420,8 @@ let html="";
 for(const row of data){
  let statusText = "";
 let statusClass = "";
+
+  if(indicators.length && !indicators.includes(statusText)) continue;
 
 if(row.status === "Closed" && row.date_of_assurance){
     statusText = "Closed";
@@ -485,6 +490,9 @@ kpiOverdue.innerText=totalOverdue;
 
 tableBody.innerHTML=html;
 pageInfo.innerText=`Total: ${count}`;
+
+// default sort by due date
+sortTable(7);
 }
 
 function nextPage(){currentPage++;loadData();}
