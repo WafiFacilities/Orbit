@@ -333,13 +333,11 @@ const container=document.getElementById("leadDropdown");
 container.innerHTML=`<label><input type="checkbox" value="ALL" checked onchange="toggleAll('leadDropdown')"> All</label>`;
 
 leads.forEach(l=>{
-container.innerHTML+=`
-const prefix = l.split("@")[0];
+  const prefix = l.split("@")[0];
 
-container.innerHTML+=`
-<label><input type="checkbox" value="${l}"> ${prefix}</label>
-`;
-`;
+  container.innerHTML += `
+  <label><input type="checkbox" value="${l}"> ${prefix}</label>
+  `;
 });
 
 }
