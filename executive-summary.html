@@ -100,7 +100,7 @@ background:#eefffa;
 }
 
 .section td{
-background:#53ab7b;
+background:#53ab7b !important;
 color:white;
 font-weight:600;
 text-transform:uppercase;
@@ -303,7 +303,13 @@ let total=0;
 
 depots.forEach(d=>{
 const val = fn(d) || 0;
-total += parseFloat(val) || 0;
+
+const num = typeof val === "string"
+? parseFloat(val.replace(/<[^>]*>/g,""))
+: val;
+
+total += num || 0;
+
 html+=`<td class="value">${val}</td>`;
 });
 
