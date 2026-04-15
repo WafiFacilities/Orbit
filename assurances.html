@@ -28,7 +28,7 @@ font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
 position:relative;
 display:inline-block;
 }
-
+.planned{background:#3498db;}
 .filter-btn{
 padding:6px 12px;
 border:1px solid #ccc;
@@ -415,22 +415,28 @@ const today=new Date().toISOString().split("T")[0];
 let html="";
 
 for(const row of data){
-  let statusText = row.status;
-let statusClass = row.status==="Closed" ? "closed" : "open";
-if(row.status !== "Closed" && row.planned_finish_date){
-  if(row.planned_finish_date < today){
-    overdueAssurances++;
-  }
+ let statusText = "";
+let statusClass = "";
+
+if(row.status === "Closed" && row.date_of_assurance){
+    statusText = "Closed";
+    statusClass = "closed";
 }
 
+else if(row.date_of_assurance){
+    statusText = "Open";
+    statusClass = "open";
+}
 
-if(row.status !== "Closed" && row.planned_finish_date){
-  if(today > row.planned_finish_date){
+else if(!row.date_of_assurance && row.planned_finish_date && today > row.planned_finish_date){
     statusText = "Overdue";
     statusClass = "overdue";
-  }else{
-    statusText = "Open";
-  }
+    overdueAssurances++;
+}
+
+else{
+    statusText = "Planned";
+    statusClass = "planned";
 }
 
 const findings=allFindings.filter(f=>f.assurance_id===row.id);
