@@ -426,7 +426,7 @@ if(row.status !== "Closed" && row.planned_finish_date){
 
 if(row.status !== "Closed" && row.planned_finish_date){
   if(today > row.planned_finish_date){
-    statusText = "Open - Overdue";
+    statusText = "Overdue";
     statusClass = "overdue";
   }else{
     statusText = "Open";
