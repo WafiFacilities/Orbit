@@ -391,33 +391,54 @@ return dt.getFullYear()==year && dt.getMonth()+1 <= lod1Month;
 }).length
 );
 
-html+=row("# of LOD1 Closed",d=>
-assurances.filter(a=>{
+html+=row("# of LOD1 Closed",d=>{
+
+const planned = assurances.filter(a=>{
+if(a.depot!==d) return false;
+if(a.assurance_type!=="LOD1") return false;
+if(!a.planned_start_date) return false;
+
+const dt = new Date(a.planned_start_date);
+return dt.getFullYear()==year && dt.getMonth()+1 <= lod1Month;
+
+}).length;
+
+const closed = assurances.filter(a=>{
 if(a.depot!==d) return false;
 if(a.assurance_type!=="LOD1") return false;
 if(!a.date_of_assurance) return false;
 
 const dt = new Date(a.date_of_assurance);
-
 return dt.getFullYear()==year && dt.getMonth()+1 <= lod1Month;
-}).length
-);
 
-html+=row("# of LOD1 Overdue",d=>
-assurances.filter(a=>{
+}).length;
+
+let cls = closed >= planned ? "kpi-good" : "kpi-bad";
+
+return `<span class="${cls}">${closed}</span>`;
+
+});
+
+html+=row("# of LOD1 Overdue",d=>{
+
+const overdue = assurances.filter(a=>{
 
 if(a.depot!==d) return false;
 if(a.assurance_type!=="LOD1") return false;
 if(!a.planned_finish_date) return false;
-if(a.date_of_assurance) return false;   // assurance already done
+if(a.date_of_assurance) return false;
 
 const dt = new Date(a.planned_finish_date);
 
 return dt.getFullYear()==year && dt.getMonth()+1 <= lod1Month;
 
-}).length
-);
+}).length;
 
+let cls = overdue > 0 ? "kpi-bad" : "kpi-good";
+
+return `<span class="${cls}">${overdue}</span>`;
+
+});
 html+=row("Total Actions LOD1",d=>
 actions.filter(f=>{
 const a=assurances.find(x=>x.id===f.assurance_id);
@@ -432,12 +453,18 @@ return a && a.depot===d && a.assurance_type==="LOD1" && f.status!=="Closed";
 }).length
 );
 
-html+=row("Overdue Actions LOD1",d=>
-actions.filter(f=>{
+html+=row("Overdue Actions LOD1",d=>{
+
+const overdue = actions.filter(f=>{
 const a=assurances.find(x=>x.id===f.assurance_id);
 return a && a.depot===d && a.assurance_type==="LOD1" && f.status!=="Closed" && f.target_date && f.target_date<today;
-}).length
-);
+}).length;
+
+let cls = overdue > 0 ? "kpi-bad" : "kpi-good";
+
+return `<span class="${cls}">${overdue}</span>`;
+
+});
 
 html+=`<tr class="section"><td colspan="11">Assurance LOD2&3 - KPIs</td></tr>`;
  html+=`
