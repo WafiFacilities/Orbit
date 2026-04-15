@@ -177,8 +177,10 @@ button { padding:8px 16px; background:#76B531; color:white; border:none; border-
 </div>
 
 <div class="field-row">
-  <label>Project Owner Email:</label>
-  <input type="email" id="project_owner_email" required>
+ <label>Project Owner:</label>
+<input id="project_owner_email" list="userList" placeholder="Start typing name or email" required>
+
+<datalist id="userList"></datalist>
 </div>
 
 <div class="field-row">
@@ -202,12 +204,31 @@ const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 document.getElementById('start_date').value = new Date().toISOString().split('T')[0];
+async function loadUsers(){
 
+ const {data, error} = await supabaseClient
+ .from("portal_users")
+ .select("email, full_name");
+
+ if(error) return;
+
+ const list = document.getElementById("userList");
+
+ data.forEach(u=>{
+   const option = document.createElement("option");
+   option.value = u.email;
+   option.label = u.full_name + " (" + u.email + ")";
+   list.appendChild(option);
+ });
+
+}
+  
 async function init(){
  const {data} = await supabaseClient.auth.getSession();
  if(!data.session) window.location.replace("login.html");
 }
 init();
+  loadUsers();
 
 document.getElementById('initiativeForm').addEventListener('submit', async (e)=>{
  e.preventDefault();
