@@ -616,6 +616,22 @@ html+=row(`YTD Volume ${lastYear} (ML)`, d=>{
 return (sum(volumeLY,d)/1000000).toFixed(2);
 },"sh");
 
+ html+=row(`YTD Direct Cost ${year} (MPKR)`, d=>{
+return (sum(directCY,d)/1000000).toFixed(2);
+},"sh");
+
+html+=row(`YTD Direct Cost ${lastYear} (MPKR)`, d=>{
+return (sum(directLY,d)/1000000).toFixed(2);
+},"sh");
+
+html+=row(`YTD Indirect Cost ${year} (MPKR)`, d=>{
+return (sum(indirectCY,d)/1000000).toFixed(2);
+},"sh");
+
+html+=row(`YTD Indirect Cost ${lastYear} (MPKR)`, d=>{
+return (sum(indirectLY,d)/1000000).toFixed(2);
+},"sh");
+
 html+=row("YTD Performance",d=>{
 
 // Current year YTD
