@@ -650,12 +650,24 @@ return `<span class="${cls}">${perf.toFixed(2)}</span>`;
 
 },"sh");
  
- html+=row(`YTD Unit Cost ${year} PKR/L`,d=>{
+html+=row(`YTD Unit Cost ${year} PKR/L`,d=>{
 
-const cost=sum(directCY,d)+sum(indirectCY,d);
-const vol=sum(volumeCY,d);
+const costCY = sum(directCY,d)+sum(indirectCY,d);
+const volCY = sum(volumeCY,d);
 
-return unitCost(cost,vol);
+const costLY = sum(directLY,d)+sum(indirectLY,d);
+const volLY = sum(volumeLY,d);
+
+const cy = volCY ? (costCY/volCY) : 0;
+const ly = volLY ? (costLY/volLY) : 0;
+
+const value = cy.toFixed(2);
+
+let arrow="";
+if(cy < ly) arrow=`<span class="arrow-good">↓</span>`;
+if(cy > ly) arrow=`<span class="arrow-bad">↑</span>`;
+
+return `${value} ${arrow}`;
 
 },"sh");
 
