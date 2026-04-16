@@ -28,7 +28,29 @@ font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
  td{
 font-variant-numeric:tabular-nums;
 }
- 
+ .arrow-up{
+color:#1e7e34;
+font-weight:700;
+margin-left:6px;
+}
+
+.arrow-down{
+color:#c0392b;
+font-weight:700;
+margin-left:6px;
+}
+
+.arrow-good{
+color:#1e7e34;
+font-weight:700;
+margin-left:6px;
+}
+
+.arrow-bad{
+color:#c0392b;
+font-weight:700;
+margin-left:6px;
+}
 .sidebar{
 width:220px;background:#404040;color:white;
 display:flex;flex-direction:column;padding-top:20px;
@@ -609,15 +631,37 @@ return unitCost(cost,vol);
 },"sh");
 
 html+=row(`YTD Volume ${year} (ML)`, d=>{
-return (sum(volumeCY,d)/1000000).toFixed(2);
+
+const cy = sum(volumeCY,d);
+const ly = sum(volumeLY,d);
+
+const value = (cy/1000000).toFixed(2);
+
+let arrow="";
+if(cy>ly) arrow=`<span class="arrow-good">↑</span>`;
+if(cy<ly) arrow=`<span class="arrow-bad">↓</span>`;
+
+return `${value} ${arrow}`;
+
 },"sh");
 
 html+=row(`YTD Volume ${lastYear} (ML)`, d=>{
 return (sum(volumeLY,d)/1000000).toFixed(2);
 },"sh");
 
- html+=row(`YTD Direct Cost ${year} (MPKR)`, d=>{
-return (sum(directCY,d)/1000000).toFixed(2);
+html+=row(`YTD Direct Cost ${year} (MPKR)`, d=>{
+
+const cy = sum(directCY,d);
+const ly = sum(directLY,d);
+
+const value = (cy/1000000).toFixed(2);
+
+let arrow="";
+if(cy<ly) arrow=`<span class="arrow-good">↓</span>`;
+if(cy>ly) arrow=`<span class="arrow-bad">↑</span>`;
+
+return `${value} ${arrow}`;
+
 },"sh");
 
 html+=row(`YTD Direct Cost ${lastYear} (MPKR)`, d=>{
@@ -625,7 +669,18 @@ return (sum(directLY,d)/1000000).toFixed(2);
 },"sh");
 
 html+=row(`YTD Indirect Cost ${year} (MPKR)`, d=>{
-return (sum(indirectCY,d)/1000000).toFixed(2);
+
+const cy = sum(indirectCY,d);
+const ly = sum(indirectLY,d);
+
+const value = (cy/1000000).toFixed(2);
+
+let arrow="";
+if(cy<ly) arrow=`<span class="arrow-good">↓</span>`;
+if(cy>ly) arrow=`<span class="arrow-bad">↑</span>`;
+
+return `${value} ${arrow}`;
+
 },"sh");
 
 html+=row(`YTD Indirect Cost ${lastYear} (MPKR)`, d=>{
