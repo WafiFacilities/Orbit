@@ -612,7 +612,45 @@ Financial Performance - KPIs &nbsp;&nbsp;
 </tr>
 `;
 
-html+=row(`YTD Unit Cost ${year} PKR/L`,d=>{
+html+=row("YTD Performance",d=>{
+
+// Current year YTD
+const A = sum(directCY,d)+sum(indirectCY,d);
+const B = sum(volumeCY,d);
+
+// Last year YTD volume
+const F = sum(volumeLY,d);
+
+// Last year FULL FY
+const G = directLY
+.filter(x=>x.depot===d)
+.reduce((s,x)=>s+(x.value||0),0)
++
+indirectLY
+.filter(x=>x.depot===d)
+.reduce((s,x)=>s+(x.value||0),0);
+
+const H = volumeLY
+.filter(x=>x.depot===d)
+.reduce((s,x)=>s+(x.value||0),0);
+
+// KPIs
+const J = F ? (A/F) : null;
+const K = H ? (G/H) : null;
+
+if(!J || !K) return "-";
+
+const perf = (K/J);
+
+let cls="kpi-neutral";
+if(perf>1) cls="kpi-good";
+if(perf<1) cls="kpi-bad";
+
+return `<span class="${cls}">${perf.toFixed(2)}</span>`;
+
+},"sh");
+ 
+ html+=row(`YTD Unit Cost ${year} PKR/L`,d=>{
 
 const cost=sum(directCY,d)+sum(indirectCY,d);
 const vol=sum(volumeCY,d);
@@ -687,43 +725,7 @@ html+=row(`YTD Indirect Cost ${lastYear} (MPKR)`, d=>{
 return (sum(indirectLY,d)/1000000).toFixed(2);
 },"sh");
 
-html+=row("YTD Performance",d=>{
 
-// Current year YTD
-const A = sum(directCY,d)+sum(indirectCY,d);
-const B = sum(volumeCY,d);
-
-// Last year YTD volume
-const F = sum(volumeLY,d);
-
-// Last year FULL FY
-const G = directLY
-.filter(x=>x.depot===d)
-.reduce((s,x)=>s+(x.value||0),0)
-+
-indirectLY
-.filter(x=>x.depot===d)
-.reduce((s,x)=>s+(x.value||0),0);
-
-const H = volumeLY
-.filter(x=>x.depot===d)
-.reduce((s,x)=>s+(x.value||0),0);
-
-// KPIs
-const J = F ? (A/F) : null;
-const K = H ? (G/H) : null;
-
-if(!J || !K) return "-";
-
-const perf = (K/J);
-
-let cls="kpi-neutral";
-if(perf>1) cls="kpi-good";
-if(perf<1) cls="kpi-bad";
-
-return `<span class="${cls}">${perf.toFixed(2)}</span>`;
-
-},"sh");
 
 document.getElementById("tableBody").innerHTML=html;
 const lod1MonthSel=document.getElementById("lod1MonthFilter");
