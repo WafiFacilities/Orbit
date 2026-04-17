@@ -114,6 +114,16 @@ margin-top:10px;
 <div class="main">
 
 <div class="container">
+  <button onclick="goToAssurance()" style="
+  background:none;
+  border:none;
+  color:#0073aa;
+  font-weight:bold;
+  cursor:pointer;
+  padding:0;
+">
+  ← Back to Assurance
+</button>
 <h3>Finding Details</h3>
 
 <div class="form-row">
@@ -197,6 +207,8 @@ const {data:assurance}=await supabaseClient
 .eq("id",finding.assurance_id)
 .single();
 
+  window.currentAssuranceId = finding.assurance_id;
+
 isSuperUser = await checkSuperUser(userEmail);
 isAssuranceOwner = (assurance.assurance_owner_email||"").toLowerCase()===userEmail;
 isActionOwner = (finding.action_owner_email||"").toLowerCase()===userEmail;
@@ -237,7 +249,11 @@ return;
 // Others
 document.getElementById("lockedMsg").style.display="block";
 }
-
+function goToAssurance(){
+  if(window.currentAssuranceId){
+    window.location.href = `assurance-detail.html?id=${window.currentAssuranceId}`;
+  }
+}
 async function save(){
 
 let updates={};
