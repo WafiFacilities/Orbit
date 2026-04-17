@@ -254,11 +254,26 @@ Cannot close assurance while open findings exist.
 <script>
 
 const supabaseClient = supabase.createClient( "https://kqhbvmqxrwwspopwckah.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8" );
-const id = new URLSearchParams(window.location.search).get("id");
+
+ async function checkAuthOrRedirect() {
+  const { data, error } = await supabaseClient.auth.getSession();
+
+  if (error || !data.session) {
+    window.location.href = "login.html";
+    return null;
+  }
+
+  return data.session;
+} 
+  
+  const id = new URLSearchParams(window.location.search).get("id");
 
 async function isSuperUser(){
- const session = await supabaseClient.auth.getSession();
- const email = session.data.session.user.email;
+const { data: { session } } = await supabaseClient.auth.getSession();
+
+if (!session) return false;
+
+const email = session.user.email;
 
  const {data} = await supabaseClient
    .from('superusers')
@@ -318,8 +333,14 @@ const {data:assurance}=await supabaseClient
 .eq("id",id)
 .single();
 
-  const session = await supabaseClient.auth.getSession();
-const userEmail = session.data.session.user.email;
+ const { data: { session } } = await supabaseClient.auth.getSession();
+
+if (!session) {
+  window.location.href = "login.html";
+  return;
+}
+
+const userEmail = session.user.email;
 
 const superUser = await isSuperUser();
 
@@ -468,8 +489,11 @@ toggleAddFinding();
    load();
   }
 async function init(){
- await loadUsers();
+  const session = await checkAuthOrRedirect();
+  if (!session) return;
 
+  await loadUsers();
+  await load();
 }
 
 init();
@@ -540,7 +564,7 @@ load();
 
 }
 
-load();
+
 
 </script>
 
