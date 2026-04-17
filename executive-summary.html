@@ -683,15 +683,6 @@ return `${value} ${arrow}`;
 
 },"sh");
 
-html+=row(`YTD Unit Cost ${lastYear} PKR/L`,d=>{
-
-const cost=sum(directLY,d)+sum(indirectLY,d);
-const vol=sum(volumeLY,d);
-
-return unitCost(cost,vol);
-
-},"sh");
-
 html+=row(`YTD Volume ${year} (ML)`, d=>{
 
 const cy = sum(volumeCY,d);
@@ -706,11 +697,7 @@ if(cy<ly) arrow=`<span class="arrow-bad">↓</span>`;
 return `${value} ${arrow}`;
 
 },"sh");
-
-html+=row(`YTD Volume ${lastYear} (ML)`, d=>{
-return (sum(volumeLY,d)/1000000).toFixed(2);
-},"sh");
-
+ 
 html+=row(`YTD Direct Cost ${year} (MPKR)`, d=>{
 
 const cy = sum(directCY,d);
@@ -726,10 +713,6 @@ return `${value} ${arrow}`;
 
 },"sh");
 
-html+=row(`YTD Direct Cost ${lastYear} (MPKR)`, d=>{
-return (sum(directLY,d)/1000000).toFixed(2);
-},"sh");
-
 html+=row(`YTD Indirect Cost ${year} (MPKR)`, d=>{
 
 const cy = sum(indirectCY,d);
@@ -743,7 +726,29 @@ if(cy>ly) arrow=`<span class="arrow-bad">↑</span>`;
 
 return `${value} ${arrow}`;
 
+},"sh"); 
+ 
+html+=row(`YTD Unit Cost ${lastYear} PKR/L`,d=>{
+
+const cost=sum(directLY,d)+sum(indirectLY,d);
+const vol=sum(volumeLY,d);
+
+return unitCost(cost,vol);
+
 },"sh");
+
+
+html+=row(`YTD Volume ${lastYear} (ML)`, d=>{
+return (sum(volumeLY,d)/1000000).toFixed(2);
+},"sh");
+
+
+
+html+=row(`YTD Direct Cost ${lastYear} (MPKR)`, d=>{
+return (sum(directLY,d)/1000000).toFixed(2);
+},"sh");
+
+
 
 html+=row(`YTD Indirect Cost ${lastYear} (MPKR)`, d=>{
 return (sum(indirectLY,d)/1000000).toFixed(2);
