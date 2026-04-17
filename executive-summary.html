@@ -248,7 +248,7 @@ const supabaseClient = supabase.createClient(
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8"
 );
 
-<script>
+
 async function checkAuth() {
   try {
     const { data: { session } } = await supabase.auth.getSession();
@@ -268,7 +268,7 @@ async function checkAuth() {
 }
 
 checkAuth();
-</script>
+
  
 const depots=["KMR","SKP","DLP","CKL","TJB","MCH","BKR","VHR","MHK","GTI"];
 
