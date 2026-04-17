@@ -167,7 +167,7 @@ async function login(){
 
   clearMsg();
 
-  const {error} = await supabaseClient.auth.signInWithPassword({
+  const {error} = await supabase.auth.signInWithPassword({
     email: loginEmail.value,
     password: loginPassword.value
   });
