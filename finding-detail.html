@@ -216,7 +216,7 @@ return data.length>0;
 async function load(){
 
 const session = await supabaseClient.auth.getSession();
-const userEmail = session.data.session.user.email.toLowerCase();
+const userEmail = (session.data.session.user.email || "").trim().toLowerCase();
 
 const {data:finding}=await supabaseClient
 .from("assurance_findings")
@@ -236,7 +236,9 @@ const {data:assurance}=await supabaseClient
 
 isSuperUser = await checkSuperUser(userEmail);
 isAssuranceOwner = (assurance.assurance_owner_email||"").toLowerCase()===userEmail;
-isActionOwner = (finding.action_owner_email||"").toLowerCase()===userEmail;
+const actionOwnerEmail = (finding.action_owner_email || "").trim().toLowerCase();
+
+isActionOwner = actionOwnerEmail === userEmail;
 
 // Populate fields fresh
 document.getElementById("finding_title").value=finding.finding_title||"";
