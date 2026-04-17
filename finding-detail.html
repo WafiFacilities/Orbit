@@ -152,6 +152,11 @@ margin-top:10px;
 </div> 
 
 <div class="form-row">
+<label>Action Owner Email</label>
+<input id="action_owner_email">
+</div>
+
+<div class="form-row">
 <label>Status</label>
 <select id="status">
 <option>Open</option>
@@ -242,6 +247,7 @@ document.getElementById("target_date").value=finding.target_date||"";
   document.getElementById("finding_description").value = finding.finding_description || "";
 document.getElementById("priority_rating").value = finding.priority_rating || "";
 document.getElementById("created_on").value = finding.created_at || "";
+  document.getElementById("action_owner_email").value = finding.action_owner_email || "";
 
 // Default disable all
 document.querySelectorAll("input,textarea,select")
