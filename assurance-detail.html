@@ -348,14 +348,7 @@ const {data:assurance}=await supabaseClient
 
 const superUser = await isSuperUser();
 
-if (!session) {
-  window.location.href = "login.html";
-  return;
-}
 
-
-
-const superUser = await isSuperUser();
 
 assuranceInfo.innerHTML=`
 <h2>${assurance.assurance_name}</h2>
