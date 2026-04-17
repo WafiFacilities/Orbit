@@ -249,24 +249,6 @@ const supabaseClient = supabase.createClient(
 );
 
 
-async function checkAuth() {
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (session) {
-    window.currentUser = session.user;
-    return; // ✅ user is logged in
-  }
-
-  // If no session yet, wait for auth state
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (!session) {
-      window.location.replace("login.html");
-    }
-  });
-}
-
-checkAuth();
-
  
 const depots=["KMR","SKP","DLP","CKL","TJB","MCH","BKR","VHR","MHK","GTI"];
 
