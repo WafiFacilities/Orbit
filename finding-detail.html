@@ -132,9 +132,24 @@ margin-top:10px;
 </div>
 
 <div class="form-row">
+<label>Finding Description</label>
+<textarea id="finding_description"></textarea>
+</div>
+  
+<div class="form-row">
 <label>Action Required</label>
 <textarea id="action_required"></textarea>
 </div>
+
+   <div class="form-row">
+<label>Priority Rating</label>
+<select id="priority_rating">
+<option value="">Select</option>
+<option>High</option>
+<option>Medium</option>
+<option>Low</option>
+</select>
+</div> 
 
 <div class="form-row">
 <label>Status</label>
@@ -153,6 +168,11 @@ margin-top:10px;
 <div class="form-row">
 <label>Target Date</label>
 <input type="date" id="target_date">
+</div>
+
+  <div class="form-row">
+<label>Created On</label>
+<input type="date" id="created_at" disabled>
 </div>
 
 <button onclick="save()">Save Changes</button>
@@ -219,6 +239,9 @@ document.getElementById("action_required").value=finding.action_required||"";
 document.getElementById("status").value=finding.status;
 document.getElementById("action_taken").value=finding.action_taken||"";
 document.getElementById("target_date").value=finding.target_date||"";
+  document.getElementById("finding_description").value = finding.finding_description || "";
+document.getElementById("priority_rating").value = finding.priority_rating || "";
+document.getElementById("created_on").value = finding.created_at || "";
 
 // Default disable all
 document.querySelectorAll("input,textarea,select")
@@ -279,6 +302,8 @@ updates.finding_title=document.getElementById("finding_title").value;
 updates.action_required=document.getElementById("action_required").value;
 updates.status=newStatus;
 updates.action_taken=document.getElementById("action_taken").value;
+  updates.finding_description = document.getElementById("finding_description").value;
+updates.priority_rating = document.getElementById("priority_rating").value;
 
 if(document.getElementById("target_date").value!==currentData.target_date){
 updates.target_date=document.getElementById("target_date").value;
