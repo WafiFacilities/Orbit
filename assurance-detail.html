@@ -325,6 +325,19 @@ async function loadUsers(){
 }
 async function load(){
 
+async function load(){
+
+// ✅ FIRST: check auth
+const { data: { session } } = await supabaseClient.auth.getSession();
+
+if (!session) {
+  window.location.href = "login.html";
+  return;
+}
+
+const userEmail = session.user.email;
+
+// THEN continue
 generateRAMOptions();
 
 const {data:assurance}=await supabaseClient
@@ -333,7 +346,7 @@ const {data:assurance}=await supabaseClient
 .eq("id",id)
 .single();
 
- const { data: { session } } = await supabaseClient.auth.getSession();
+const superUser = await isSuperUser();
 
 if (!session) {
   window.location.href = "login.html";
