@@ -167,7 +167,7 @@ button:active{
   </div>-->
 
   <!-- FORGOT -->
-  <div id="forgotBox" class="hidden">
+  <div id="forgotBox" style="display:none;">
     <input type="email" id="forgotEmail" placeholder="Enter your email">
     <button onclick="resetPassword()">Send reset link</button>
     <div class="link" onclick="showLogin()">Back to login</div>
@@ -196,9 +196,9 @@ function clearMsg(){
 
 function showLogin(){
   clearMsg();
-  loginBox.classList.remove("hidden");
-  signupBox.classList.add("hidden");
-  forgotBox.classList.add("hidden");
+
+  loginBox.style.display = "block";
+  forgotBox.style.display = "none";
 }
 
 function showSignup(){
@@ -210,9 +210,9 @@ function showSignup(){
 
 function showForgot(){
   clearMsg();
-  forgotBox.classList.remove("hidden");
-  loginBox.classList.add("hidden");
-  signupBox.classList.add("hidden");
+
+  loginBox.style.display = "none";
+  forgotBox.style.display = "block";
 }
 
 async function login(){
