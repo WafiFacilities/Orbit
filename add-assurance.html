@@ -170,6 +170,17 @@ button{padding:8px 16px;background:#76B531;color:white;border:none;border-radius
 <script>
 const supabaseClient = supabase.createClient( "https://kqhbvmqxrwwspopwckah.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8" );
 
+async function checkAuthOrRedirect() {
+  const { data, error } = await supabaseClient.auth.getSession();
+
+  if (error || !data.session) {
+    window.location.href = "login.html";
+    return null;
+  }
+
+  return data.session;
+}
+  
 document.getElementById("assuranceForm").addEventListener("submit", async (e)=>{
 e.preventDefault();
 
@@ -228,8 +239,11 @@ async function loadUsers(){
 
 }
 
-  async function init(){
- await loadUsers();
+async function init(){
+  const session = await checkAuthOrRedirect();
+  if (!session) return;
+
+  await loadUsers();
 }
 
 init();
