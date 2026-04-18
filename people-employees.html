@@ -386,20 +386,33 @@ function renderTable(){
         m.is_applicable===true
       );
 
-      if(record){
-        const status=calculateStatus(record.completion_date,c.validity_years);
+     if(record){
 
-        let secondLine="";
-        if(status.text==="Valid") secondLine=`Completed: ${record.completion_date}`;
-        if(status.text==="Expiring Soon") secondLine=`Expires On: ${status.expiry}`;
-        if(status.text==="Expired") secondLine=`Expired On: ${status.expiry}`;
+  // ✅ If completed → use existing logic
+  if(record.completion_date){
+    const status = calculateStatus(record.completion_date, c.validity_years);
 
-        html+=`<td class="${status.class}">
-          ${status.text}
-          <span class="small-text">${secondLine}</span>
-        </td>`;
-        return;
-      }
+    let secondLine="";
+    if(status.text==="Valid") secondLine=`Completed: ${record.completion_date}`;
+    if(status.text==="Expiring Soon") secondLine=`Expires On: ${status.expiry}`;
+    if(status.text==="Expired") secondLine=`Expired On: ${status.expiry}`;
+
+    html+=`<td class="${status.class}">
+      ${status.text}
+      <span class="small-text">${secondLine}</span>
+    </td>`;
+    return;
+  }
+
+  // ❗ If NOT completed → use planned logic
+  const planned = getPlannedStatus(record.target_date);
+
+  html+=`<td class="${planned.class}">
+    ${planned.text}
+    <span class="small-text">${planned.sub}</span>
+  </td>`;
+  return;
+}
 
    if(required){
 
