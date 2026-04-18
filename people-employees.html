@@ -45,7 +45,9 @@ body {
 .header-left img{
   height:40px;
 }
-
+.status-planned {
+  background:#cfe2ff;
+}
 .wafi-logo{
   height:40px;
 }
@@ -311,7 +313,37 @@ function populateFilters(){
   return;
 }
 }
+function getPlannedStatus(targetDate){
 
+  if(!targetDate){
+    return {
+      text: "Not Planned",
+      class: "status-missing",
+      sub: "Target Date: -"
+    };
+  }
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const target = new Date(targetDate);
+  target.setHours(0,0,0,0);
+
+  if(target >= today){
+    return {
+      text: "Planned",
+      class: "status-planned",
+      sub: `Target: ${targetDate}`
+    };
+  }
+
+  return {
+    text: "Overdue",
+    class: "status-expired",
+    sub: `Was: ${targetDate}`
+  };
+}
+  
 function renderTable(){
 
   const nameFilter=document.getElementById("filterName").value.toLowerCase();
@@ -369,13 +401,17 @@ function renderTable(){
         return;
       }
 
-      if(required){
-        html+=`<td class="status-missing">
-          Not Done
-          <span class="small-text">Target Date: -</span>
-        </td>`;
-        return;
-      }
+   if(required){
+
+  const targetDate = record?.target_date; // ensure this exists in DB
+  const planned = getPlannedStatus(targetDate);
+
+  html+=`<td class="${planned.class}">
+    ${planned.text}
+    <span class="small-text">${planned.sub}</span>
+  </td>`;
+  return;
+}
 
       html+=`<td class="na-cell">N/A</td>`;
     });
