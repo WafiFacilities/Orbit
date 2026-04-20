@@ -172,7 +172,7 @@ margin-top:10px;
 <thead>
 <tr>
 <th>Finding</th>
-<th>RAM</th>
+<th>Risk</th>
 <th>Nature</th>
 <th>Action Required</th>
 <th>Action Taken</th>
@@ -236,8 +236,13 @@ Cannot close assurance while open findings exist.
 </div>
 
 <div class="form-row">
-<label>RAM Rating</label>
-<select id="priority_rating"></select>
+<label>Risk Rating</label>
+<select id="priority_rating">
+  <option value="">Select Risk</option>
+  <option value="High">High</option>
+  <option value="Medium">Medium</option>
+  <option value="Low">Low</option>
+</select>
 </div>
 
 <div class="form-row">
@@ -304,18 +309,7 @@ const email = session.user.email;
  return data.length > 0;
 }
   
-function generateRAMOptions(){
-const letters=["A","B","C","D","E"];
-const select=document.getElementById("priority_rating");
-select.innerHTML="<option value=''>Select RAM</option>";
 
-for(let i=0;i<=5;i++){
-letters.forEach(l=>{
-const val=i+l;
-select.innerHTML+=`<option value="${val}">${val}</option>`;
-});
-}
-}
 async function loadUsers(){
 
  const {data, error} = await supabaseClient
@@ -359,7 +353,7 @@ if (!session) {
 const userEmail = session.user.email;
 
 // THEN continue
-generateRAMOptions();
+
 
 const {data:assurance}=await supabaseClient
 .from("assurances")
