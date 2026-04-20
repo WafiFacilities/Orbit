@@ -5,6 +5,7 @@
 <title>Assurance Actions</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
 @font-face { font-family:'72 Condensed'; src:local('72 Condensed'); }
@@ -110,7 +111,19 @@ display:block;
 font-size:13px;
 margin-bottom:4px;
 }
-  
+.export-btn{
+background:#16a34a;
+color:white;
+border:none;
+padding:8px 14px;
+border-radius:6px;
+cursor:pointer;
+font-weight:bold;
+}
+
+.export-btn:hover{
+background:#12803d;
+}  
 .filters{
 display:flex;
 gap:20px;
@@ -239,6 +252,16 @@ font-weight:bold;
 </div>
 
 
+</div>
+
+  <div class="container">
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+  <h3>Actions List</h3>
+
+  <button onclick="exportToExcel()" class="export-btn">
+    Export to Excel
+  </button>
 </div>
 
 <table>
@@ -412,6 +435,97 @@ kpiClosed.innerText=closed;
 kpiOverdue.innerText=overdue;
 
 }
+
+async function exportToExcel(){
+
+const {data:rows, error} = await supabaseClient
+.from("assurance_findings")
+.select(`
+  finding_title,
+  finding_description,
+  type_of_finding,
+  priority_rating,
+  action_required,
+  action_taken,
+  action_owner_email,
+  target_date,
+  status,
+  assurances(
+    depot,
+    assurance_name,
+    assurance_type,
+    assurance_owner_name,
+    participants,
+    brief_description,
+    planned_start_date,
+    status
+  )
+`);
+
+if(error){
+  alert("Error exporting data");
+  return;
+}
+
+const today = new Date().toISOString().split("T")[0];
+
+const formatted = rows.map(r => {
+
+let indicator = "Open";
+
+if(r.status === "Closed"){
+  indicator = "Closed";
+}
+else if(r.target_date && r.target_date < today){
+  indicator = "Overdue";
+}
+
+return {
+  Depot: r.assurances?.depot || "",
+  Assurance_Name: r.assurances?.assurance_name || "",
+  Assurance_Type: r.assurances?.assurance_type || "",
+  Assurance_Owner: r.assurances?.assurance_owner_name || "",
+  Participants: r.assurances?.participants || "",
+  Description: r.assurances?.brief_description || "",
+  Planned_Start_Date: r.assurances?.planned_start_date || "",
+  Assurance_Status: r.assurances?.status || "",
+
+  Finding_Title: r.finding_title || "",
+  Finding_Description: r.finding_description || "",
+  Finding_Type: r.type_of_finding || "",
+  Priority: r.priority_rating || "",
+
+  Action_Required: r.action_required || "",
+  Action_Taken: r.action_taken || "",
+  Action_Owner_Email: r.action_owner_email || "",
+  Target_Date: r.target_date || "",
+  Finding_Status: r.status || "",
+
+  Indicator: indicator
+};
+
+});
+
+
+// Create worksheet
+const ws = XLSX.utils.json_to_sheet(formatted);
+
+// Auto column width (clean look)
+const colWidths = Object.keys(formatted[0]).map(key => ({
+  wch: Math.max(key.length, 20)
+}));
+ws["!cols"] = colWidths;
+
+
+// Create workbook
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb, ws, "Assurance Actions");
+
+// Download file
+XLSX.writeFile(wb, "Orbit_Assurance_Actions.xlsx");
+
+}
+  
 function toggleDropdown(id){
 
 document.querySelectorAll(".dropdown-content").forEach(d=>{
