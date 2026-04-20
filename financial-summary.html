@@ -118,12 +118,12 @@ th { background:#76B531; color:white; }
 </div>
 <div class="main">
 
-<h2>Comparative Financial Summary</h2>
+<h2 id="pageTitle">Comparative Financial Summary</h2>
 
 <div class="filters">
   <select id="yearSelect" onchange="loadTable()">
     <option>2024</option>
-    <option selected>2025</option>
+    <option>2025</option>
     <option>2026</option>
   </select>
 
@@ -138,7 +138,7 @@ th { background:#76B531; color:white; }
     <option value="8">Aug</option>
     <option value="9">Sep</option>
     <option value="10">Oct</option>
-    <option value="11" selected>Nov</option>
+    <option value="11">Nov</option>
     <option value="12">Dec</option>
   </select>
 </div>
@@ -191,7 +191,27 @@ function sumFY(data, depot, year) {
   return data.filter(x => x.depot === depot && x.year === year)
              .reduce((a,b) => a + (b.value || 0), 0);
 }
+async function getLatestMonthYear(){
 
+  const { data, error } = await supabaseClient
+    .from("direct_cost_data")
+    .select("year, month")
+    .order("year", { ascending: false })
+    .order("month", { ascending: false })
+    .limit(1);
+
+  if(error || !data || data.length === 0){
+    console.error("Failed to fetch latest month/year", error);
+    return null;
+  }
+
+  return {
+    year: data[0].year,
+    month: data[0].month
+  };
+}
+
+  
 async function loadTable() {
 
   const year = parseInt(yearSelect.value);
@@ -305,7 +325,25 @@ async function init(){
   const session = await checkAuthOrRedirect();
   if (!session) return;
 
-  loadTable();
+const latest = await getLatestMonthYear();
+
+if(latest){
+
+  // set dropdowns
+  document.getElementById("yearSelect").value = latest.year;
+  document.getElementById("monthSelect").value = latest.month;
+
+  // month name mapping
+  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  const monthName = monthNames[latest.month - 1];
+
+  // update title
+  document.getElementById("pageTitle").innerText =
+    `Comparative Financial Summary (Latest Trend File Uploaded for: ${monthName} ${latest.year})`;
+}
+
+await loadTable();
 }
 
 init();
