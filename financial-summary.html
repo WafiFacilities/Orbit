@@ -227,15 +227,15 @@ async function loadTable() {
   const indirCY = await supabaseClient.from("indirect_cost_data").select("*").eq("year", year);
   const indirLY = await supabaseClient.from("indirect_cost_data").select("*").eq("year", prevYear);
 
-  let html = `<table>
+ let html = `<table>
 
-  <tr>
-    <th rowspan="2">Terminal</th>
-    <th colspan="2" class="group-header">Current Year YTD</th>
-    <th colspan="2" class="group-header">Last Year YTD</th>
-    <th colspan="2" class="group-header">Last Full Year</th>
-    <th colspan="4" class="group-header">Computed KPIs</th>
-  </tr>
+<tr>
+  <th rowspan="2">Terminal</th>
+  <th colspan="2" class="group-header">${year} YTD</th>
+  <th colspan="2" class="group-header">${prevYear} YTD</th>
+  <th colspan="2" class="group-header">${prevYear} FY</th>
+  <th colspan="4" class="group-header">Computed KPIs</th>
+</tr>
 
   <tr>
     <th>A: Cost</th>
