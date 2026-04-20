@@ -699,7 +699,7 @@ return `<span class="${cls}">${perf.toFixed(2)}</span>`;
 
 },"sh");
  
-html+=row(`YTD Unit Cost ${year} PKR/L`,d=>{
+html+=row(`YTD Unit Cost ${year} PKR/L`, d=>{
 
 const costCY = sum(directCY,d)+sum(indirectCY,d);
 const volCY = sum(volumeCY,d);
@@ -710,13 +710,19 @@ const volLY = sum(volumeLY,d);
 const cy = volCY ? (costCY/volCY) : 0;
 const ly = volLY ? (costLY/volLY) : 0;
 
-const value = cy.toFixed(2);
+const change = ly ? ((cy - ly) / ly * 100) : 0;
 
-let arrow="";
-if(cy < ly) arrow=`<span class="arrow-good">↓</span>`;
-if(cy > ly) arrow=`<span class="arrow-bad">↑</span>`;
+// lower cost = good
+let cls = "kpi-neutral";
+if(change < 0) cls = "kpi-good";
+if(change > 0) cls = "kpi-bad";
 
-return `${value} ${arrow}`;
+return `
+<div class="value">${cy.toFixed(2)}</div>
+<div class="${cls}" style="font-size:12px;">
+${change>0?"+":""}${change.toFixed(1)}%
+</div>
+`;
 
 },"sh");
 
@@ -725,28 +731,41 @@ html+=row(`YTD Volume ${year} (ML)`, d=>{
 const cy = sum(volumeCY,d);
 const ly = sum(volumeLY,d);
 
-const value = (cy/1000000).toFixed(2);
+const change = ly ? ((cy - ly) / ly * 100) : 0;
 
-let arrow="";
-if(cy>ly) arrow=`<span class="arrow-good">↑</span>`;
-if(cy<ly) arrow=`<span class="arrow-bad">↓</span>`;
+// higher volume = good
+let cls = "kpi-neutral";
+if(change > 0) cls = "kpi-good";
+if(change < 0) cls = "kpi-bad";
 
-return `${value} ${arrow}`;
+return `
+<div class="value">${(cy/1000000).toFixed(2)}</div>
+<div class="${cls}" style="font-size:12px;">
+${change>0?"+":""}${change.toFixed(1)}%
+</div>
+`;
 
 },"sh");
- 
+
+  
 html+=row(`YTD Direct Cost ${year} (MPKR)`, d=>{
 
 const cy = sum(directCY,d);
 const ly = sum(directLY,d);
 
-const value = (cy/1000000).toFixed(2);
+const change = ly ? ((cy - ly) / ly * 100) : 0;
 
-let arrow="";
-if(cy<ly) arrow=`<span class="arrow-good">↓</span>`;
-if(cy>ly) arrow=`<span class="arrow-bad">↑</span>`;
+// lower cost = good
+let cls = "kpi-neutral";
+if(change < 0) cls = "kpi-good";
+if(change > 0) cls = "kpi-bad";
 
-return `${value} ${arrow}`;
+return `
+<div class="value">${(cy/1000000).toFixed(2)}</div>
+<div class="${cls}" style="font-size:12px;">
+${change>0?"+":""}${change.toFixed(1)}%
+</div>
+`;
 
 },"sh");
 
@@ -755,41 +774,22 @@ html+=row(`YTD Indirect Cost ${year} (MPKR)`, d=>{
 const cy = sum(indirectCY,d);
 const ly = sum(indirectLY,d);
 
-const value = (cy/1000000).toFixed(2);
+const change = ly ? ((cy - ly) / ly * 100) : 0;
 
-let arrow="";
-if(cy<ly) arrow=`<span class="arrow-good">↓</span>`;
-if(cy>ly) arrow=`<span class="arrow-bad">↑</span>`;
+// lower cost = good
+let cls = "kpi-neutral";
+if(change < 0) cls = "kpi-good";
+if(change > 0) cls = "kpi-bad";
 
-return `${value} ${arrow}`;
+return `
+<div class="value">${(cy/1000000).toFixed(2)}</div>
+<div class="${cls}" style="font-size:12px;">
+${change>0?"+":""}${change.toFixed(1)}%
+</div>
+`;
 
-},"sh"); 
+},"sh");
  
-html+=row(`YTD Unit Cost ${lastYear} PKR/L`,d=>{
-
-const cost=sum(directLY,d)+sum(indirectLY,d);
-const vol=sum(volumeLY,d);
-
-return unitCost(cost,vol);
-
-},"sh");
-
-
-html+=row(`YTD Volume ${lastYear} (ML)`, d=>{
-return (sum(volumeLY,d)/1000000).toFixed(2);
-},"sh");
-
-
-
-html+=row(`YTD Direct Cost ${lastYear} (MPKR)`, d=>{
-return (sum(directLY,d)/1000000).toFixed(2);
-},"sh");
-
-
-
-html+=row(`YTD Indirect Cost ${lastYear} (MPKR)`, d=>{
-return (sum(indirectLY,d)/1000000).toFixed(2);
-},"sh");
 
 
 
