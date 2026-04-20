@@ -699,7 +699,8 @@ return `<span class="${cls}">${perf.toFixed(2)}</span>`;
 
 },"sh");
  
-html+=row(`YTD Unit Cost ${year} PKR/L (% vs ${lastYear})`, d=>{
+html+=row(`YTD Unit Cost ${year} PKR/L<br>
+<span style="font-size:11px;color:#777;">% vs ${lastYear}</span>`, d=>{
 
 const costCY = sum(directCY,d)+sum(indirectCY,d);
 const volCY = sum(volumeCY,d);
@@ -726,7 +727,8 @@ ${change>0?"+":""}${change.toFixed(1)}%
 
 },"sh");
 
-html+=row(`YTD Volume ${year} (ML) (% vs ${lastYear})`, d=>{
+html+=row(`YTD Volume ${year} (ML)<br>
+<span style="font-size:11px;color:#777;">% vs ${lastYear}</span>`, d=>{
 
 const cy = sum(volumeCY,d);
 const ly = sum(volumeLY,d);
@@ -748,7 +750,8 @@ ${change>0?"+":""}${change.toFixed(1)}%
 },"sh");
 
   
-html+=row(`YTD Direct Cost ${year} (MPKR) (% vs ${lastYear})`, d=>{
+html+=row(`YTD Direct Cost ${year} (MPKR)<br>
+<span style="font-size:11px;color:#777;">% vs ${lastYear}</span>`, d=>{
 
 const cy = sum(directCY,d);
 const ly = sum(directLY,d);
@@ -769,7 +772,8 @@ ${change>0?"+":""}${change.toFixed(1)}%
 
 },"sh");
 
-html+=row(`YTD Indirect Cost ${year} (MPKR) (% vs ${lastYear})`, d=>{
+html+=row(`YTD Indirect Cost ${year} (MPKR)<br>
+<span style="font-size:11px;color:#777;">% vs ${lastYear}</span>`, d=>{
 
 const cy = sum(indirectCY,d);
 const ly = sum(indirectLY,d);
