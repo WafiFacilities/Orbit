@@ -191,26 +191,7 @@ margin-top:10px;
 <button onclick="toggleAddFinding()">+ Add Finding</button>
 <button onclick="closeAssurance()">Close Assurance</button>
 
-<hr>
 
-<h3>Attachments (<span id="attachmentCount">0</span>)</h3>
-
-<div class="form-row">
-  <input type="file" id="attachmentFile">
-<button id="uploadBtn" onclick="uploadAttachment()">+ Add Attachment</button>
-</div>
-
-<table style="margin-top:10px;">
-<thead>
-<tr>
-<th>File Name</th>
-<th>Uploaded By</th>
-<th>Date</th>
-<th>Action</th>
-</tr>
-</thead>
-<tbody id="attachmentsTable"></tbody>
-</table>
 
 <p class="warning" id="closeWarning" style="display:none;">
 Cannot close assurance while open findings exist.
@@ -272,6 +253,27 @@ Cannot close assurance while open findings exist.
 <button onclick="saveFinding()">Save Finding</button>
 
 </div>
+
+<hr>
+
+<h3>Attachments (<span id="attachmentCount">0</span>)</h3>
+
+<div class="form-row">
+  <input type="file" id="attachmentFile">
+<button id="uploadBtn" onclick="uploadAttachment()">+ Add Attachment</button>
+</div>
+
+<table style="margin-top:10px;">
+<thead>
+<tr>
+<th>File Name</th>
+<th>Uploaded By</th>
+<th>Date</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="attachmentsTable"></tbody>
+</table>
 
 </div>
 </div>
