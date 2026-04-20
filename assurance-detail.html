@@ -193,11 +193,11 @@ margin-top:10px;
 
 <hr>
 
-<h3>Attachments</h3>
+<h3>Attachments (<span id="attachmentCount">0</span>)</h3>
 
 <div class="form-row">
   <input type="file" id="attachmentFile">
-  <button onclick="uploadAttachment()">+ Add Attachment</button>
+<button id="uploadBtn" onclick="uploadAttachment()">+ Add Attachment</button>
 </div>
 
 <table style="margin-top:10px;">
@@ -481,12 +481,14 @@ if(!canEdit || assurance.status === "Closed"){
 
 document.getElementById("date_of_assurance").disabled = true;
 document.getElementById("participants").disabled = true;
+  document.getElementById("attachmentFile").disabled = true;
+  document.getElementById("uploadBtn").disabled = true;
 
 const saveBtn = document.querySelector("button[onclick='saveAssuranceDetails()']");
 if(saveBtn) saveBtn.style.display = "none";
 
 }
-  
+  await loadAttachments();
 }
 
 function toggleAddFinding(){
@@ -521,6 +523,7 @@ async function init(){
 
   await loadUsers();
   await load();
+  
 }
 
 init();
@@ -569,12 +572,110 @@ closure_date: today
 
 }
 
+async function loadAttachments(){
 
+const { data, error } = await supabaseClient
+.from("assurance_attachments")
+.select("*")
+.eq("assurance_id", id)
+.order("created_at", { ascending: false });
+
+if(error){
+  console.error("Load Attachments Error:", error);
+  alert("Failed to load attachments");
+  return;
+}
+
+if(!data || data.length === 0){
+  document.getElementById("attachmentsTable").innerHTML =
+    `<tr><td colspan="4">No attachments uploaded</td></tr>`;
+
+  document.getElementById("attachmentCount").innerText = 0;
+
+  return;
+}
+
+  document.getElementById("attachmentCount").innerText = data.length;
+
+let html = "";
+
+data.forEach(a=>{
+html += `
+<tr>
+<td>${a.file_name}</td>
+<td>${a.uploaded_by}</td>
+<td>${new Date(a.created_at).toLocaleDateString()}</td>
+<td>
+<a href="${a.file_url}" target="_blank">📎 Open</a>
+</td>
+</tr>`;
+});
+
+document.getElementById("attachmentsTable").innerHTML = html;
+}
 async function logout(){
 await supabaseClient.auth.signOut();
 window.location="login.html";
 }
+async function uploadAttachment(){
 
+const fileInput = document.getElementById("attachmentFile");
+const file = fileInput.files[0];
+
+if(!file){
+  alert("Please select a file");
+  return;
+}
+
+// size control (5MB)
+if(file.size > 5 * 1024 * 1024){
+  alert("Max file size is 5MB");
+  return;
+}
+
+const { data: { session } } = await supabaseClient.auth.getSession();
+const userEmail = session.user.email;
+
+// structured path (important for scaling)
+const cleanName = file.name.replace(/\s+/g, "_");
+const filePath = `assurance_${id}/${Date.now()}_${cleanName}`;
+
+const { error } = await supabaseClient.storage
+  .from('attachments')
+  .upload(filePath, file);
+
+if(error){
+  console.error(error);
+  alert("Upload failed");
+  return;
+}
+
+// get URL
+const { data: urlData } = supabaseClient.storage
+  .from('attachments')
+  .getPublicUrl(filePath);
+
+// save record
+const { error: insertError } = await supabaseClient
+.from("assurance_attachments")
+.insert([{
+  assurance_id: id,
+  file_name: file.name,
+  file_url: urlData.publicUrl,
+  uploaded_by: userEmail
+}]);
+
+if(insertError){
+  console.error("Insert Error:", insertError);
+  alert("Failed to save attachment");
+  return;
+}
+
+// reset input
+fileInput.value = "";
+
+loadAttachments();
+}
   async function saveAssuranceDetails(){
 
 await supabaseClient
