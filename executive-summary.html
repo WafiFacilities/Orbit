@@ -75,7 +75,17 @@ color:white;padding:10px 30px;text-decoration:none;display:block;
 .sidebar .logout{margin-top:auto;border-top:1px solid #555;}
 
 .main{flex:1;padding:20px;overflow-y:auto;}
+header-right{
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
 
+#userWelcome{
+  font-size:14px;
+  color:#404040;
+  font-weight:600;
+}
 .filters {
   margin-bottom:20px;
 }
@@ -823,7 +833,15 @@ monthSel.addEventListener("change",loadDashboard);
 }
 
 document.getElementById("yearFilter").addEventListener("change",loadDashboard);
+async function setUserWelcome(){
 
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  if(session && session.user){
+    document.getElementById("userWelcome").innerText =
+      `Welcome: ${session.user.email}`;
+  }
+}
 async function logout(){
 await supabaseClient.auth.signOut();
 window.location="login.html";
@@ -834,6 +852,7 @@ async function init() {
   if (!session) return;
 
   loadDashboard();
+  await setUserWelcome();
 }
 
 init();
