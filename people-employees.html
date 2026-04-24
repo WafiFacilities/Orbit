@@ -207,13 +207,13 @@ function calculateStatus(completionDate, validityYears){
   const expiryDate=calculateExpiry(completionDate,validityYears);
   const expiry=new Date(expiryDate);
   const today=new Date();
-  const twoMonthsBefore=new Date(expiry);
-  twoMonthsBefore.setMonth(twoMonthsBefore.getMonth()-2);
+  const sixMonthsBefore = new Date(expiry);
+  sixMonthsBefore.setMonth(sixMonthsBefore.getMonth() - 6);
 
   if(today>expiry)
     return { text:"Expired", class:"status-expired", expiry:expiryDate };
 
-  if(today>=twoMonthsBefore)
+ if(today >= sixMonthsBefore)
     return { text:"Expiring Soon", class:"status-expiring", expiry:expiryDate };
 
   return { text:"Valid", class:"status-valid", expiry:expiryDate };
