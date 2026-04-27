@@ -385,7 +385,18 @@ function renderTable(){
         m.competency_type_id===c.id &&
         m.is_applicable===true
       );
+// ==============================
+// SPECIAL RULE: PHV & DO only valid for KMR
+// ==============================
+const compName = c.name?.toLowerCase();
 
+const isPHV = compName.includes("product handling vessel") || compName.includes("phv");
+const isDO = compName.includes("dock officer") || compName.includes("do");
+
+if((isPHV || isDO) && emp.depot !== "KMR"){
+  html += `<td class="na-cell">N/A</td>`;
+  return;
+}
      if(record){
 
   // ✅ If completed → use existing logic
