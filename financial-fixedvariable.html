@@ -777,38 +777,77 @@ document.getElementById("kpiCards").innerHTML = `
 
     <div style="
       background:#f3e3dd;
-      color:#7c2d12;
-      padding:8px 10px;
+      padding:10px 14px;
       border-radius:10px;
-      text-align:center;
-      font-size:20px;
-      font-weight:800;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     ">
-      Total: ${getUnitCost(allCost)}
+      <span style="
+        color:#7c2d12;
+        font-size:18px;
+        font-weight:700;
+      ">
+        Total
+      </span>
+
+      <span style="
+        color:#000;
+        font-size:28px;
+        font-weight:900;
+      ">
+        ${getUnitCost(allCost)}
+      </span>
     </div>
 
     <div style="
       background:#f3e3dd;
-      color:#7c2d12;
-      padding:8px 10px;
+      padding:10px 14px;
       border-radius:10px;
-      text-align:center;
-      font-size:20px;
-      font-weight:800;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     ">
-      Fixed: ${getUnitCost(fixedCost)}
+      <span style="
+        color:#7c2d12;
+        font-size:18px;
+        font-weight:700;
+      ">
+        Fixed
+      </span>
+
+      <span style="
+        color:#000;
+        font-size:28px;
+        font-weight:900;
+      ">
+        ${getUnitCost(fixedCost)}
+      </span>
     </div>
 
     <div style="
       background:#f3e3dd;
-      color:#7c2d12;
-      padding:8px 10px;
+      padding:10px 14px;
       border-radius:10px;
-      text-align:center;
-      font-size:20px;
-      font-weight:800;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     ">
-      Variable: ${getUnitCost(variableCost)}
+      <span style="
+        color:#7c2d12;
+        font-size:18px;
+        font-weight:700;
+      ">
+        Variable
+      </span>
+
+      <span style="
+        color:#000;
+        font-size:28px;
+        font-weight:900;
+      ">
+        ${getUnitCost(variableCost)}
+      </span>
     </div>
 
   </div>
@@ -850,38 +889,77 @@ document.getElementById("kpiCards").innerHTML = `
 
     <div style="
       background:#f3e3dd;
-      color:#7c2d12;
-      padding:8px 10px;
+      padding:10px 14px;
       border-radius:10px;
-      text-align:center;
-      font-size:20px;
-      font-weight:800;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     ">
-      Total: ${(allCost / 1000000).toFixed(2)}
+      <span style="
+        color:#7c2d12;
+        font-size:18px;
+        font-weight:700;
+      ">
+        Total
+      </span>
+
+      <span style="
+        color:#000;
+        font-size:28px;
+        font-weight:900;
+      ">
+        ${(allCost / 1000000).toFixed(2)}
+      </span>
     </div>
 
     <div style="
       background:#f3e3dd;
-      color:#7c2d12;
-      padding:8px 10px;
+      padding:10px 14px;
       border-radius:10px;
-      text-align:center;
-      font-size:20px;
-      font-weight:800;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     ">
-      Fixed: ${(fixedCost / 1000000).toFixed(2)}
+      <span style="
+        color:#7c2d12;
+        font-size:18px;
+        font-weight:700;
+      ">
+        Fixed
+      </span>
+
+      <span style="
+        color:#000;
+        font-size:28px;
+        font-weight:900;
+      ">
+        ${(fixedCost / 1000000).toFixed(2)}
+      </span>
     </div>
 
     <div style="
       background:#f3e3dd;
-      color:#7c2d12;
-      padding:8px 10px;
+      padding:10px 14px;
       border-radius:10px;
-      text-align:center;
-      font-size:20px;
-      font-weight:800;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     ">
-      Variable: ${(variableCost / 1000000).toFixed(2)}
+      <span style="
+        color:#7c2d12;
+        font-size:18px;
+        font-weight:700;
+      ">
+        Variable
+      </span>
+
+      <span style="
+        color:#000;
+        font-size:28px;
+        font-weight:900;
+      ">
+        ${(variableCost / 1000000).toFixed(2)}
+      </span>
     </div>
 
   </div>
@@ -917,14 +995,27 @@ document.getElementById("kpiCards").innerHTML = `
 
   <div style="
     background:#f3e3dd;
-    color:#7c2d12;
-    padding:8px 10px;
+    padding:10px 14px;
     border-radius:10px;
-    text-align:center;
-    font-size:20px;
-    font-weight:800;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
   ">
-    Total: ${(totalVolume / 1000000).toFixed(2)}
+    <span style="
+      color:#7c2d12;
+      font-size:18px;
+      font-weight:700;
+    ">
+      Total
+    </span>
+
+    <span style="
+      color:#000;
+      font-size:28px;
+      font-weight:900;
+    ">
+      ${(totalVolume / 1000000).toFixed(2)}
+    </span>
   </div>
 
 </div>
