@@ -164,6 +164,7 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 let allData = [];
 let mappingData = [];
 let volumeData = [];
+let mappingTable = [];
 
 let chartAll;
 let chartFixed;
@@ -204,9 +205,20 @@ if(volumeError){
   return;
 }
 
+  const { data: mappingRows, error: mappingError } =
+  await supabaseClient
+    .from("financial_volume_mapping")
+    .select("*");
+
+if(mappingError){
+  console.log(mappingError);
+  return;
+}
+
 allData = data;
 mappingData = mapping;
 volumeData = volume;
+mappingTable = mappingRows;
 
   populateFilters();
   autoSelectLatestYear();
@@ -216,7 +228,10 @@ volumeData = volume;
 function populateFilters(){
 
   const years = [...new Set(allData.map(d => d.year))].sort();
-  const costCenters = [...new Set(allData.map(d => d.cost_center_name))];
+  const costCenters = [
+  "Total S&H",
+  ...new Set(mappingTable.map(m => m.reporting_group))
+];
 
   const yearSelect = document.getElementById("filterYear");
   const ccSelect = document.getElementById("filterCostCenter");
@@ -243,15 +258,38 @@ function autoSelectLatestYear(){
 
 function getFilteredData(){
 
-  const year = document.getElementById("filterYear").value;
-  const costCenter = document.getElementById("filterCostCenter").value;
+  const year =
+    document.getElementById("filterYear").value;
+
+  const selectedGroup =
+    document.getElementById("filterCostCenter").value;
+
+  let allowedFinancials = [];
+
+  if(
+    !selectedGroup ||
+    selectedGroup === "Total S&H"
+  ){
+
+    allowedFinancials =
+  [...new Set(allData.map(d => d.cost_center_name))];
+
+  } else {
+
+    allowedFinancials = mappingTable
+      .filter(m => m.reporting_group === selectedGroup)
+      .map(m => m.financial_name);
+  }
 
   return allData.filter(d =>
+
     (!year || d.year == year) &&
-    (!costCenter || d.cost_center_name === costCenter)
+
+    (
+      allowedFinancials.includes(d.cost_center_name)
+    )
   );
 }
-
 function renderChart(){
 
   const filtered = getFilteredData();
@@ -296,7 +334,12 @@ function renderSingleChart(canvasId, dataRows, lineLabel){
 
   const categories = [...new Set(dataRows.map(d => d.category))];
 const unitCostData = [];
+ const selectedYear =
+  document.getElementById("filterYear").value;
 
+const selectedGroup =
+  document.getElementById("filterCostCenter").value;
+  
 for(let m=1; m<=12; m++){
 
   const totalCost = dataRows
@@ -306,33 +349,49 @@ for(let m=1; m<=12; m++){
       0
     );
 
- const selectedYear =
-  document.getElementById("filterYear").value;
 
-const selectedCostCenter =
-  document.getElementById("filterCostCenter").value;
+
+let allowedDepots = [];
+
+if(
+  !selectedGroup ||
+  selectedGroup === "Total S&H"
+){
+
+  allowedDepots =
+    [...new Set(
+      volumeData.map(v => v.depot)
+    )];
+
+} else {
+
+  allowedDepots = mappingTable
+    .filter(m => m.reporting_group === selectedGroup)
+    .map(m => m.volume_depot)
+    .filter(v => v !== "0");
+}
 
 const volume = volumeData
-  .filter(v => {
+  .filter(v =>
 
-    return (
-      Number(v.month) === m &&
-      (!selectedYear || v.year == selectedYear) &&
-      (
-        !selectedCostCenter ||
-        v.depot === selectedCostCenter ||
-        v.cost_center_name === selectedCostCenter
-      )
-    );
-  })
+    Number(v.month) === m &&
+
+    (!selectedYear || v.year == selectedYear) &&
+
+    allowedDepots.includes(v.depot)
+  )
+
   .reduce(
-    (sum,row)=> sum + Number(row.value || 0),
+    (sum,row)=>
+      sum + Number(row.value || 0),
     0
   );
 
   unitCostData.push(
-    volume ? (totalCost / volume).toFixed(2) : 0
-  );
+  volume
+    ? Number((totalCost / volume).toFixed(2))
+    : 0
+);
 }
   const datasets = categories.map(cat => {
 
