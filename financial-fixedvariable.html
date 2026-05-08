@@ -279,10 +279,9 @@ function getFilteredData(){
 
   let allowedFinancials = [];
 
-  if(
-    !selectedGroup ||
-    selectedGroup === "Total S&H"
-  ){
+ if(
+  selectedGroup === "Total S&H"
+){
 
     allowedFinancials =
   [...new Set(allData.map(d => d.cost_center_name))];
@@ -357,18 +356,10 @@ const selectedGroup =
 let allowedDepots = [];
 
 if(
-  !selectedGroup ||
   selectedGroup === "Total S&H"
 ){
 
- allowedDepots =
-  [...new Set(
-
-    mappingTable
-      .map(m => m.volume_depot)
-      .filter(v => v !== "0")
-
-  )];
+  allowedDepots = ["Total Facilities"];
 
 } else {
 
@@ -691,26 +682,18 @@ y2: {
   let allowedDepots = [];
 
   if(
-    !selectedGroup ||
-    selectedGroup === "Total S&H"
-  ){
+  selectedGroup === "Total S&H"
+){
 
-    allowedDepots =
-  [...new Set(
+  allowedDepots = ["Total Facilities"];
 
-    mappingTable
-      .map(m => m.volume_depot)
-      .filter(v => v !== "0")
+} else {
 
-  )];
-
-  } else {
-
-    allowedDepots = mappingTable
-      .filter(m => m.reporting_group === selectedGroup)
-      .map(m => m.volume_depot)
-      .filter(v => v !== "0");
-  }
+  allowedDepots = mappingTable
+    .filter(m => m.reporting_group === selectedGroup)
+    .map(m => m.volume_depot)
+    .filter(v => v !== "0");
+}
 
   const totalVolume = volumeData
     .filter(v =>
