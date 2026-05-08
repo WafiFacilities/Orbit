@@ -89,7 +89,12 @@ th, td {
 }
 
 th {
-  background:#76B531;
+  background:#d9e6f2;
+  color:#222;
+  font-weight:600;
+}
+
+thead tr:first-child th {
   color:white;
 }
 
@@ -142,7 +147,7 @@ th {
 
 <div class="main">
 
-<h2>Unit Cost Tabular</h2>
+<h2>NMPI Reporting Dashboard</h2>
 
 <div class="filters">
   <select id="yearSelect" onchange="loadTable()">
@@ -151,21 +156,45 @@ th {
     <option selected>2026</option>
   </select>
 </div>
-
 <table>
   <thead>
+
     <tr>
-      <th>Depot</th>
-      <th>Cost Center</th>
-      <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th>
-      <th>May</th><th>Jun</th><th>Jul</th><th>Aug</th>
-      <th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
-      <th>YTD</th>
+      <th rowspan="2">Name</th>
+
+      <th colspan="13" style="background:#0b2a4a;color:white;">
+        NMPI Reporting
+      </th>
+
+      <th colspan="2" style="background:#e67e22;color:white;">
+        Actions
+      </th>
     </tr>
+
+    <tr>
+      <th>Jan</th>
+      <th>Feb</th>
+      <th>Mar</th>
+      <th>Apr</th>
+      <th>May</th>
+      <th>Jun</th>
+      <th>Jul</th>
+      <th>Aug</th>
+      <th>Sep</th>
+      <th>Oct</th>
+      <th>Nov</th>
+      <th>Dec</th>
+      <th>YTD</th>
+
+      <th>Open Actions</th>
+      <th>Overdue Actions</th>
+    </tr>
+
   </thead>
 
   <tbody id="tableBody"></tbody>
 </table>
+
 
 </div>
 </div>
@@ -185,80 +214,127 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
   return data.session;
 } 
-  
-const depots = [
-  {name:"SH-Shershah SSH", code:"SSH", center:"PK01000025"},
-  {name:"SH-MHK-Mehmoodkot", code:"MHK", center:"PK01000027"},
-  {name:"SH-Chaklala CKL", code:"CKL", center:"PK01000028"},
-  {name:"SH-FBD-Gatti-M.Term", code:"GTI", center:"PK01000030"},
-  {name:"SH-Tarujabba TJB", code:"TJB", center:"PK01000031"},
-  {name:"SH-Karachi KMR", code:"KMR", center:"PK01000040"},
-  {name:"SH-Shikarpur SKP", code:"SKP", center:"PK01000055"},
-  {name:"SH-Daulatpur DLP", code:"DLP", center:"PK01000056"},
-  {name:"SH-Bhakkar BKR", code:"BHK", center:"PK01000057"},
-  {name:"SH-Vehari VHR", code:"VHR", center:"PK01000059"},
-  {name:"SH-Machike MCH", code:"MCH", center:"PK01000061"},
-  {name:"Total Facilities", code:"Total Facilities", center:""}
+
+  const people = [
+  "Mr. Muhammad Ahmed Saleem",
+  "Mr. Waleed Bin Khalil",
+  "Ms. Syeda Aiman Abid",
+  "Mr. Abdul Rauf Khatri",
+  "Rana Daniyal Tariq",
+  "Mr. Fayyaz Ahmed Bhatti",
+  "Mr. Mirza Zeeshan Baig",
+  "Mr. Farhan Ali",
+  "Mr. Arhum Khalil Bin",
+  "Mr. Muhammad Moiz Pervez",
+  "Mr. Asif Zahoor",
+  "Mr. Sheikh Rashid",
+  "Mr. Farhat Ullah",
+  "Mr. Shahnawaz Khan"
 ];
 
 async function loadTable() {
 
   const year = document.getElementById("yearSelect").value;
 
-  const volume = await supabaseClient.from("volume_data").select("*").match({year});
-  const direct = await supabaseClient.from("direct_cost_data").select("*").match({year});
-  const indirect = await supabaseClient.from("indirect_cost_data").select("*").match({year});
+  // NMPI DATA
+  const { data: nmpiData, error: nmpiError } = await supabaseClient
+    .from("Velocity_NMPI")
+    .select("*");
 
-  const months = [...Array(12)].map((_,i)=>i+1);
+  // ACTIONS DATA
+  const { data: actionsData, error: actionsError } = await supabaseClient
+    .from("Velocity_Actions")
+    .select("*");
+
+  console.log(nmpiError);
+  console.log(actionsError);
+
+  const months = [
+    "Jan","Feb","Mar","Apr","May","Jun",
+    "Jul","Aug","Sep","Oct","Nov","Dec"
+  ];
 
   let html = "";
 
-  depots.forEach(d => {
+  people.forEach(person => {
 
-    let rowClass = d.code === "Total Facilities" ? "total-row" : "";
+    html += `<tr>`;
 
-    html += `<tr class="${rowClass}">`;
-    html += `<td>${d.name}</td>`;
-    html += `<td>${d.center}</td>`;
+    html += `
+      <td style="text-align:left;font-weight:500;">
+        ${person}
+      </td>
+    `;
 
-    let cumulativeCost = 0;
-    let cumulativeVolume = 0;
+    let ytd = 0;
 
-    months.forEach(m => {
+    // MONTHS
+    months.forEach((m, index) => {
 
-      const v = volume.data.find(x=>x.month==m && x.depot==d.code)?.value || 0;
-      const dc = direct.data.find(x=>x.month==m && x.depot==d.code)?.value || 0;
-      const ic = indirect.data.find(x=>x.month==m && x.depot==d.code)?.value || 0;
+      const monthNo = index + 1;
 
-      const unit = v ? ((dc + ic) / v).toFixed(2) : "-";
+      const count = nmpiData.filter(x => {
 
-      html += `<td>${unit}</td>`;
+        // CHANGE COLUMN NAMES HERE IF NEEDED
+        const personName = x.name;
+        const reportDate = new Date(x.date);
 
-      // accumulate only if volume exists
-      // Include months even if value is zero
-// Exclude only if volume is actually NULL
+        return (
+          personName === person &&
+          reportDate.getFullYear() == year &&
+          (reportDate.getMonth() + 1) === monthNo
+        );
 
-if (v !== null && v !== undefined) {
-  cumulativeCost += (dc + ic);
-  cumulativeVolume += v;
-}
+      }).length;
+
+      ytd += count;
+
+      html += `<td>${count || ""}</td>`;
 
     });
 
-    // YTD Calculation
-    let ytdValue = "-";
+    // YTD
+    html += `<td><b>${ytd}</b></td>`;
 
-    if(cumulativeVolume > 0) {
-      ytdValue = (cumulativeCost / cumulativeVolume).toFixed(2);
-    }
+    // ACTIONS
+    const personActions = actionsData.filter(x => {
 
-    html += `<td><b>${ytdValue}</b></td>`;
+      const personName = x.name;
+
+      return personName === person;
+
+    });
+
+    // OPEN ACTIONS
+    const openActions = personActions.filter(x => {
+
+      const status = (x.status || "").toLowerCase();
+
+      return status !== "closed"
+          && status !== "complete"
+          && status !== "completed";
+
+    });
+
+    // OVERDUE
+    const overdueActions = openActions.filter(x => {
+
+      const targetDate = new Date(x.target_date);
+
+      return targetDate < new Date();
+
+    });
+
+    html += `<td>${openActions.length}</td>`;
+    html += `<td>${overdueActions.length}</td>`;
 
     html += `</tr>`;
+
   });
 
   document.getElementById("tableBody").innerHTML = html;
 }
+
 
 async function logout(){
   await supabaseClient.auth.signOut();
