@@ -327,10 +327,11 @@ renderSingleChart(
 
 function renderSingleChart(canvasId, dataRows, lineLabel){
 
-  const monthLabels = [
-    "Jan","Feb","Mar","Apr","May","Jun",
-    "Jul","Aug","Sep","Oct","Nov","Dec"
-  ];
+const monthLabels = [
+  "Jan","Feb","Mar","Apr","May","Jun",
+  "Jul","Aug","Sep","Oct","Nov","Dec",
+  "YTD"
+];
 
   const categories = [...new Set(dataRows.map(d => d.category))];
 const unitCostData = [];
@@ -340,17 +341,6 @@ const unitCostData = [];
 const selectedGroup =
   document.getElementById("filterCostCenter").value;
   
-for(let m=1; m<=12; m++){
-
-  const totalCost = dataRows
-    .filter(d => Number(d.month) === m)
-    .reduce(
-      (sum,row)=> sum + Number(row.actual_amount || 0),
-      0
-    );
-
-
-
 let allowedDepots = [];
 
 if(
@@ -371,10 +361,47 @@ if(
     .filter(v => v !== "0");
 }
 
-const volume = volumeData
-  .filter(v =>
+for(let m=1; m<=12; m++){
 
-    Number(v.month) === m &&
+  const totalCost = dataRows
+    .filter(d => Number(d.month) === m)
+    .reduce(
+      (sum,row)=> sum + Number(row.actual_amount || 0),
+      0
+    );
+
+  const volume = volumeData
+    .filter(v =>
+
+      Number(v.month) === m &&
+
+      (!selectedYear || v.year == selectedYear) &&
+
+      allowedDepots.includes(v.depot)
+    )
+
+    .reduce(
+      (sum,row)=>
+        sum + Number(row.value || 0),
+      0
+    );
+
+  unitCostData.push(
+    volume
+      ? Number((totalCost / volume).toFixed(2))
+      : 0
+  );
+}
+
+const totalYearCost = dataRows
+  .reduce(
+    (sum,row)=>
+      sum + Number(row.actual_amount || 0),
+    0
+  );
+
+const totalYearVolume = volumeData
+  .filter(v =>
 
     (!selectedYear || v.year == selectedYear) &&
 
@@ -387,31 +414,37 @@ const volume = volumeData
     0
   );
 
-  unitCostData.push(
-  volume
-    ? Number((totalCost / volume).toFixed(2))
+unitCostData.push(
+  totalYearVolume
+    ? Number((totalYearCost / totalYearVolume).toFixed(2))
     : 0
 );
-}
   const datasets = categories.map(cat => {
 
     const data = [];
 
-    for(let m=1; m<=12; m++){
+for(let m=1; m<=12; m++){
 
-      const total = dataRows
-        .filter(d =>
-          d.category === cat &&
-          Number(d.month) === m
-        )
-        .reduce(
-          (sum,row)=>
-            sum + Number(row.actual_amount || 0),
-          0
-        );
+  const total = dataRows
+    .filter(d =>
+      d.category === cat &&
+      Number(d.month) === m
+    )
+    .reduce(
+      (sum,row)=>
+        sum + Number(row.actual_amount || 0),
+      0
+    );
 
-      data.push(total);
-    }
+  data.push(total);
+}
+
+const ytdTotal = data.reduce(
+  (sum,val)=> sum + val,
+  0
+);
+
+data.push(ytdTotal);
 
     return {
       label: cat,
