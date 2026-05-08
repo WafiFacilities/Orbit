@@ -2,14 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Unit Cost Tabular</title>
+<title>NMPI Reporting Dashboard</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-@font-face { font-family: '72 Condensed'; src: local('72 Condensed'); }
 
-body {
+@font-face {
+  font-family: '72 Condensed';
+  src: local('72 Condensed');
+}
+
+body{
   font-family:'72 Condensed',Arial;
   margin:0;
   background:#f4f6f9;
@@ -18,7 +22,7 @@ body {
 .header{
   display:flex;
   align-items:center;
-  justify-content:space-between;   /* pushes items to edges */
+  justify-content:space-between;
   padding:10px 20px;
   background:white;
   border-bottom:2px solid #e0e0e0;
@@ -27,7 +31,7 @@ body {
 .header-left{
   display:flex;
   align-items:center;
-  gap:12px;   /* spacing between orbit logo and title */
+  gap:12px;
 }
 
 .header-left img{
@@ -38,43 +42,68 @@ body {
   height:40px;
 }
 
-.header img{height:40px;margin-right:15px;}
 .header-title{
-font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
+  font-size:22px;
+  color:#404040;
+  font-weight:bold;
+  text-transform:uppercase;
 }
 
-.layout{display:flex;height:calc(100vh - 62px);}
+.layout{
+  display:flex;
+  height:calc(100vh - 62px);
+}
 
 .sidebar{
-width:220px;background:#404040;color:white;
-display:flex;flex-direction:column;padding-top:20px;
+  width:220px;
+  background:#404040;
+  color:white;
+  display:flex;
+  flex-direction:column;
+  padding-top:20px;
 }
+
 .sidebar h4{
   padding:10px 20px;
   margin:10px 0 5px 0;
   background:#2f2f2f;
   border-left:4px solid #16a34a;
 }
-.sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
-.sidebar a:hover{background:#505050;}
-.sidebar .logout{margin-top:auto;border-top:1px solid #555;}
 
+.sidebar a{
+  color:white;
+  padding:10px 30px;
+  text-decoration:none;
+  display:block;
+}
 
-.main{flex:1;padding:20px;overflow-y:auto;}
+.sidebar a:hover{
+  background:#505050;
+}
 
+.sidebar .logout{
+  margin-top:auto;
+  border-top:1px solid #555;
+}
 
-.filters {
+.main{
+  flex:1;
+  padding:20px;
+  overflow-y:auto;
+}
+
+.filters{
   margin-bottom:15px;
 }
 
-select {
+select{
   padding:6px;
   border-radius:4px;
   border:1px solid #ccc;
   font-family:'72 Condensed';
 }
 
-table {
+table{
   width:100%;
   border-collapse:collapse;
   background:white;
@@ -82,25 +111,25 @@ table {
   overflow:hidden;
 }
 
-th, td {
+th, td{
   border:1px solid #ddd;
   padding:8px;
   text-align:center;
+  font-size:14px;
 }
 
-th {
+th{
   background:#d9e6f2;
   color:#222;
   font-weight:600;
 }
 
-thead tr:first-child th {
+thead tr:first-child th{
   color:white;
 }
 
-.total-row {
-  font-weight:bold;
-  background:#f2f2f2;
+tbody tr:hover{
+  background:#f8fafc;
 }
 
 </style>
@@ -119,27 +148,27 @@ thead tr:first-child th {
 
 </div>
 
-
 <div class="layout">
 
 <div class="sidebar">
 
   <a href="dashboard.html"><h4>EXECUTIVE DASHBOARD</h4></a>
-  
+
   <a href="dashboard.html"><h4>INITIATIVE</h4></a>
 
   <a href="assurances.html"><h4>ASSURANCE</h4></a>
 
-   <a href="people-employees.html"><h4>PEOPLE</h4></a>
+  <a href="people-employees.html"><h4>PEOPLE</h4></a>
 
-   <a href="financial-dashboard.html"><h4>FINANCIAL</h4></a>
-     <a href="financial-dashboard.html">Unit Cost - Graph List</a>
+  <a href="financial-dashboard.html"><h4>FINANCIAL</h4></a>
+
+  <a href="financial-dashboard.html">Unit Cost - Graph List</a>
   <a href="unit-cost-tabular.html">Unit Cost - Tabular</a>
-   <a href="financial-fixedvariable.html">Fixed vs Variable</a>
+  <a href="financial-fixedvariable.html">Fixed vs Variable</a>
   <a href="financial-dashboard-overview.html">Category - Stacked Graph</a>
   <a href="financial-dashboard-category.html">Depot - Stacked Graph</a>
-    <a href="financial-summary.html">Financial Performance</a>
-  
+  <a href="financial-summary.html">Financial Performance</a>
+
   <a href="mydetails.html" class="logout"><h4>MY TASK</h4></a>
   <a href="#" onclick="logout()" class="logout">Logout</a>
 
@@ -156,10 +185,13 @@ thead tr:first-child th {
     <option selected>2026</option>
   </select>
 </div>
+
 <table>
+
   <thead>
 
     <tr>
+
       <th rowspan="2">Name</th>
 
       <th colspan="13" style="background:#0b2a4a;color:white;">
@@ -169,9 +201,11 @@ thead tr:first-child th {
       <th colspan="2" style="background:#e67e22;color:white;">
         Actions
       </th>
+
     </tr>
 
     <tr>
+
       <th>Jan</th>
       <th>Feb</th>
       <th>Mar</th>
@@ -184,67 +218,92 @@ thead tr:first-child th {
       <th>Oct</th>
       <th>Nov</th>
       <th>Dec</th>
+
       <th>YTD</th>
 
       <th>Open Actions</th>
       <th>Overdue Actions</th>
+
     </tr>
 
   </thead>
 
   <tbody id="tableBody"></tbody>
-</table>
 
+</table>
 
 </div>
 </div>
 
 <script>
-const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
- async function checkAuthOrRedirect() {
-  const { data, error } = await supabaseClient.auth.getSession();
+const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
+
+const supabaseKey = "YOUR_SUPABASE_ANON_KEY";
+
+const supabaseClient = supabase.createClient(
+  supabaseUrl,
+  supabaseKey
+);
+
+async function checkAuthOrRedirect() {
+
+  const { data, error } =
+    await supabaseClient.auth.getSession();
 
   if (error || !data.session) {
+
     window.location.href = "login.html";
     return null;
+
   }
 
   return data.session;
-} 
+}
 
-  const people = [
+const people = [
+
   "Mr. Muhammad Ahmed Saleem",
   "Mr. Waleed Bin Khalil",
   "Ms. Syeda Aiman Abid",
   "Mr. Abdul Rauf Khatri",
   "Rana Daniyal Tariq",
   "Mr. Fayyaz Ahmed Bhatti",
+
   "Mr. Mirza Zeeshan Baig",
   "Mr. Farhan Ali",
   "Mr. Arhum Khalil Bin",
   "Mr. Muhammad Moiz Pervez",
+
   "Mr. Asif Zahoor",
   "Mr. Sheikh Rashid",
   "Mr. Farhat Ullah",
   "Mr. Shahnawaz Khan"
+
 ];
 
 async function loadTable() {
 
-  const year = document.getElementById("yearSelect").value;
+  const year =
+    document.getElementById("yearSelect").value;
 
-  // NMPI DATA
-  const { data: nmpiData, error: nmpiError } = await supabaseClient
-    .from("Velocity_NMPI")
-    .select("*");
+  // FETCH NMPI
 
-  // ACTIONS DATA
-  const { data: actionsData, error: actionsError } = await supabaseClient
-    .from("Velocity_Actions")
-    .select("*");
+  const {
+    data: nmpiData,
+    error: nmpiError
+  } = await supabaseClient
+      .from("Velocity_NMPI")
+      .select("*");
+
+  // FETCH ACTIONS
+
+  const {
+    data: actionsData,
+    error: actionsError
+  } = await supabaseClient
+      .from("Velocity_Actions")
+      .select("*");
 
   console.log(nmpiError);
   console.log(actionsError);
@@ -261,28 +320,37 @@ async function loadTable() {
     html += `<tr>`;
 
     html += `
-      <td style="text-align:left;font-weight:500;">
+      <td style="text-align:left;font-weight:600;">
         ${person}
       </td>
     `;
 
     let ytd = 0;
 
-    // MONTHS
+    // MONTHLY NMPI
+
     months.forEach((m, index) => {
 
       const monthNo = index + 1;
 
       const count = nmpiData.filter(x => {
 
-        // CHANGE COLUMN NAMES HERE IF NEEDED
-        const personName = x.name;
-        const reportDate = new Date(x.date);
+        const personName = x["Reported By"];
+
+        const rawDate = x["Event Report Date"];
+
+        if (!rawDate) return false;
+
+        const reportDate = new Date(rawDate);
 
         return (
+
           personName === person &&
+
           reportDate.getFullYear() == year &&
+
           (reportDate.getMonth() + 1) === monthNo
+
         );
 
       }).length;
@@ -294,21 +362,26 @@ async function loadTable() {
     });
 
     // YTD
+
     html += `<td><b>${ytd}</b></td>`;
 
-    // ACTIONS
+    // PERSON ACTIONS
+
     const personActions = actionsData.filter(x => {
 
-      const personName = x.name;
+      const personName =
+        x["Person Responsible"];
 
       return personName === person;
 
     });
 
     // OPEN ACTIONS
+
     const openActions = personActions.filter(x => {
 
-      const status = (x.status || "").toLowerCase();
+      const status =
+        (x["Status"] || "").toLowerCase();
 
       return status !== "closed"
           && status !== "complete"
@@ -316,16 +389,22 @@ async function loadTable() {
 
     });
 
-    // OVERDUE
+    // OVERDUE ACTIONS
+
     const overdueActions = openActions.filter(x => {
 
-      const targetDate = new Date(x.target_date);
+      const rawDate = x["Due Date"];
+
+      if (!rawDate) return false;
+
+      const targetDate = new Date(rawDate);
 
       return targetDate < new Date();
 
     });
 
     html += `<td>${openActions.length}</td>`;
+
     html += `<td>${overdueActions.length}</td>`;
 
     html += `</tr>`;
@@ -333,19 +412,25 @@ async function loadTable() {
   });
 
   document.getElementById("tableBody").innerHTML = html;
+
 }
 
-
 async function logout(){
+
   await supabaseClient.auth.signOut();
+
   window.location.replace("login.html");
+
 }
 
 async function init(){
+
   const session = await checkAuthOrRedirect();
+
   if (!session) return;
 
   loadTable();
+
 }
 
 init();
@@ -354,5 +439,3 @@ init();
 
 </body>
 </html>
-
-
