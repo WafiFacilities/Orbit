@@ -386,11 +386,15 @@ for(let m=1; m<=12; m++){
       0
     );
 
-  unitCostData.push(
-    volume
+ unitCostData.push(
+
+  totalCost === 0
+    ? null
+    : volume
       ? Number((totalCost / volume).toFixed(2))
-      : 0
-  );
+      : null
+
+);
 }
 
 const totalYearCost = dataRows
@@ -415,10 +419,15 @@ const totalYearVolume = volumeData
   );
 
 unitCostData.push(
-  totalYearVolume
-    ? Number((totalYearCost / totalYearVolume).toFixed(2))
-    : 0
+
+  totalYearCost === 0
+    ? null
+    : totalYearVolume
+      ? Number((totalYearCost / totalYearVolume).toFixed(2))
+      : null
+
 );
+  
   const datasets = categories.map(cat => {
 
     const data = [];
@@ -446,10 +455,28 @@ const ytdTotal = data.reduce(
 
 data.push(ytdTotal);
 
-    return {
-      label: cat,
-      data: data
-    };
+  const colors = [
+  "#4e79a7",
+  "#f28e2b",
+  "#e15759",
+  "#76b7b2",
+  "#59a14f",
+  "#edc949",
+  "#af7aa1",
+  "#ff9da7",
+  "#9c755f",
+  "#bab0ab"
+];
+
+return {
+  label: cat,
+  data: data,
+
+  backgroundColor:
+    colors[
+      categories.indexOf(cat) % colors.length
+    ]
+};
   });
 
   if(canvasId === "financialChartAll" && chartAll){
