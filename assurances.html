@@ -501,8 +501,11 @@ ${statusText}
 }
 
 kpiFindings.innerText=totalOpenFindings;
-kpiOverdue.innerText=totalOverdue;
-   kpiOverdueAssurances.innerText = overdueAssurances;
+kpiOverdue.innerText = totalOverdue;
+kpiOverdue.style.color = "red";
+
+kpiOverdueAssurances.innerText = overdueAssurances;
+kpiOverdueAssurances.style.color = "red";
 
 tableBody.innerHTML=html;
 pageInfo.innerText=`Total: ${count}`;
