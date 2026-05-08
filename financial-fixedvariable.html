@@ -740,214 +740,184 @@ offset: -2,
       : "-";
   }
 
-  document.getElementById("kpiCards").innerHTML = `
+document.getElementById("kpiCards").innerHTML = `
 
 <div style="
-  background:linear-gradient(135deg,#ffffff,#f8fbff);
-  border-radius:18px;
+  background:white;
+  border-radius:20px;
   padding:24px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.08);
-  border-left:6px solid #2563eb;
+  box-shadow:0 4px 14px rgba(0,0,0,0.08);
+  border-top:6px solid #2563eb;
 ">
 
   <div style="
+    font-size:28px;
+    font-weight:800;
+    color:#1e293b;
+    margin-bottom:4px;
+  ">
+    YTD UNIT COST
+  </div>
+
+  <div style="
+    color:#64748b;
+    font-size:16px;
+    margin-bottom:22px;
+  ">
+    PKR/L
+  </div>
+
+  <div style="
     display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:18px;
+    flex-direction:column;
+    gap:14px;
   ">
 
-    <div>
-      <div style="
-        font-size:13px;
-        color:#64748b;
-        text-transform:uppercase;
-        letter-spacing:1px;
-        margin-bottom:4px;
-      ">
-        YTD Unit Cost
-      </div>
-
-      <div style="
-        font-size:15px;
-        color:#94a3b8;
-      ">
-        PKR/L
-      </div>
+    <div style="
+      background:#dbeafe;
+      color:#1d4ed8;
+      padding:14px;
+      border-radius:12px;
+      text-align:center;
+      font-size:28px;
+      font-weight:bold;
+    ">
+      Total: ${getUnitCost(allCost)}
     </div>
 
     <div style="
-      font-size:40px;
+      background:#dcfce7;
+      color:#15803d;
+      padding:14px;
+      border-radius:12px;
+      text-align:center;
+      font-size:28px;
+      font-weight:bold;
     ">
-      📈
+      Fixed: ${getUnitCost(fixedCost)}
     </div>
 
-  </div>
+    <div style="
+      background:#ffedd5;
+      color:#ea580c;
+      padding:14px;
+      border-radius:12px;
+      text-align:center;
+      font-size:28px;
+      font-weight:bold;
+    ">
+      Variable: ${getUnitCost(variableCost)}
+    </div>
 
-  <div style="
-    display:flex;
-    justify-content:space-between;
-    margin-bottom:14px;
-    font-size:17px;
-  ">
-    <span>Total</span>
-    <strong style="color:#2563eb;">
-      ${getUnitCost(allCost)}
-    </strong>
-  </div>
-
-  <div style="
-    display:flex;
-    justify-content:space-between;
-    margin-bottom:14px;
-    font-size:17px;
-  ">
-    <span>Fixed</span>
-    <strong style="color:#16a34a;">
-      ${getUnitCost(fixedCost)}
-    </strong>
-  </div>
-
-  <div style="
-    display:flex;
-    justify-content:space-between;
-    font-size:17px;
-  ">
-    <span>Variable</span>
-    <strong style="color:#f97316;">
-      ${getUnitCost(variableCost)}
-    </strong>
   </div>
 
 </div>
 
 <div style="
-  background:linear-gradient(135deg,#ffffff,#f8fff9);
-  border-radius:18px;
+  background:white;
+  border-radius:20px;
   padding:24px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.08);
-  border-left:6px solid #16a34a;
+  box-shadow:0 4px 14px rgba(0,0,0,0.08);
+  border-top:6px solid #16a34a;
 ">
 
   <div style="
+    font-size:28px;
+    font-weight:800;
+    color:#1e293b;
+    margin-bottom:4px;
+  ">
+    YTD COST
+  </div>
+
+  <div style="
+    color:#64748b;
+    font-size:16px;
+    margin-bottom:22px;
+  ">
+    MPKR
+  </div>
+
+  <div style="
     display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:18px;
+    flex-direction:column;
+    gap:14px;
   ">
 
-    <div>
-      <div style="
-        font-size:13px;
-        color:#64748b;
-        text-transform:uppercase;
-        letter-spacing:1px;
-        margin-bottom:4px;
-      ">
-        YTD Cost
-      </div>
-
-      <div style="
-        font-size:15px;
-        color:#94a3b8;
-      ">
-        MPKR
-      </div>
+    <div style="
+      background:#dcfce7;
+      color:#15803d;
+      padding:14px;
+      border-radius:12px;
+      text-align:center;
+      font-size:28px;
+      font-weight:bold;
+    ">
+      Total: ${(allCost / 1000000).toFixed(2)}
     </div>
 
     <div style="
-      font-size:40px;
+      background:#dcfce7;
+      color:#15803d;
+      padding:14px;
+      border-radius:12px;
+      text-align:center;
+      font-size:28px;
+      font-weight:bold;
     ">
-      💰
+      Fixed: ${(fixedCost / 1000000).toFixed(2)}
     </div>
 
-  </div>
+    <div style="
+      background:#ffedd5;
+      color:#ea580c;
+      padding:14px;
+      border-radius:12px;
+      text-align:center;
+      font-size:28px;
+      font-weight:bold;
+    ">
+      Variable: ${(variableCost / 1000000).toFixed(2)}
+    </div>
 
-  <div style="
-    display:flex;
-    justify-content:space-between;
-    margin-bottom:14px;
-    font-size:17px;
-  ">
-    <span>Total</span>
-    <strong style="color:#16a34a;">
-      ${(allCost / 1000000).toFixed(2)}
-    </strong>
-  </div>
-
-  <div style="
-    display:flex;
-    justify-content:space-between;
-    margin-bottom:14px;
-    font-size:17px;
-  ">
-    <span>Fixed</span>
-    <strong style="color:#16a34a;">
-      ${(fixedCost / 1000000).toFixed(2)}
-    </strong>
-  </div>
-
-  <div style="
-    display:flex;
-    justify-content:space-between;
-    font-size:17px;
-  ">
-    <span>Variable</span>
-    <strong style="color:#f97316;">
-      ${(variableCost / 1000000).toFixed(2)}
-    </strong>
   </div>
 
 </div>
 
 <div style="
-  background:linear-gradient(135deg,#ffffff,#faf5ff);
-  border-radius:18px;
+  background:white;
+  border-radius:20px;
   padding:24px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.08);
-  border-left:6px solid #9333ea;
+  box-shadow:0 4px 14px rgba(0,0,0,0.08);
+  border-top:6px solid #9333ea;
 ">
 
   <div style="
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:18px;
+    font-size:28px;
+    font-weight:800;
+    color:#1e293b;
+    margin-bottom:4px;
   ">
-
-    <div>
-      <div style="
-        font-size:13px;
-        color:#64748b;
-        text-transform:uppercase;
-        letter-spacing:1px;
-        margin-bottom:4px;
-      ">
-        YTD Volume
-      </div>
-
-      <div style="
-        font-size:15px;
-        color:#94a3b8;
-      ">
-        ML
-      </div>
-    </div>
-
-    <div style="
-      font-size:40px;
-    ">
-      ⛽
-    </div>
-
+    YTD VOLUME
   </div>
 
   <div style="
-    font-size:52px;
-    font-weight:bold;
+    color:#64748b;
+    font-size:16px;
+    margin-bottom:22px;
+  ">
+    ML
+  </div>
+
+  <div style="
+    background:#f3e8ff;
     color:#7e22ce;
+    padding:24px;
+    border-radius:16px;
     text-align:center;
-    margin-top:16px;
+    font-size:54px;
+    font-weight:900;
+    margin-top:10px;
   ">
     ${(totalVolume / 1000000).toFixed(2)}
   </div>
