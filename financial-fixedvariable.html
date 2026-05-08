@@ -163,6 +163,7 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 let allData = [];
 let mappingData = [];
+let volumeData = [];
 
 let chartAll;
 let chartFixed;
@@ -194,8 +195,18 @@ if(mapError){
   return;
 }
 
+const { data: volume, error: volumeError } = await supabaseClient
+  .from("volume_data")
+  .select("*");
+
+if(volumeError){
+  console.log(volumeError);
+  return;
+}
+
 allData = data;
 mappingData = mapping;
+volumeData = volume;
 
   populateFilters();
   autoSelectLatestYear();
@@ -245,10 +256,11 @@ function renderChart(){
 
   const filtered = getFilteredData();
 
-  renderSingleChart(
-    "financialChartAll",
-    filtered
-  );
+renderSingleChart(
+  "financialChartAll",
+  filtered,
+  "All Unit Cost"
+);
 
   renderSingleChart(
     "financialChartFixed",
@@ -258,7 +270,8 @@ function renderChart(){
       );
 
       return map?.fvmapping === "Fixed";
-    })
+    }),
+      "Fixed Unit Cost"
   );
 
   renderSingleChart(
@@ -269,11 +282,12 @@ function renderChart(){
       );
 
       return map?.fvmapping === "Variable";
-    })
+    }),
+  "Variable Unit Cost"
   );
 }
 
-function renderSingleChart(canvasId, dataRows){
+function renderSingleChart(canvasId, dataRows, lineLabel){
 
   const monthLabels = [
     "Jan","Feb","Mar","Apr","May","Jun",
@@ -281,7 +295,45 @@ function renderSingleChart(canvasId, dataRows){
   ];
 
   const categories = [...new Set(dataRows.map(d => d.category))];
+const unitCostData = [];
 
+for(let m=1; m<=12; m++){
+
+  const totalCost = dataRows
+    .filter(d => Number(d.month) === m)
+    .reduce(
+      (sum,row)=> sum + Number(row.actual_amount || 0),
+      0
+    );
+
+ const selectedYear =
+  document.getElementById("filterYear").value;
+
+const selectedCostCenter =
+  document.getElementById("filterCostCenter").value;
+
+const volume = volumeData
+  .filter(v => {
+
+    return (
+      Number(v.month) === m &&
+      (!selectedYear || v.year == selectedYear) &&
+      (
+        !selectedCostCenter ||
+        v.depot === selectedCostCenter ||
+        v.cost_center_name === selectedCostCenter
+      )
+    );
+  })
+  .reduce(
+    (sum,row)=> sum + Number(row.value || 0),
+    0
+  );
+
+  unitCostData.push(
+    volume ? (totalCost / volume).toFixed(2) : 0
+  );
+}
   const datasets = categories.map(cat => {
 
     const data = [];
@@ -327,29 +379,70 @@ function renderSingleChart(canvasId, dataRows){
     type: 'bar',
 
     data: {
-      labels: monthLabels,
-      datasets: datasets
-    },
+  labels: monthLabels,
+
+  datasets: [
+
+    ...datasets,
+
+    {
+      label: lineLabel,
+      type: 'line',
+      data: unitCostData,
+      borderColor: '#000',
+      backgroundColor: '#000',
+      borderWidth: 3,
+      tension: 0.3,
+      yAxisID: 'y1',
+
+      datalabels: {
+        color:"#000",
+        anchor:"end",
+        align:"top",
+        formatter: value => value
+      }
+    }
+
+  ]
+},
 
     options: {
 
       responsive:true,
       maintainAspectRatio:false,
 
-      scales: {
-        x: {
-          stacked: true
-        },
+     scales: {
 
-        y: {
-          stacked: true,
+  x: {
+    stacked: true
+  },
 
-          ticks: {
-            callback: value =>
-              value.toLocaleString()
-          }
-        }
-      },
+  y: {
+    stacked: true,
+    position:'left',
+
+    ticks: {
+      callback: value =>
+        value.toLocaleString()
+    }
+  },
+
+  y1: {
+    position:'right',
+    grid:{
+      drawOnChartArea:false
+    },
+
+    ticks:{
+      callback:value => value
+    },
+
+    title:{
+      display:true,
+      text:'Unit Cost'
+    }
+  }
+},
 
       plugins: {
 
@@ -357,8 +450,8 @@ function renderSingleChart(canvasId, dataRows){
 
           display: function(context) {
 
-            return context.datasetIndex ===
-              datasets.length - 1;
+            return context.dataset.type !== 'line' &&
+       context.datasetIndex === datasets.length - 1;
           },
 
           anchor: 'end',
