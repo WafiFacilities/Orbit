@@ -127,6 +127,15 @@ display:flex;flex-direction:column;padding-top:20px;
 
 <h2>Financial - Fixed vs Variable Unit Cost (Excluding OH) (Stacked)</h2>
 
+  <div id="kpiCards"
+     style="
+       display:grid;
+       grid-template-columns:repeat(3,1fr);
+       gap:20px;
+       margin-bottom:20px;
+     ">
+</div>
+  
 <div class="filters">
   <select id="filterYear"></select>
   <select id="filterCostCenter"></select>
@@ -223,7 +232,8 @@ mappingTable = mappingRows;
 
   populateFilters();
   autoSelectLatestYear();
-  renderChart();
+renderKpiCards();
+renderChart();
 }
 
 function populateFilters(){
@@ -646,9 +656,196 @@ y2: {
   }
 }
 
-document.getElementById("filterYear").addEventListener("change", renderChart);
-document.getElementById("filterCostCenter").addEventListener("change", renderChart);
+  function renderKpiCards(){
 
+  const filtered = getFilteredData();
+
+  const fixedData = filtered.filter(d => {
+    const map = mappingData.find(
+      m => m.category === d.category
+    );
+
+    return map?.fvmapping === "Fixed";
+  });
+
+  const variableData = filtered.filter(d => {
+    const map = mappingData.find(
+      m => m.category === d.category
+    );
+
+    return map?.fvmapping === "Variable";
+  });
+
+  const selectedYear =
+    document.getElementById("filterYear").value;
+
+  const selectedGroup =
+    document.getElementById("filterCostCenter").value;
+
+  let allowedDepots = [];
+
+  if(
+    !selectedGroup ||
+    selectedGroup === "Total S&H"
+  ){
+
+    allowedDepots =
+      [...new Set(
+        volumeData.map(v => v.depot)
+      )];
+
+  } else {
+
+    allowedDepots = mappingTable
+      .filter(m => m.reporting_group === selectedGroup)
+      .map(m => m.volume_depot)
+      .filter(v => v !== "0");
+  }
+
+  const totalVolume = volumeData
+    .filter(v =>
+
+      (!selectedYear || v.year == selectedYear) &&
+
+      allowedDepots.includes(v.depot)
+    )
+
+    .reduce(
+      (sum,row)=>
+        sum + Number(row.value || 0),
+      0
+    );
+
+  function getCost(data){
+
+    return data.reduce(
+      (sum,row)=>
+        sum + Number(row.actual_amount || 0),
+      0
+    );
+  }
+
+  const allCost = getCost(filtered);
+  const fixedCost = getCost(fixedData);
+  const variableCost = getCost(variableData);
+
+  function getUnitCost(cost){
+
+    return totalVolume
+      ? Number(cost / totalVolume).toFixed(2)
+      : "-";
+  }
+
+  document.getElementById("kpiCards").innerHTML = `
+
+<div style="
+  background:white;
+  border-radius:12px;
+  padding:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+">
+
+  <div style="
+    font-size:13px;
+    color:#777;
+    text-transform:uppercase;
+    margin-bottom:16px;
+    letter-spacing:1px;
+  ">
+    YTD Unit Cost
+  </div>
+
+  <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+    <span>Total</span>
+    <strong>${getUnitCost(allCost)}</strong>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+    <span>Fixed</span>
+    <strong>${getUnitCost(fixedCost)}</strong>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;">
+    <span>Variable</span>
+    <strong>${getUnitCost(variableCost)}</strong>
+  </div>
+
+</div>
+
+<div style="
+  background:white;
+  border-radius:12px;
+  padding:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+">
+
+  <div style="
+    font-size:13px;
+    color:#777;
+    text-transform:uppercase;
+    margin-bottom:16px;
+    letter-spacing:1px;
+  ">
+    YTD Cost
+  </div>
+
+  <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+    <span>Total</span>
+    <strong>${allCost.toLocaleString()}</strong>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+    <span>Fixed</span>
+    <strong>${fixedCost.toLocaleString()}</strong>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;">
+    <span>Variable</span>
+    <strong>${variableCost.toLocaleString()}</strong>
+  </div>
+
+</div>
+
+<div style="
+  background:white;
+  border-radius:12px;
+  padding:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+">
+
+  <div style="
+    font-size:13px;
+    color:#777;
+    text-transform:uppercase;
+    margin-bottom:16px;
+    letter-spacing:1px;
+  ">
+    YTD Volume
+  </div>
+
+  <div style="
+    font-size:34px;
+    font-weight:bold;
+    color:#404040;
+    margin-top:20px;
+  ">
+    ${totalVolume.toLocaleString()}
+  </div>
+
+</div>
+
+`;
+}
+  
+document.getElementById("filterYear").addEventListener("change", () => {
+  renderKpiCards();
+  renderChart();
+});
+
+document.getElementById("filterCostCenter").addEventListener("change", () => {
+  renderKpiCards();
+  renderChart();
+});
 async function logout(){
   await supabaseClient.auth.signOut();
   window.location.replace("login.html");
