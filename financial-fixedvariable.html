@@ -457,12 +457,28 @@ data.push(ytdTotal);
 
 
 
+const colors = [
+  "#5470C6",
+  "#91CC75",
+  "#FAC858",
+  "#EE6666",
+  "#73C0DE",
+  "#3BA272",
+  "#FC8452",
+  "#9A60B4",
+  "#6E7074",
+  "#EA7CCC"
+];
+
 return {
   label: cat,
   data: data,
-   borderWidth: 0
+  borderWidth: 0,
 
- 
+  backgroundColor:
+    colors[
+      categories.indexOf(cat) % colors.length
+    ]
 };
   });
 
