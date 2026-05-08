@@ -620,21 +620,32 @@ y2: {
     datasets.length - 1;
 },
 
-          anchor: 'end',
-          align: 'top',
+         anchor: 'start',
+align: 'bottom',
+          color:"#404040",
 
-          formatter: function(value, context) {
+backgroundColor:"rgba(255,255,255,0.75)",
 
-            const monthIndex = context.dataIndex;
+borderRadius:4,
 
-            const total = datasets.reduce(
-              (sum,ds)=>
-                sum + ds.data[monthIndex],
-              0
-            );
+padding:3,
+          
+offset: -2,
 
-            return total.toLocaleString();
-          }
+         formatter: function(value, context) {
+
+  const monthIndex = context.dataIndex;
+
+  const total = datasets.reduce(
+    (sum,ds)=>
+      sum + ds.data[monthIndex],
+    0
+  );
+
+  const mpkr = total / 1000000;
+
+  return mpkr.toFixed(1) + " MPKR";
+}
         }
       }
     }
