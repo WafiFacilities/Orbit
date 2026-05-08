@@ -248,7 +248,7 @@ function populateFilters(){
   const ccSelect = document.getElementById("filterCostCenter");
 
   yearSelect.innerHTML = "";
-  ccSelect.innerHTML = `<option value="">All Cost Centers</option>`;
+ ccSelect.innerHTML = "";
 
   years.forEach(y=>{
     yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
@@ -263,8 +263,10 @@ function autoSelectLatestYear(){
   const yearSelect = document.getElementById("filterYear");
   const years = [...new Set(allData.map(d => d.year))].sort();
   if(years.length > 0){
-    yearSelect.value = years[years.length - 1];
-  }
+  yearSelect.value = years[years.length - 1];
+}
+
+document.getElementById("filterCostCenter").value = "Total S&H";
 }
 
 function getFilteredData(){
@@ -359,10 +361,14 @@ if(
   selectedGroup === "Total S&H"
 ){
 
-  allowedDepots =
-    [...new Set(
-      volumeData.map(v => v.depot)
-    )];
+ allowedDepots =
+  [...new Set(
+
+    mappingTable
+      .map(m => m.volume_depot)
+      .filter(v => v !== "0")
+
+  )];
 
 } else {
 
@@ -690,9 +696,13 @@ y2: {
   ){
 
     allowedDepots =
-      [...new Set(
-        volumeData.map(v => v.depot)
-      )];
+  [...new Set(
+
+    mappingTable
+      .map(m => m.volume_depot)
+      .filter(v => v !== "0")
+
+  )];
 
   } else {
 
