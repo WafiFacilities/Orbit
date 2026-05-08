@@ -329,12 +329,12 @@ function renderSingleChart(canvasId, dataRows, lineLabel){
 
 const monthLabels = [
   "Jan","Feb","Mar","Apr","May","Jun",
-  "Jul","Aug","Sep","Oct","Nov","Dec",
-  "YTD"
+  "Jul","Aug","Sep","Oct","Nov","Dec"
 ];
 
   const categories = [...new Set(dataRows.map(d => d.category))];
 const unitCostData = [];
+const volumeLineData = [];
  const selectedYear =
   document.getElementById("filterYear").value;
 
@@ -386,7 +386,13 @@ for(let m=1; m<=12; m++){
       0
     );
 
- unitCostData.push(
+volumeLineData.push(
+  volume > 0
+    ? volume
+    : null
+);
+  
+  unitCostData.push(
 
   totalCost === 0
     ? null
@@ -397,36 +403,7 @@ for(let m=1; m<=12; m++){
 );
 }
 
-const totalYearCost = dataRows
-  .reduce(
-    (sum,row)=>
-      sum + Number(row.actual_amount || 0),
-    0
-  );
 
-const totalYearVolume = volumeData
-  .filter(v =>
-
-    (!selectedYear || v.year == selectedYear) &&
-
-    allowedDepots.includes(v.depot)
-  )
-
-  .reduce(
-    (sum,row)=>
-      sum + Number(row.value || 0),
-    0
-  );
-
-unitCostData.push(
-
-  totalYearCost === 0
-    ? null
-    : totalYearVolume
-      ? Number((totalYearCost / totalYearVolume).toFixed(2))
-      : null
-
-);
   
   const datasets = categories.map(cat => {
 
@@ -448,12 +425,7 @@ for(let m=1; m<=12; m++){
   data.push(total);
 }
 
-const ytdTotal = data.reduce(
-  (sum,val)=> sum + val,
-  0
-);
 
-data.push(ytdTotal);
 
 
 
@@ -475,10 +447,10 @@ return {
   data: data,
   borderWidth: 0,
 
-  backgroundColor:
-    colors[
-      categories.indexOf(cat) % colors.length
-    ]
+backgroundColor:
+  colors[
+    categories.indexOf(cat) % colors.length
+  ] + "99"
 };
   });
 
@@ -521,9 +493,35 @@ return {
         color:"#000",
         anchor:"end",
         align:"top",
-        formatter: value => value
+       formatter: value =>
+
+  value !== null
+    ? value.toFixed(2)
+    : ""
       }
     }
+    ,
+
+{
+  label: 'Volume',
+  type: 'line',
+  data: volumeLineData,
+
+  borderColor: '#8ecae6',
+  backgroundColor: '#8ecae6',
+
+  borderWidth: 2,
+  borderDash: [5,5],
+  tension: 0.3,
+
+  pointRadius: 2,
+
+  yAxisID: 'y2',
+
+  datalabels: {
+    display:false
+  }
+}
 
   ]
 },
@@ -549,21 +547,40 @@ return {
     }
   },
 
-  y1: {
-    position:'right',
-    grid:{
-      drawOnChartArea:false
-    },
+y1: {
+  position:'right',
 
-    ticks:{
-      callback:value => value
-    },
+  grid:{
+    drawOnChartArea:false
+  },
 
-    title:{
-      display:true,
-      text:'Unit Cost'
-    }
+  ticks:{
+    callback:value => value
+  },
+
+  title:{
+    display:true,
+    text:'Unit Cost'
   }
+},
+
+y2: {
+
+  position:'right',
+
+  grid:{
+    drawOnChartArea:false
+  },
+
+  ticks:{
+    display:false
+  },
+
+  title:{
+    display:true,
+    text:'Volume'
+  }
+}
 },
 
       plugins: {
@@ -572,9 +589,13 @@ return {
 
           display: function(context) {
 
-            return context.dataset.type !== 'line' &&
-       context.datasetIndex === datasets.length - 1;
-          },
+  if(context.dataset.type === 'line'){
+    return true;
+  }
+
+  return context.datasetIndex ===
+    datasets.length - 1;
+},
 
           anchor: 'end',
           align: 'top',
