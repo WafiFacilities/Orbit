@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Financial Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+<style>
+@font-face { font-family: '72 Condensed'; src: local('72 Condensed'); }
+
+body { font-family:'72 Condensed', Arial; margin:0; background:#f4f6f9; }
+
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;   /* pushes items to edges */
+  padding:10px 20px;
+  background:white;
+  border-bottom:2px solid #e0e0e0;
+}
+
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:12px;   /* spacing between orbit logo and title */
+}
+
+.header-left img{
+  height:40px;
+}
+
+.wafi-logo{
+  height:40px;
+}
+
+.header img{height:40px;margin-right:15px;}
+.header-title{
+font-size:22px;color:#404040;font-weight:bold;text-transform:uppercase;
+}
+
+.layout{display:flex;height:calc(100vh - 62px);}
+
+.sidebar{
+width:220px;background:#404040;color:white;
+display:flex;flex-direction:column;padding-top:20px;
+}
+.sidebar h4{
+  padding:10px 20px;
+  margin:10px 0 5px 0;
+  background:#2f2f2f;
+  border-left:4px solid #16a34a;
+}
+.sidebar a{color:white;padding:10px 30px;text-decoration:none;display:block;}
+.sidebar a:hover{background:#505050;}
+.sidebar .logout{margin-top:auto;border-top:1px solid #555;}
+
+
+.main{flex:1;padding:20px;overflow-y:auto;}
+
+.filters {
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+.filters select {
+  padding:6px;
+  border-radius:4px;
+  border:1px solid #ccc;
+  font-family:'72 Condensed';
+}
+
+.chart-box {
+  background:white;
+  padding:20px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  height:500px;
+  margin-bottom:30px;
+}
+
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+
+  <div class="header-left">
+    <img src="orbit-logo.png">
+    <h1 class="header-title">M&D FACILITIES – ORBIT PORTAL</h1>
+  </div>
+
+  <img src="wafi-logo.png" class="wafi-logo">
+
+</div>
+
+
+<div class="layout">
+
+<div class="sidebar">
+
+  <a href="dashboard.html"><h4>EXECUTIVE DASHBOARD</h4></a>
+  
+  <a href="dashboard.html"><h4>INITIATIVE</h4></a>
+
+  <a href="assurances.html"><h4>ASSURANCE</h4></a>
+
+   <a href="people-employees.html"><h4>PEOPLE</h4></a>
+
+   <a href="financial-dashboard.html"><h4>FINANCIAL</h4></a>
+     <a href="financial-dashboard.html">Unit Cost - Graph List</a>
+  <a href="unit-cost-tabular.html">Unit Cost - Tabular</a>
+  <a href="financial-dashboard-overview.html">Category - Stacked Graph</a>
+  <a href="financial-dashboard-category.html">Depot - Stacked Graph</a>
+    <a href="financial-summary.html">Financial Performance</a>
+  
+  <a href="mydetails.html" class="logout"><h4>MY TASK</h4></a>
+  <a href="#" onclick="logout()" class="logout">Logout</a>
+
+</div>
+<div class="main">
+
+<h2>Financial Overview – Monthly Spend (Stacked)</h2>
+
+<div class="filters">
+  <select id="filterYear"></select>
+  <select id="filterCostCenter"></select>
+</div>
+
+<div class="chart-box">
+  <h3>All Costs</h3>
+  <canvas id="financialChartAll"></canvas>
+</div>
+
+<br><br>
+
+<div class="chart-box">
+  <h3>Fixed Costs</h3>
+  <canvas id="financialChartFixed"></canvas>
+</div>
+
+<br><br>
+
+<div class="chart-box">
+  <h3>Variable Costs</h3>
+  <canvas id="financialChartVariable"></canvas>
+</div>
+
+</div>
+</div>
+
+<script>
+
+Chart.register(ChartDataLabels);
+
+const supabaseUrl = "https://kqhbvmqxrwwspopwckah.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+let allData = [];
+let mappingData = [];
+
+let chartAll;
+let chartFixed;
+let chartVariable;
+
+async function load(){
+
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  if(!sessionData.session){
+    window.location.replace("login.html");
+    return;
+  }
+
+const { data, error } = await supabaseClient
+  .from("financial_actuals")
+  .select("*");
+
+if(error){
+  console.log(error);
+  return;
+}
+
+const { data: mapping, error: mapError } = await supabaseClient
+  .from("fixedvariablemapping")
+  .select("*");
+
+if(mapError){
+  console.log(mapError);
+  return;
+}
+
+allData = data;
+mappingData = mapping;
+
+  populateFilters();
+  autoSelectLatestYear();
+  renderChart();
+}
+
+function populateFilters(){
+
+  const years = [...new Set(allData.map(d => d.year))].sort();
+  const costCenters = [...new Set(allData.map(d => d.cost_center_name))];
+
+  const yearSelect = document.getElementById("filterYear");
+  const ccSelect = document.getElementById("filterCostCenter");
+
+  yearSelect.innerHTML = "";
+  ccSelect.innerHTML = `<option value="">All Cost Centers</option>`;
+
+  years.forEach(y=>{
+    yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+  });
+
+  costCenters.forEach(c=>{
+    ccSelect.innerHTML += `<option value="${c}">${c}</option>`;
+  });
+}
+
+function autoSelectLatestYear(){
+  const yearSelect = document.getElementById("filterYear");
+  const years = [...new Set(allData.map(d => d.year))].sort();
+  if(years.length > 0){
+    yearSelect.value = years[years.length - 1];
+  }
+}
+
+function getFilteredData(){
+
+  const year = document.getElementById("filterYear").value;
+  const costCenter = document.getElementById("filterCostCenter").value;
+
+  return allData.filter(d =>
+    (!year || d.year == year) &&
+    (!costCenter || d.cost_center_name === costCenter)
+  );
+}
+
+function renderChart(){
+
+  const filtered = getFilteredData();
+
+  renderSingleChart(
+    "financialChartAll",
+    filtered
+  );
+
+  renderSingleChart(
+    "financialChartFixed",
+    filtered.filter(d => {
+      const map = mappingData.find(
+        m => m.category === d.category
+      );
+
+      return map?.fvmapping === "Fixed";
+    })
+  );
+
+  renderSingleChart(
+    "financialChartVariable",
+    filtered.filter(d => {
+      const map = mappingData.find(
+        m => m.category === d.category
+      );
+
+      return map?.fvmapping === "Variable";
+    })
+  );
+}
+
+function renderSingleChart(canvasId, dataRows){
+
+  const monthLabels = [
+    "Jan","Feb","Mar","Apr","May","Jun",
+    "Jul","Aug","Sep","Oct","Nov","Dec"
+  ];
+
+  const categories = [...new Set(dataRows.map(d => d.category))];
+
+  const datasets = categories.map(cat => {
+
+    const data = [];
+
+    for(let m=1; m<=12; m++){
+
+      const total = dataRows
+        .filter(d =>
+          d.category === cat &&
+          Number(d.month) === m
+        )
+        .reduce(
+          (sum,row)=>
+            sum + Number(row.actual_amount || 0),
+          0
+        );
+
+      data.push(total);
+    }
+
+    return {
+      label: cat,
+      data: data
+    };
+  });
+
+  if(canvasId === "financialChartAll" && chartAll){
+    chartAll.destroy();
+  }
+
+  if(canvasId === "financialChartFixed" && chartFixed){
+    chartFixed.destroy();
+  }
+
+  if(canvasId === "financialChartVariable" && chartVariable){
+    chartVariable.destroy();
+  }
+
+  const ctx = document.getElementById(canvasId);
+
+  const newChart = new Chart(ctx, {
+
+    type: 'bar',
+
+    data: {
+      labels: monthLabels,
+      datasets: datasets
+    },
+
+    options: {
+
+      responsive:true,
+      maintainAspectRatio:false,
+
+      scales: {
+        x: {
+          stacked: true
+        },
+
+        y: {
+          stacked: true,
+
+          ticks: {
+            callback: value =>
+              value.toLocaleString()
+          }
+        }
+      },
+
+      plugins: {
+
+        datalabels: {
+
+          display: function(context) {
+
+            return context.datasetIndex ===
+              datasets.length - 1;
+          },
+
+          anchor: 'end',
+          align: 'top',
+
+          formatter: function(value, context) {
+
+            const monthIndex = context.dataIndex;
+
+            const total = datasets.reduce(
+              (sum,ds)=>
+                sum + ds.data[monthIndex],
+              0
+            );
+
+            return total.toLocaleString();
+          }
+        }
+      }
+    }
+  });
+
+  if(canvasId === "financialChartAll"){
+    chartAll = newChart;
+  }
+
+  if(canvasId === "financialChartFixed"){
+    chartFixed = newChart;
+  }
+
+  if(canvasId === "financialChartVariable"){
+    chartVariable = newChart;
+  }
+}
+
+document.getElementById("filterYear").addEventListener("change", renderChart);
+document.getElementById("filterCostCenter").addEventListener("change", renderChart);
+
+async function logout(){
+  await supabaseClient.auth.signOut();
+  window.location.replace("login.html");
+}
+
+load();
+
+</script>
+
+</body>
+</html>
+
+
