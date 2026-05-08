@@ -127,6 +127,19 @@ display:flex;flex-direction:column;padding-top:20px;
 
 <h2>Financial - Fixed vs Variable Unit Cost (Stacked)</h2>
 
+<div class="filters"
+     style="
+       margin-bottom:16px;
+       display:flex;
+       justify-content:flex-end;
+       gap:10px;
+     ">
+       
+  <select id="filterYear"></select>
+  <select id="filterCostCenter"></select>
+
+</div>
+
 <div id="kpiCards"
      style="
        display:grid;
@@ -135,12 +148,6 @@ display:flex;flex-direction:column;padding-top:20px;
        margin-bottom:24px;
      ">
 </div>
-  
-<div class="filters">
-  <select id="filterYear"></select>
-  <select id="filterCostCenter"></select>
-</div>
-
 <div class="chart-box">
   <h3>All Costs</h3>
   <canvas id="financialChartAll"></canvas>
