@@ -35,6 +35,13 @@ flex:0 0 220px;
 max-width:420px;
 flex:0 0 420px;
 }
+  #assurance_owner_email{
+max-width:420px;
+}
+
+.select2-container{
+max-width:420px !important;
+}
   
 .layout{display:flex;height:calc(100vh - 62px);}
 .sidebar{
@@ -430,7 +437,7 @@ ${assurance.status}
 
 <div class="form-row">
 <label>Owner Email</label>
-<select id="assurance_owner_email" style="width:100%"></select>
+<select id="assurance_owner_email" style="width:420px"></select>
 </div>
 
 <div class="form-row">
@@ -575,7 +582,7 @@ async function loadOwnerDropdown(selectedEmail){
  dropdown.select2({
    placeholder: "Search owner...",
    allowClear: false,
-   width: "100%"
+  width: "420px"
  });
 
 }
