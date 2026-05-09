@@ -561,11 +561,11 @@ async function loadOwnerDropdown(selectedEmail){
    const text = `${u.full_name} | ${u.email}`;
 
    const option = new Option(
-     text,
-     u.email,
-     false,
-     u.email === selectedEmail
-   );
+  text,
+  u.email,
+  false,
+  u.email?.toLowerCase().trim() === selectedEmail?.toLowerCase().trim()
+);
 
    dropdown.append(option);
  });
