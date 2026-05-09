@@ -219,7 +219,9 @@ tbody tr:hover{
       <th>Nov</th>
       <th>Dec</th>
 
-      <th>YTD</th>
+      <th>YTD Total</th>
+
+<th>YTD Open</th>
 
       <th>Open Actions</th>
       <th>Overdue Actions</th>
@@ -366,7 +368,38 @@ console.log("ACTIONS DATA", actionsData);
 
     // YTD
 
-    html += `<td><b>${ytd}</b></td>`;
+    // YTD TOTAL
+
+html += `<td><b>${ytd}</b></td>`;
+
+// YTD OPEN ASSURANCES
+
+const ytdOpen = nmpiData.filter(x => {
+
+  const personName = x["Reported By"];
+
+  const rawDate = x["Event Report Date"];
+
+  const status =
+    (x["Status"] || "").toLowerCase();
+
+  if (!rawDate) return false;
+
+  const reportDate = new Date(rawDate);
+
+  return (
+
+    personName === person &&
+
+    reportDate.getFullYear() == year &&
+
+    status !== "closed"
+
+  );
+
+}).length;
+
+html += `<td><b>${ytdOpen}</b></td>`;
 
     // PERSON ACTIONS
 
