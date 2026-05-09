@@ -224,7 +224,9 @@ background:#404040;color:white;cursor:pointer;
 <div class="filters">
 
 <div class="dropdown-filter">
-<button onclick="toggleDropdown('depotDropdown')" class="filter-btn">Terminal ▼</button>
+<button id="depotBtn" onclick="toggleDropdown('depotDropdown')" class="filter-btn">
+Terminal: All ▼
+</button>
 <div id="depotDropdown" class="dropdown-content">
 
 <label><input type="checkbox" value="ALL" checked onchange="toggleAll('depotDropdown')"> All</label>
@@ -246,12 +248,16 @@ background:#404040;color:white;cursor:pointer;
 </div>
 
 <div class="dropdown-filter">
-<button onclick="toggleDropdown('leadDropdown')" class="filter-btn">Lead ▼</button>
+<button id="leadBtn" onclick="toggleDropdown('leadDropdown')" class="filter-btn">
+Lead: All ▼
+</button>
 <div id="leadDropdown" class="dropdown-content"></div>
 </div>
   
 <div class="dropdown-filter">
-<button onclick="toggleDropdown('indicatorDropdown')" class="filter-btn">Status ▼</button>
+<button id="indicatorBtn" onclick="toggleDropdown('indicatorDropdown')" class="filter-btn">
+Status: All ▼
+</button>
 <div id="indicatorDropdown" class="dropdown-content">
 
 <label><input type="checkbox" value="ALL" checked onchange="toggleAll('indicatorDropdown')"> All</label>
@@ -265,7 +271,9 @@ background:#404040;color:white;cursor:pointer;
 
 
 <div class="dropdown-filter">
-<button onclick="toggleDropdown('typeDropdown')" class="filter-btn">Type ▼</button>
+<button id="typeBtn" onclick="toggleDropdown('typeDropdown')" class="filter-btn">
+Type: All ▼
+</button>
 <div id="typeDropdown" class="dropdown-content">
 
 <label><input type="checkbox" value="ALL" checked onchange="toggleAll('typeDropdown')"> All</label>
@@ -278,7 +286,9 @@ background:#404040;color:white;cursor:pointer;
 
 
 <div class="dropdown-filter">
-<button onclick="toggleDropdown('yearDropdown')" class="filter-btn">Year ▼</button>
+<button id="yearBtn" onclick="toggleDropdown('yearDropdown')" class="filter-btn">
+Year: 2026 ▼
+</button>
 <div id="yearDropdown" class="dropdown-content"></div>
 </div>
 
@@ -542,6 +552,34 @@ await supabaseClient.auth.signOut();
 window.location="login.html";
 }
 
+ function updateFilterButton(dropdownId, buttonId, label){
+
+const selected=[...document.querySelectorAll(`#${dropdownId} input:checked`)]
+.map(c=>{
+
+  if(dropdownId==="leadDropdown"){
+    return c.parentElement.innerText.trim();
+  }
+
+  return c.value;
+
+})
+.filter(v=>v!=="ALL");
+
+const button=document.getElementById(buttonId);
+
+if(selected.length===0){
+button.innerText=`${label}: All ▼`;
+}
+else if(selected.length<=2){
+button.innerText=`${label}: ${selected.join(", ")} ▼`;
+}
+else{
+button.innerText=`${label}: ${selected.length} Selected ▼`;
+}
+
+} 
+  
 function toggleDropdown(id){
 
 document.querySelectorAll(".dropdown-content").forEach(d=>{
@@ -653,10 +691,22 @@ document.querySelectorAll(".dropdown-content input[type=checkbox]")
       }
     }
 
-    currentPage = 1;
-    loadData();
+    updateFilterButton("depotDropdown","depotBtn","Terminal");
+updateFilterButton("leadDropdown","leadBtn","Lead");
+updateFilterButton("indicatorDropdown","indicatorBtn","Status");
+updateFilterButton("typeDropdown","typeBtn","Type");
+updateFilterButton("yearDropdown","yearBtn","Year");
+
+currentPage = 1;
+loadData();
   });
 });
+
+updateFilterButton("depotDropdown","depotBtn","Terminal");
+updateFilterButton("leadDropdown","leadBtn","Lead");
+updateFilterButton("indicatorDropdown","indicatorBtn","Status");
+updateFilterButton("typeDropdown","typeBtn","Type");
+updateFilterButton("yearDropdown","yearBtn","Year");
 
 loadData();
 }
