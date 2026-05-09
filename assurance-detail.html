@@ -318,7 +318,7 @@ const email = session.user.email;
  const {data} = await supabaseClient
    .from('superusers')
    .select('*')
-   .eq('email', email);
+   .eq('email', email.toLowerCase().trim());
 
  return data.length > 0;
 }
@@ -412,9 +412,9 @@ assuranceInfo.innerHTML=`
 <div>${assurance.planned_finish_date || ""}</div>
 </div>
 
-<div class="data-row">
-<label>Owner Email:</label>
-<div>${assurance.assurance_owner_email || ""}</div>
+<div class="form-row">
+<label>Owner Email</label>
+<select id="assurance_owner_email" style="width:100%"></select>
 </div>
 
 <div class="data-row">
@@ -478,6 +478,7 @@ ${f.finding_title}</a></td>
 });
 
 findingsTable.innerHTML=html;
+  await loadOwnerDropdown(assurance.assurance_owner_email);
 
   // lock editing if assurance is closed
 const isOwner =
@@ -490,6 +491,7 @@ if(!canEdit || assurance.status === "Closed"){
 
 document.getElementById("date_of_assurance").disabled = true;
 document.getElementById("participants").disabled = true;
+  $("#assurance_owner_email").prop("disabled", true);
   document.getElementById("attachmentFile").disabled = true;
   document.getElementById("uploadBtn").disabled = true;
 
@@ -538,7 +540,44 @@ async function init(){
 
 init();
 
+async function loadOwnerDropdown(selectedEmail){
 
+ const { data, error } = await supabaseClient
+   .from("portal_users")
+   .select("email, full_name")
+   .order("full_name");
+
+ if(error){
+   console.error(error);
+   return;
+ }
+
+ const dropdown = $("#assurance_owner_email");
+
+ dropdown.empty();
+
+ data.forEach(u => {
+
+   const text = `${u.full_name} | ${u.email}`;
+
+   const option = new Option(
+     text,
+     u.email,
+     false,
+     u.email === selectedEmail
+   );
+
+   dropdown.append(option);
+ });
+
+ dropdown.select2({
+   placeholder: "Search owner...",
+   allowClear: false,
+   width: "100%"
+ });
+
+}
+  
 async function closeAssurance(){
 
 const dateField = document.getElementById("date_of_assurance");
@@ -688,13 +727,20 @@ loadAttachments();
 }
   async function saveAssuranceDetails(){
 
-await supabaseClient
+const { error } = await supabaseClient
 .from("assurances")
 .update({
-date_of_assurance: document.getElementById("date_of_assurance").value,
-participants: document.getElementById("participants").value
+  date_of_assurance: document.getElementById("date_of_assurance").value,
+  participants: document.getElementById("participants").value,
+  assurance_owner_email: $("#assurance_owner_email").val()?.toLowerCase().trim()
 })
 .eq("id", id);
+
+if(error){
+  console.error(error);
+  alert(error.message);
+  return;
+}
 
 alert("Assurance details updated");
 
