@@ -373,7 +373,10 @@ container.innerHTML=`<label><input type="checkbox" value="ALL" checked onchange=
 
 years.forEach(y=>{
 container.innerHTML+=`
-<label><input type="checkbox" value="${y}"> ${y}</label>
+<label>
+<input type="checkbox" value="${y}" ${y===2026 ? "checked" : ""}>
+${y}
+</label>
 `;
 });
 
@@ -412,19 +415,32 @@ const years=[...document.querySelectorAll("#yearDropdown input:checked")]
 if(depots.length)
 query=query.in("depot",depots);
 
-
-
 if(types.length)
 query=query.in("assurance_type",types);
 
-if(years.length){
-query=query.gte("planned_start_date",`${Math.min(...years)}-01-01`)
-           .lte("planned_start_date",`${Math.max(...years)}-12-31`);
+const {data:rawData,count}=await query;
+
+let data = rawData;
+
+// DEFAULT YEAR = 2026
+if(years.length === 0){
+  data = rawData.filter(row => {
+    if(!row.planned_start_date) return false;
+
+    return new Date(row.planned_start_date).getFullYear() === 2026;
+  });
+}
+else{
+  data = rawData.filter(row => {
+    if(!row.planned_start_date) return false;
+
+    const rowYear = new Date(row.planned_start_date).getFullYear();
+
+    return years.includes(rowYear);
+  });
 }
 
-const {data,count}=await query;
-
-kpiTotal.innerText=count;
+kpiTotal.innerText=data.length;
 kpiOpen.innerText=data.filter(x=>x.status==="Open").length;
 
 let totalOpenFindings=0;
