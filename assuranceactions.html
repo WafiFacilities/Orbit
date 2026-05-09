@@ -229,29 +229,39 @@ font-weight:bold;
 
 
 <div class="dropdown-filter">
-<button onclick="toggleDropdown('depotDropdown')" class="filter-btn">Terminal ▼</button>
+<button id="depotBtn" onclick="toggleDropdown('depotDropdown')" class="filter-btn">
+Terminal: All ▼
+</button>
 <div id="depotDropdown" class="dropdown-content"></div>
 </div>
 
 <div class="dropdown-filter">
-<button onclick="toggleDropdown('yearDropdown')" class="filter-btn">Year ▼</button>
+<button id="yearBtn" onclick="toggleDropdown('yearDropdown')" class="filter-btn">
+Year: 2026 ▼
+</button>
 <div id="yearDropdown" class="dropdown-content"></div>
 </div>
 
 <div class="dropdown-filter">
-<button onclick="toggleDropdown('categoryDropdown')" class="filter-btn">Category ▼</button>
+<button id="categoryBtn" onclick="toggleDropdown('categoryDropdown')" class="filter-btn">
+Category: All ▼
+</button>
 <div id="categoryDropdown" class="dropdown-content"></div>
 </div>
 
   <div class="dropdown-filter">
-<button onclick="toggleDropdown('typeDropdown')" class="filter-btn">Type ▼</button>
+<button id="typeBtn" onclick="toggleDropdown('typeDropdown')" class="filter-btn">
+Type: All ▼
+</button>
 <div id="typeDropdown" class="dropdown-content"></div>
 </div>
 
 
 
   <div class="dropdown-filter">
-<button onclick="toggleDropdown('indicatorDropdown')" class="filter-btn">Status ▼</button>
+<button id="indicatorBtn" onclick="toggleDropdown('indicatorDropdown')" class="filter-btn">
+Status: All ▼
+</button>
 
 <div id="indicatorDropdown" class="dropdown-content">
 
@@ -398,6 +408,13 @@ ${c}
 document.querySelectorAll(".dropdown-content input[type=checkbox]")
 .forEach(cb=>{
 cb.addEventListener("change",()=>{
+
+updateFilterButton("depotDropdown","depotBtn","Terminal");
+updateFilterButton("yearDropdown","yearBtn","Year");
+updateFilterButton("categoryDropdown","categoryBtn","Category");
+updateFilterButton("typeDropdown","typeBtn","Type");
+updateFilterButton("indicatorDropdown","indicatorBtn","Status");
+
 loadActions();
 });
 });
@@ -615,7 +632,26 @@ XLSX.utils.book_append_sheet(wb, ws, "Assurance Actions");
 XLSX.writeFile(wb, "Orbit_Assurance_Actions.xlsx");
 
 }
-  
+
+ function updateFilterButton(dropdownId, buttonId, label){
+
+const selected=[...document.querySelectorAll(`#${dropdownId} input:checked`)]
+.map(c=>c.value)
+.filter(v=>v!=="ALL");
+
+const button=document.getElementById(buttonId);
+
+if(selected.length===0){
+button.innerText=`${label}: All ▼`;
+}
+else if(selected.length<=2){
+button.innerText=`${label}: ${selected.join(", ")} ▼`;
+}
+else{
+button.innerText=`${label}: ${selected.length} Selected ▼`;
+}
+
+} 
 function toggleDropdown(id){
 
 document.querySelectorAll(".dropdown-content").forEach(d=>{
@@ -680,7 +716,14 @@ async function init() {
   const session = await checkAuthOrRedirect();
   if (!session) return;
 
-  await loadFilters();
+await loadFilters();
+
+updateFilterButton("depotDropdown","depotBtn","Terminal");
+updateFilterButton("yearDropdown","yearBtn","Year");
+updateFilterButton("categoryDropdown","categoryBtn","Category");
+updateFilterButton("typeDropdown","typeBtn","Type");
+updateFilterButton("indicatorDropdown","indicatorBtn","Status");
+
 await loadActions();
 }
 
