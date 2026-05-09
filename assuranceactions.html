@@ -226,12 +226,24 @@ font-weight:bold;
 
 <div class="filters">
 
+
+
 <div class="dropdown-filter">
 <button onclick="toggleDropdown('depotDropdown')" class="filter-btn">Terminal ▼</button>
 <div id="depotDropdown" class="dropdown-content"></div>
 </div>
 
 <div class="dropdown-filter">
+<button onclick="toggleDropdown('yearDropdown')" class="filter-btn">Year ▼</button>
+<div id="yearDropdown" class="dropdown-content"></div>
+</div>
+
+<div class="dropdown-filter">
+<button onclick="toggleDropdown('categoryDropdown')" class="filter-btn">Category ▼</button>
+<div id="categoryDropdown" class="dropdown-content"></div>
+</div>
+
+  <div class="dropdown-filter">
 <button onclick="toggleDropdown('typeDropdown')" class="filter-btn">Type ▼</button>
 <div id="typeDropdown" class="dropdown-content"></div>
 </div>
@@ -273,12 +285,13 @@ font-weight:bold;
 <th onclick="sortTable(2)">Assurance</th>
 <th onclick="sortTable(3)">RAM</th>
 <th onclick="sortTable(4)">Nature</th>
-<th onclick="sortTable(5)">Action Required</th>
-<th onclick="sortTable(6)">Action Owner</th>
-<th onclick="sortTable(7)">Target Date</th>
-<th onclick="sortTable(8)">Revisions</th>
-<th onclick="sortTable(9)">Terminal</th>
-<th onclick="sortTable(10)">Status</th>
+<th onclick="sortTable(5)">Category</th>
+<th onclick="sortTable(6)">Action Required</th>
+<th onclick="sortTable(7)">Action Owner</th>
+<th onclick="sortTable(8)">Target Date</th>
+<th onclick="sortTable(9)">Revisions</th>
+<th onclick="sortTable(10)">Terminal</th>
+<th onclick="sortTable(11)">Status</th>
 </tr>
 </thead>
 
@@ -312,10 +325,27 @@ async function loadFilters(){
 
 const {data:assurances} = await supabaseClient
 .from("assurances")
-.select("depot,assurance_type");
+.select("depot,assurance_type,planned_start_date");
 
 const depots=[...new Set(assurances.map(a=>a.depot).filter(Boolean))];
-const types=[...new Set(assurances.map(a=>a.assurance_type).filter(Boolean))];
+
+const types=[...new Set(
+assurances.map(a=>a.assurance_type).filter(Boolean)
+)];
+
+const years=[...new Set(
+assurances
+.filter(a=>a.planned_start_date)
+.map(a=>new Date(a.planned_start_date).getFullYear())
+)].sort();
+
+const {data:categoriesData} = await supabaseClient
+.from("assurance_findings")
+.select("category");
+
+const categories=[...new Set(
+categoriesData.map(c=>c.category).filter(Boolean)
+)];
 
 const depotContainer=document.getElementById("depotDropdown");
 depotContainer.innerHTML=`<label><input type="checkbox" value="ALL" checked onchange="toggleAll('depotDropdown')"> All</label>`;
@@ -329,6 +359,40 @@ typeContainer.innerHTML=`<label><input type="checkbox" value="ALL" checked oncha
 
 types.forEach(t=>{
 typeContainer.innerHTML+=`<label><input type="checkbox" value="${t}"> ${t}</label>`;
+});
+
+const yearContainer=document.getElementById("yearDropdown");
+
+yearContainer.innerHTML=`
+<label>
+<input type="checkbox" value="ALL" onchange="toggleAll('yearDropdown')">
+All
+</label>
+`;
+
+years.forEach(y=>{
+yearContainer.innerHTML+=`
+<label>
+<input type="checkbox" value="${y}" ${y===2026 ? "checked" : ""}>
+${y}
+</label>`;
+});
+
+const categoryContainer=document.getElementById("categoryDropdown");
+
+categoryContainer.innerHTML=`
+<label>
+<input type="checkbox" value="ALL" checked onchange="toggleAll('categoryDropdown')">
+All
+</label>
+`;
+
+categories.forEach(c=>{
+categoryContainer.innerHTML+=`
+<label>
+<input type="checkbox" value="${c}">
+${c}
+</label>`;
 });
 
 document.querySelectorAll(".dropdown-content input[type=checkbox]")
@@ -354,11 +418,26 @@ const depots=[...document.querySelectorAll("#depotDropdown input:checked")]
 const types=[...document.querySelectorAll("#typeDropdown input:checked")]
 .map(c=>c.value).filter(v=>v!=="ALL");
 
+  const years=[...document.querySelectorAll("#yearDropdown input:checked")]
+.map(c=>c.value)
+.filter(v=>v!=="ALL")
+.map(Number);
+
+const categories=[...document.querySelectorAll("#categoryDropdown input:checked")]
+.map(c=>c.value)
+.filter(v=>v!=="ALL");
+
 let query = supabaseClient
 .from("assurance_findings")
 .select(`
 *,
-assurances(id,assurance_name,depot,assurance_type)
+assurances(
+id,
+assurance_name,
+depot,
+assurance_type,
+planned_start_date
+)
 `);
 
 
@@ -372,8 +451,16 @@ const today=new Date().toISOString().split("T")[0];
 actions.forEach(a=>{
 
 if(depots.length && !depots.includes(a.assurances?.depot)) return;
+
 if(types.length && !types.includes(a.assurances?.assurance_type)) return;
-total++;
+
+const assuranceYear = a.assurances?.planned_start_date
+? new Date(a.assurances.planned_start_date).getFullYear()
+: null;
+
+if(years.length && !years.includes(assuranceYear)) return;
+
+if(categories.length && !categories.includes(a.category)) return;
 
 let indicator="open";
 
@@ -391,6 +478,8 @@ open++;
 }
 
 if(indicators.length && !indicators.includes(indicator)) return;
+
+total++;
 
 html+=`
 <tr>
@@ -411,6 +500,7 @@ ${a.assurances?.assurance_name || ""}
 
 <td>${a.priority_rating || ""}</td>
 <td>${a.type_of_finding || ""}</td>
+<td>${a.category || ""}</td>
 <td>${a.action_required || ""}</td>
 <td>${a.action_owner_email || ""}</td>
 <td>${a.target_date || ""}</td>
@@ -590,8 +680,8 @@ async function init() {
   const session = await checkAuthOrRedirect();
   if (!session) return;
 
-  loadFilters();
-  loadActions();
+  await loadFilters();
+await loadActions();
 }
 
 init();
