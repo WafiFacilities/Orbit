@@ -369,7 +369,7 @@ data
 
 const container=document.getElementById("yearDropdown");
 
-container.innerHTML=`<label><input type="checkbox" value="ALL" checked onchange="toggleAll('yearDropdown')"> All</label>`;
+container.innerHTML=`<label><input type="checkbox" value="ALL" onchange="toggleAll('yearDropdown')"> All</label>`;
 
 years.forEach(y=>{
 container.innerHTML+=`
@@ -636,18 +636,29 @@ async function init() {
   const session = await checkAuthOrRedirect();
   if (!session) return;
 
-  populateYears();
-  populateLeads();
+await populateYears();
+await populateLeads();
 
-  document.querySelectorAll(".dropdown-content input[type=checkbox]")
-  .forEach(cb=>{
-    cb.addEventListener("change",()=>{
-      currentPage=1;
-      loadData();
-    });
+document.querySelectorAll(".dropdown-content input[type=checkbox]")
+.forEach(cb=>{
+  cb.addEventListener("change",()=>{
+
+    // remove ALL if specific years selected
+    if(cb.value !== "ALL" && cb.checked){
+      const allBox = cb.closest(".dropdown-content")
+                       .querySelector('input[value="ALL"]');
+
+      if(allBox){
+        allBox.checked = false;
+      }
+    }
+
+    currentPage = 1;
+    loadData();
   });
+});
 
-  loadData();
+loadData();
 }
 
 init();
