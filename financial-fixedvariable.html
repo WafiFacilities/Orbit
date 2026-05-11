@@ -746,7 +746,26 @@ const previousYearCost = previousYearFiltered.reduce(
   0
 );
     
-  const totalVolume = volumeData
+ const previousYearVolume = volumeData
+  .filter(v =>
+
+    v.year == previousYear &&
+
+    allowedDepots.includes(v.depot)
+  )
+
+  .reduce(
+    (sum,row)=>
+      sum + Number(row.value || 0),
+    0
+  );
+
+const previousYearUnitCost =
+  previousYearVolume
+    ? (previousYearCost / previousYearVolume).toFixed(2)
+    : "-";
+    
+    const totalVolume = volumeData
     .filter(v =>
 
       (!selectedYear || v.year == selectedYear) &&
