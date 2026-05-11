@@ -358,7 +358,9 @@ const monthLabels = [
 
   const categories = [...new Set(dataRows.map(d => d.category))];
 const unitCostData = [];
-const volumeLineData = [];
+const selectedYear =
+  document.getElementById("filterYear").value;
+  const volumeLineData = [];
 
 
 const selectedGroup =
