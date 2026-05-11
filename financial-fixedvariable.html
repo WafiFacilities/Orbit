@@ -280,6 +280,10 @@ function getFilteredData(){
 
   const year =
     document.getElementById("filterYear").value;
+
+   const selectedYear =
+  document.getElementById("filterYear").value;
+  
   const previousYear = Number(selectedYear) - 1;
 
   const selectedGroup =
@@ -355,8 +359,7 @@ const monthLabels = [
   const categories = [...new Set(dataRows.map(d => d.category))];
 const unitCostData = [];
 const volumeLineData = [];
- const selectedYear =
-  document.getElementById("filterYear").value;
+
 
 const selectedGroup =
   document.getElementById("filterCostCenter").value;
