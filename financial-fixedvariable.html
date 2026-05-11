@@ -721,6 +721,16 @@ offset: -2,
     .filter(v => v !== "0");
 }
 
+      function getCost(data){
+
+    return data.reduce(
+      (sum,row)=>
+        sum + Number(row.actual_amount || 0),
+      0
+    );
+  }
+
+    
 const previousYearFiltered = allData.filter(d => {
 
   let allowedFinancials = [];
@@ -747,6 +757,32 @@ const previousYearCost = previousYearFiltered.reduce(
   (sum,row)=> sum + Number(row.actual_amount || 0),
   0
 );
+
+    const previousYearFixedData =
+  previousYearFiltered.filter(d => {
+
+    const map = mappingData.find(
+      m => m.category === d.category
+    );
+
+    return map?.fvmapping === "Fixed";
+  });
+
+const previousYearVariableData =
+  previousYearFiltered.filter(d => {
+
+    const map = mappingData.find(
+      m => m.category === d.category
+    );
+
+    return map?.fvmapping === "Variable";
+  });
+
+const previousYearFixedCost =
+  getCost(previousYearFixedData);
+
+const previousYearVariableCost =
+  getCost(previousYearVariableData);
     
  const previousYearVolume = volumeData
   .filter(v =>
@@ -781,14 +817,7 @@ const previousYearUnitCost =
       0
     );
 
-  function getCost(data){
 
-    return data.reduce(
-      (sum,row)=>
-        sum + Number(row.actual_amount || 0),
-      0
-    );
-  }
 
   const allCost = getCost(filtered);
   const fixedCost = getCost(fixedData);
@@ -804,58 +833,91 @@ const previousYearUnitCost =
 document.getElementById("kpiCards").innerHTML = `
 
 <div style="
-  background:white;
-  border-radius:18px;
-  padding:18px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.08);
-  border-top:5px solid #404040;
-">
-
-  <div style="
-    font-size:30px;
-    font-weight:900;
-    color:#1f2937;
-    letter-spacing:0.5px;
-    margin-bottom:2px;
-  ">
-    UNIT COST (LY)
-  </div>
-
-  <div style="
-    font-size:18px;
-    font-weight:800;
-    color:#475569;
-    margin-bottom:12px;
-  ">
-    PKR/L
-  </div>
-
-  <div style="
-    background:#b7d1ff;
-    padding:10px 14px;
-    border-radius:10px;
     display:flex;
-    justify-content:space-between;
-    align-items:center;
+    flex-direction:column;
+    gap:8px;
   ">
-    <span style="
-      color:#1e3a8a;
-      font-size:18px;
-      font-weight:700;
-    ">
-      ${previousYear}
-    </span>
 
-    <span style="
-      color:#000;
-      font-size:28px;
-      font-weight:900;
+    <div style="
+      background:#b7d1ff;
+      padding:10px 14px;
+      border-radius:10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     ">
-      ${previousYearUnitCost}
-    </span>
+      <span style="
+        color:#1e3a8a;
+        font-size:18px;
+        font-weight:700;
+      ">
+        Total
+      </span>
+
+      <span style="
+        color:#000;
+        font-size:28px;
+        font-weight:900;
+      ">
+        ${previousYearUnitCost}
+      </span>
+    </div>
+
+    <div style="
+      background:#e9f1ff;
+      padding:10px 14px;
+      border-radius:10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    ">
+      <span style="
+        color:#1e3a8a;
+        font-size:18px;
+        font-weight:700;
+      ">
+        Fixed
+      </span>
+
+      <span style="
+        color:#000;
+        font-size:28px;
+        font-weight:900;
+      ">
+        ${previousYearVolume
+          ? (previousYearFixedCost / previousYearVolume).toFixed(2)
+          : "-"}
+      </span>
+    </div>
+
+    <div style="
+      background:#e9f1ff;
+      padding:10px 14px;
+      border-radius:10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    ">
+      <span style="
+        color:#1e3a8a;
+        font-size:18px;
+        font-weight:700;
+      ">
+        Variable
+      </span>
+
+      <span style="
+        color:#000;
+        font-size:28px;
+        font-weight:900;
+      ">
+        ${previousYearVolume
+          ? (previousYearVariableCost / previousYearVolume).toFixed(2)
+          : "-"}
+      </span>
+    </div>
+
   </div>
-
-</div>
 
 <div style="
   background:white;
