@@ -143,7 +143,7 @@ display:flex;flex-direction:column;padding-top:20px;
 <div id="kpiCards"
      style="
        display:grid;
-       grid-template-columns:repeat(3,1fr);
+       grid-template-columns:repeat(4,1fr);
        gap:24px;
        margin-bottom:24px;
      ">
@@ -280,6 +280,7 @@ function getFilteredData(){
 
   const year =
     document.getElementById("filterYear").value;
+  const previousYear = Number(selectedYear) - 1;
 
   const selectedGroup =
     document.getElementById("filterCostCenter").value;
@@ -713,6 +714,33 @@ offset: -2,
     .filter(v => v !== "0");
 }
 
+const previousYearFiltered = allData.filter(d => {
+
+  let allowedFinancials = [];
+
+  if(selectedGroup === "Total S&H"){
+
+    allowedFinancials =
+      [...new Set(allData.map(x => x.cost_center_name))];
+
+  } else {
+
+    allowedFinancials = mappingTable
+      .filter(m => m.reporting_group === selectedGroup)
+      .map(m => m.financial_name);
+  }
+
+  return (
+    d.year == previousYear &&
+    allowedFinancials.includes(d.cost_center_name)
+  );
+});
+
+const previousYearCost = previousYearFiltered.reduce(
+  (sum,row)=> sum + Number(row.actual_amount || 0),
+  0
+);
+    
   const totalVolume = volumeData
     .filter(v =>
 
@@ -748,6 +776,60 @@ offset: -2,
   }
 
 document.getElementById("kpiCards").innerHTML = `
+
+<div style="
+  background:white;
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+  border-top:5px solid #404040;
+">
+
+  <div style="
+    font-size:30px;
+    font-weight:900;
+    color:#1f2937;
+    letter-spacing:0.5px;
+    margin-bottom:2px;
+  ">
+    UNIT COST (LY)
+  </div>
+
+  <div style="
+    font-size:18px;
+    font-weight:800;
+    color:#475569;
+    margin-bottom:12px;
+  ">
+    PKR/L
+  </div>
+
+  <div style="
+    background:#b7d1ff;
+    padding:10px 14px;
+    border-radius:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  ">
+    <span style="
+      color:#1e3a8a;
+      font-size:18px;
+      font-weight:700;
+    ">
+      ${previousYear}
+    </span>
+
+    <span style="
+      color:#000;
+      font-size:28px;
+      font-weight:900;
+    ">
+      ${previousYearUnitCost}
+    </span>
+  </div>
+
+</div>
 
 <div style="
   background:white;
