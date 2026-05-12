@@ -224,9 +224,12 @@ async function sendOTP(){
   // STEP 1: Send OTP
   if(!otpSent){
 
-    const { error } = await supabaseClient.auth.signInWithOtp({
-      email: loginEmail.value
-    });
+   const { error } = await supabaseClient.auth.signInWithOtp({
+  email: loginEmail.value,
+  options: {
+    shouldCreateUser: false
+  }
+});
 
     if(error){
       errorMessage.textContent = error.message;
