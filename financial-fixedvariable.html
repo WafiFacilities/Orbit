@@ -7,6 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
 @font-face { font-family: '72 Condensed'; src: local('72 Condensed'); }
@@ -125,8 +126,42 @@ display:flex;flex-direction:column;padding-top:20px;
 </div>
 <div class="main">
 
+<div id="dashboardCapture">
+
 <h2>Financial - Fixed vs Variable Unit Cost (Stacked)</h2>
 
+  <div style="
+display:flex;
+gap:10px;
+margin-bottom:20px;
+">
+
+<button onclick="downloadDashboardImage()" style="
+padding:10px 18px;
+border:none;
+background:#404040;
+color:white;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+">
+Download PNG
+</button>
+
+<button onclick="printDashboard()" style="
+padding:10px 18px;
+border:none;
+background:#16a34a;
+color:white;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+">
+Print Dashboard
+</button>
+
+</div>
+  
 <div class="filters"
      style="
        margin-bottom:16px;
@@ -165,6 +200,8 @@ display:flex;flex-direction:column;padding-top:20px;
 <div class="chart-box">
   <h3>Variable Costs</h3>
   <canvas id="financialChartVariable"></canvas>
+</div>
+
 </div>
 
 </div>
@@ -1242,7 +1279,39 @@ async function logout(){
   await supabaseClient.auth.signOut();
   window.location.replace("login.html");
 }
+async function downloadDashboardImage(){
 
+  const dashboard =
+    document.getElementById("dashboardCapture");
+
+  const canvas = await html2canvas(dashboard, {
+    backgroundColor:"#f4f6f9",
+    scale:2
+  });
+
+  const image = canvas.toDataURL("image/png");
+
+  const link = document.createElement("a");
+
+  const year =
+    document.getElementById("filterYear").value;
+
+  const cc =
+    document.getElementById("filterCostCenter").value;
+
+  link.download =
+    `Financial-Dashboard-${cc}-${year}.png`;
+
+  link.href = image;
+
+  link.click();
+}
+
+function printDashboard(){
+
+  window.print();
+}
+  
 load();
 
 </script>
