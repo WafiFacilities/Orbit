@@ -79,7 +79,38 @@ display:flex;flex-direction:column;padding-top:20px;
   box-shadow:0 2px 6px rgba(0,0,0,0.1);
   height:650px;
 }
+.table-box{
+  margin-top:20px;
+  background:white;
+  padding:20px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  overflow-x:auto;
+}
 
+#financialTable{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+
+#financialTable th,
+#financialTable td{
+  border:1px solid #ddd;
+  padding:8px 10px;
+  text-align:right;
+}
+
+#financialTable th:first-child,
+#financialTable td:first-child{
+  text-align:left;
+  font-weight:bold;
+  background:#f7f7f7;
+}
+
+#financialTable thead{
+  background:#404040;
+  color:white;
+}
 
 </style>
 </head>
@@ -136,6 +167,13 @@ display:flex;flex-direction:column;padding-top:20px;
   <canvas id="financialChart"></canvas>
 </div>
 
+  <div class="table-box">
+  <table id="financialTable">
+    <thead></thead>
+    <tbody></tbody>
+  </table>
+</div>
+  
 </div>
 </div>
 
@@ -281,6 +319,59 @@ function renderChart(){
       }
     }
   });
+  renderTable();
+}
+
+  function renderTable(){
+
+  const filtered = getFilteredData();
+
+  const monthLabels = [
+    "Jan","Feb","Mar","Apr","May","Jun",
+    "Jul","Aug","Sep","Oct","Nov","Dec"
+  ];
+
+  const categories = [...new Set(filtered.map(d => d.category))];
+
+  const tableHead = document.querySelector("#financialTable thead");
+  const tableBody = document.querySelector("#financialTable tbody");
+
+  let headHtml = `
+    <tr>
+      <th>Category</th>
+      ${monthLabels.map(m => `<th>${m}</th>`).join("")}
+      <th>Total</th>
+    </tr>
+  `;
+
+  tableHead.innerHTML = headHtml;
+
+  let bodyHtml = "";
+
+  categories.forEach(cat => {
+
+    let yearlyTotal = 0;
+
+    let rowHtml = `<tr><td>${cat}</td>`;
+
+    for(let m=1; m<=12; m++){
+
+      const total = filtered
+        .filter(d => d.category === cat && Number(d.month) === m)
+        .reduce((sum,row)=> sum + Number(row.actual_amount || 0),0);
+
+      yearlyTotal += total;
+
+      rowHtml += `<td>${total.toLocaleString()}</td>`;
+    }
+
+    rowHtml += `<td><b>${yearlyTotal.toLocaleString()}</b></td>`;
+    rowHtml += `</tr>`;
+
+    bodyHtml += rowHtml;
+  });
+
+  tableBody.innerHTML = bodyHtml;
 }
 
 document.getElementById("filterYear").addEventListener("change", renderChart);
