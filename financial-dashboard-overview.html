@@ -362,10 +362,10 @@ function renderChart(){
 
       yearlyTotal += total;
 
-      rowHtml += `<td>${total.toLocaleString()}</td>`;
+      rowHtml += `<td>${(total / 1000000).toFixed(1)}M</td>`;
     }
 
-    rowHtml += `<td><b>${yearlyTotal.toLocaleString()}</b></td>`;
+    rowHtml += `<td><b>${(yearlyTotal / 1000000).toFixed(1)}M</b></td>`;
     rowHtml += `</tr>`;
 
     bodyHtml += rowHtml;
