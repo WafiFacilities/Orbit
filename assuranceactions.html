@@ -560,6 +560,7 @@ const {data:rows, error} = await supabaseClient
   assurances(
     depot,
     assurance_name,
+     scope_area,
     assurance_type,
     assurance_owner_email,
     participants,
@@ -591,6 +592,7 @@ return {
   Depot: r.assurances?.depot || "",
   Assurance_Name: r.assurances?.assurance_name || "",
   Assurance_Type: r.assurances?.assurance_type || "",
+  Scope_Area: r.assurances?.scope_area || "",
   Assurance_Owner: r.assurances?.assurance_owner_email || "",
   Participants: r.assurances?.participants || "",
   Description: r.assurances?.brief_description || "",
