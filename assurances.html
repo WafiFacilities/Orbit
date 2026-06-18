@@ -354,8 +354,8 @@ All
 <script>
 
 const supabaseClient = supabase.createClient( "https://kqhbvmqxrwwspopwckah.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxaGJ2bXF4cnd3c3BvcHdja2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3MTYyOTAsImV4cCI6MjA4NjI5MjI5MH0.uKfFMK7GBtCR8P5n7hsJlN72-w5h0oyOhuaySphmns8" );
-
- async function checkAuthOrRedirect() {
+let currentUserEmail = "";
+async function checkAuthOrRedirect() {
   const { data, error } = await supabaseClient.auth.getSession();
 
   if (error || !data.session) {
@@ -363,8 +363,10 @@ const supabaseClient = supabase.createClient( "https://kqhbvmqxrwwspopwckah.supa
     return null;
   }
 
+  currentUserEmail = data.session.user.email.toLowerCase();
+
   return data.session;
-} 
+}
   
 let currentPage=1;
 const pageSize=15;
@@ -510,7 +512,12 @@ const today=new Date().toISOString().split("T")[0];
 let html="";
 
 for(const row of data){
- let statusText = "";
+ const canEditDueDate=[
+"sana.naz@wafi-energy.com",
+"m-a.saleem@wafi-energy.com"
+].includes(currentUserEmail);
+  
+  let statusText = "";
 let statusClass = "";
 
 
@@ -565,7 +572,15 @@ ${row.assurance_name}
 <td>${row.frequency||""}</td>
 <td>${row.assurance_owner_email ? row.assurance_owner_email.split("@")[0] : ""}</td>
 <td>${row.date_of_assurance || ""}</td>
-<td>${row.planned_finish_date||""}</td>
+<td>
+${
+  canEditDueDate
+  ? `<input type="date"
+       value="${row.planned_finish_date || ""}"
+       onchange="updateDueDate('${row.id}', this.value)">`
+  : `${row.planned_finish_date || ""}`
+}
+</td>
 <td>
 <span class="indicator ${statusClass}">
 ${statusText}
@@ -682,8 +697,11 @@ const rows=[...tbody.rows];
 
 rows.sort((a,b)=>{
 
-let A=a.cells[7].innerText.trim();
-let B=b.cells[7].innerText.trim();
+let inputA=a.cells[7].querySelector("input");
+let inputB=a.cells[7].querySelector("input");
+
+let A=inputA ? inputA.value : a.cells[7].innerText.trim();
+let B=inputB ? inputB.value : b.cells[7].innerText.trim();
 
 const dateA = Date.parse(A);
 const dateB = Date.parse(B);
@@ -719,6 +737,36 @@ drop.style.display="none";
 }
 });
 });
+
+  async function updateDueDate(id,newDate){
+
+const allowed=[
+"sana.naz@wafi-energy.com",
+"m-a.saleem@wafi-energy.com"
+];
+
+if(!allowed.includes(currentUserEmail)){
+alert("Not authorized");
+loadData();
+return;
+}
+
+const {error}=await supabaseClient
+.from("assurances")
+.update({
+planned_finish_date:newDate
+})
+.eq("id",id);
+
+if(error){
+alert(error.message);
+loadData();
+return;
+}
+
+loadData();
+
+}
   
 async function init() {
   const session = await checkAuthOrRedirect();
