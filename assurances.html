@@ -372,9 +372,16 @@ let currentPage=1;
 const pageSize=15;
 async function populateLeads(){
 
-const {data}=await supabaseClient
+const {data,error}=await supabaseClient
 .from("assurances")
 .select("assurance_owner_email");
+
+if(error){
+console.log(error);
+return;
+}
+
+if(!data) return;
 
 let leads=[...new Set(
 data
@@ -397,9 +404,16 @@ leads.forEach(l=>{
 }
 async function populateYears(){
 
-const {data}=await supabaseClient
+const {data,error}=await supabaseClient
 .from("assurances")
 .select("planned_start_date");
+
+if(error){
+console.log(error);
+return;
+}
+
+if(!data) return;
 
 let years=[...new Set(
 data
