@@ -665,8 +665,11 @@ table.setAttribute("data-sort", asc ? "asc" : "desc");
 
 rows.sort((a,b)=>{
 
-let A=a.cells[colIndex].innerText.trim();
-let B=b.cells[colIndex].innerText.trim();
+let inputA = a.cells[colIndex].querySelector("input");
+let inputB = b.cells[colIndex].querySelector("input");
+
+let A = inputA ? inputA.value : a.cells[colIndex].innerText.trim();
+let B = inputB ? inputB.value : b.cells[colIndex].innerText.trim();
 
 const dateA = Date.parse(A);
 const dateB = Date.parse(B);
