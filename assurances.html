@@ -501,7 +501,12 @@ else{
     return yearMatch && monthMatch;
   });
 }
-
+data.sort((a,b)=>{
+    const dateA = a.planned_finish_date || "9999-12-31";
+    const dateB = b.planned_finish_date || "9999-12-31";
+    return new Date(dateA) - new Date(dateB);
+});
+  
 kpiTotal.innerText=data.length;
 kpiOpen.innerText=data.filter(x=>x.status==="Open").length;
 
