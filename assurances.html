@@ -463,9 +463,14 @@ query=query.in("depot",depots);
 if(types.length)
 query=query.in("assurance_type",types);
 
-const {data:rawData,count}=await query;
+const {data:rawData,count,error}=await query;
 
-let data = rawData;
+if(error){
+    console.log(error);
+    return;
+}
+
+let data = rawData || [];
 
 // DEFAULT YEAR = 2026
 if(years.length === 0){
@@ -608,8 +613,7 @@ kpiOverdueAssurances.style.color = "red";
 tableBody.innerHTML=html;
 pageInfo.innerText=`Total: ${count}`;
 
-// default sort by due date
-sortDueDateDefault();
+
 }
 
 function nextPage(){currentPage++;loadData();}
